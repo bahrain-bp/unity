@@ -1,17 +1,26 @@
 import * as cdk from "aws-cdk-lib";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import { RemovalPolicy } from "aws-cdk-lib";
+import { Stack, StackProps, RemovalPolicy, CfnOutput} from "aws-cdk-lib";
+import { Construct } from "constructs";
 
-export class DBStack extends cdk.Stack {
-  public readonly casesTable: dynamodb.Table;
+export class DBStack extends Stack {
+  public readonly table: dynamodb.Table;
 
-  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // Create DynamoDB Table for cases
-    this.casesTable = new dynamodb.Table(this, "[ChallengeName]CaseHistory", {
-      partitionKey: { name: "caseID", type: dynamodb.AttributeType.STRING },
-      removalPolicy: RemovalPolicy.DESTROY, // Ensure table is deleted during stack removal
+    // Bahtwin table
+    this.table = new dynamodb.Table(this, "BahtwinTable", {
+      tableName: "BahtwinTable",
+      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+      removalPolicy: RemovalPolicy.DESTROY,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      // stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
     });
+
+
+
+    new CfnOutput(this, "BahtwinTableName", { value: this.table.tableName });
   }
 }
