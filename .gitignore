@@ -1,21 +1,36 @@
+############################################
+# 🟢 Node.js & AWS CDK
+############################################
 
-!jest.config.js
+# Node modules & type declarations
+node_modules/
 *.d.ts
-node_modules
 
-# CDK asset staging directory
-.cdk.staging
-cdk.out
+# Jest configuration (kept tracked explicitly)
+!jest.config.js
 
-# === Unity ===
+# CDK asset staging directories
+.cdk.staging/
+cdk.out/
+
+############################################
+# 🟣 Unity Project
+############################################
+
+# Core Unity auto-generated folders
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
 [Ll]ogs/
-[Mm]emoryCaptures/
 UserSettings/
+
+# Memory and recording captures (can be large / sensitive)
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Unity3D auto files
 *.pidb
 *.user
 *.suo
@@ -30,7 +45,80 @@ UserSettings/
 sysinfo.txt
 .vscode/
 
-# === WebGL build output (optional) ===
+# Packed Addressables (auto-generated)
+[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+
+# Temporary auto-generated Android assets
+[Aa]ssets/[Ss]treamingAssets/aa.meta
+[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Crashlytics generated file
+crashlytics-build.properties
+
+# Memory crash files
+sysinfo.txt
+
+############################################
+# 🔵 Unity Plugins & Tools
+############################################
+
+# JetBrains Rider plugin
+[Aa]ssets/Plugins/Editor/JetBrains*
+
+# Asset Store Tools (optional — uncomment to ignore)
+# [Aa]ssets/AssetStoreTools*
+
+############################################
+# 🔶 Build Outputs
+############################################
+
+# Unity Build Artifacts
+*.apk
+*.aab
+*.unitypackage
+*.unitypackage.meta
+*.app
+
+# Unity WebGL build outputs
 unity/Build/
 unity/Builds/
 unity/StreamingAssets/
+
+# Exported binaries / archives
+ExportedObj/
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+############################################
+# ⚫ IDE / Platform Specific
+############################################
+
+# Visual Studio / Rider / MonoDevelop
+.vs/
+.gradle/
+.consulo/
+*.csproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# macOS Finder metadata
+.DS_Store
+
+############################################
+# ✅ End of File
+############################################
