@@ -6,3 +6,31 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# === Unity ===
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+*.pidb
+*.user
+*.suo
+*.unityproj
+*.DS_Store
+*.swp
+*.bak
+*.tmp
+*.booproj
+*.svd
+*.userprefs
+sysinfo.txt
+.vscode/
+
+# === WebGL build output (optional) ===
+unity/Build/
+unity/Builds/
+unity/StreamingAssets/
