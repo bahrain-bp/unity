@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-function App() {
-  const [message, setMessage] = useState("");
+const App: React.FC = () => {
+  const [message, setMessage] = useState<string>("");
 
   useEffect(() => {
     // Replace YOUR_API_GATEWAY_URL with the actual API Gateway URL
@@ -17,6 +17,7 @@ function App() {
       <p>Message from the Backend system: {message}</p>
     </div>
   );
-}
+};
+
 
 export default App;
