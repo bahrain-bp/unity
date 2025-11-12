@@ -1,0 +1,43 @@
+@use "var";
+
+section, .landing__hero {
+  width: 120rem;
+  margin: auto;
+
+  & h2 {
+    font-size: 3rem;
+    text-align: center;
+  }
+
+  & > p {
+    font-size: 1.7rem;
+    text-align: center;
+    color: var.$color-grey;
+  }
+}
+
+section {
+  margin: 20rem auto;
+  display: grid;
+  row-gap: 2rem;
+
+  &:nth-child(2) {
+    margin-top: 0;
+  }
+
+  & > p {
+    width: 60%;
+    text-align: center;
+    margin: auto;
+    margin-bottom: 2rem;
+  }
+}
+
+footer {
+  height: 20rem;
+  background-image: linear-gradient(
+      to right bottom,
+      rgba(255, 255, 255, 0.55),
+      rgba(245, 245, 245, 0.55)
+    );
+}

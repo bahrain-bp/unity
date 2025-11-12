@@ -7,11 +7,18 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sass": "sass sass/main.scss styles/globals.css -w",
+    "compile:sass": "sass sass/main.scss styles/globals.comp.css",
+    "prefix:css": "postcss --use autoprefixer -b 'last 10 versions' styles/globals.comp.css -o styles/globals.prefix.css",
+    "compress:css": "sass styles/globals.prefix.css styles/globals.css --style compressed",
+    "build:css": "npm-run-all compile:sass prefix:css compress:css"
   },
   "dependencies": {
+    "gsap": "^3.13.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "sass": "^1.94.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -1,0 +1,26 @@
+@use "var";
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+
+html {
+  box-sizing: border-box;
+  font-size: 62.5%;
+  // scrollbar-color: var.$color-grey var.$color-primary;
+  scrollbar-width: thin;
+}
+
+body {
+  background-color: var.$color-bg;
+  color: var.$color-font;
+  font-family: var.$font;
+}
