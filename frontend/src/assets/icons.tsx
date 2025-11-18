@@ -100,3 +100,81 @@ export const HOME = () => {
     </svg>
   );
 };
+export const LOCATION = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M12 1.5c-4.14 0-7.5 3.024-7.5 6.75 0 6 7.5 14.25 7.5 14.25s7.5-8.25 7.5-14.25c0-3.726-3.36-6.75-7.5-6.75ZM12 12a3 3 0 1 1 0-5.999A3 3 0 0 1 12 12Z"></path>
+    </svg>
+  );
+};
+export const CLOUD = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M18.563 20.25H6.374c-1.708 0-3.298-.59-4.477-1.66C.674 17.48 0 15.938 0 14.25c0-1.715.628-3.193 1.815-4.276.934-.853 2.209-1.432 3.627-1.658a7.332 7.332 0 0 1 2.12-2.982C8.802 4.298 10.336 3.75 12 3.75a7.199 7.199 0 0 1 5.022 2.011c1.269 1.222 2.09 2.873 2.396 4.803 2.311.342 4.582 1.912 4.582 4.811 0 1.565-.574 2.85-1.66 3.714-.954.76-2.26 1.161-3.777 1.161Z"></path>
+    </svg>
+  );
+};
+export const CLOCK = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M12 2.25A9.75 9.75 0 0 0 2.25 12c0 5.376 4.374 9.75 9.75 9.75 5.384 0 9.75-4.366 9.75-9.75 0-5.376-4.374-9.75-9.75-9.75Zm5.063 11.25h-5.625a.188.188 0 0 1-.188-.188V5.439a.188.188 0 0 1 .188-.188h1.124a.188.188 0 0 1 .188.188V12h4.313a.188.188 0 0 1 .187.188v1.124a.188.188 0 0 1-.188.188Z"></path>
+    </svg>
+  );
+};
+export const HOTEL = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M22 11v9h-2v-3H4v3H2V4h2v10h8V7h6a4 4 0 0 1 4 4ZM8 13a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"></path>
+    </svg>
+  );
+};
+export const RESTAURANT = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M21 2v20h-2v-8h-3V7a5 5 0 0 1 5-5ZM9 13.9V22H7v-8.1A5.002 5.002 0 0 1 3 9V3h2v7h2V3h2v7h2V3h2v6a5.002 5.002 0 0 1-4 4.9Z"></path>
+    </svg>
+  );
+};
+export const SHOP = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M12 1a5 5 0 0 1 5 5v2h3a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h3V6a5 5 0 0 1 5-5Zm5 10h-2v1a1 1 0 0 0 1.993.117L17 12v-1Zm-8 0H7v1a1 1 0 0 0 1.993.117L9 12v-1Zm3-8a3 3 0 0 0-2.995 2.824L9 6v2h6V6a3 3 0 0 0-2.824-2.995L12 3Z"></path>
+    </svg>
+  );
+};

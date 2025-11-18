@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Hilton Garden Inn Bahrain Bay",
+    "distance" : "270 M",
+    "type" : "hotel",
+    "link": "!1m18!1m12!1m3!1d3266.8708029830345!2d50.580711269165995!3d26.250041502683594!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e49af137ad3940d%3A0x37cc2cd0dcff60c2!2sHilton%20Garden%20Inn%20Bahrain%20Bay!5e0!3m2!1sen!2sbh!4v1763460160613!5m2!1sen!2sbh"
+  },
+  {
+    "name": "Biba Caffe",
+    "distance" : "270 M",
+    "type" : "restaurant",
+    "link": "!1m14!1m8!1m3!1d4620.8697192857335!2d50.580596578967786!3d26.247327228257863!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e49a5fa6077e7cd%3A0x306bc4b2fd567102!2sBiba!5e0!3m2!1sen!2sbh!4v1763460651473!5m2!1sen!2sbh"
+  },
+  {
+    "name": "The Avenues",
+    "distance" : "270 M",
+    "type" : "shop",
+    "link": "!1m14!1m8!1m3!1d9341.910504693387!2d50.58075866836973!3d26.249268765360487!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e49a5f064f0a013%3A0xe0aae9ebaaec9a58!2sThe%20Avenues!5e0!3m2!1sen!2sbh!4v1763460869814!5m2!1sen!2sbh"
+  }
+]

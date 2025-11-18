@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import { ED, NAVIGATION, VA } from "../assets/icons";
 import Feature from "../components/Feature";
 import Step from "../components/Step";
@@ -22,7 +24,7 @@ function Landing() {
           through interactive 3D spaces with real-time insights and personalized
           virtual assistance.
         </p>
-        <a>Explore now!</a>
+        <Link to="/info">Explore Now!</Link>
       </div>
       <section>
         <h2>Why BAHTWIN</h2>

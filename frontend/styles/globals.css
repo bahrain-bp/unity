@@ -33,6 +33,11 @@ footer {
   background-image: linear-gradient(to right bottom, rgba(255, 255, 255, 0.55), rgba(245, 245, 245, 0.55));
 }
 
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -173,7 +178,6 @@ body {
 }
 .landing .feature__icon {
   padding: 1rem;
-  background-color: aqua;
   display: flex;
   width: fit-content;
   border-radius: 1rem;
@@ -280,6 +284,105 @@ body {
 .landing__partners img {
   height: 5rem;
   object-fit: contain;
+}
+
+.info {
+  min-height: 100vh;
+  width: 100%;
+  background-image: url(../src/assets/office_bg.png);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-size: cover;
+}
+.info__container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 4rem;
+  width: 100rem;
+  padding: 3rem;
+  border: 1px solid #fff;
+  border-radius: 2rem;
+  background-image: linear-gradient(to right bottom, rgba(255, 255, 255, 0.7), rgba(172, 172, 172, 0.7)), url(../src/assets/gradient_blob.png);
+  background-size: contain;
+  backdrop-filter: blur(5rem);
+}
+.info__container h2 {
+  font-size: 2.2rem;
+}
+.info a {
+  color: #fff;
+  text-align: center;
+  font-size: 1.8rem;
+  padding: 1.5rem;
+  border-radius: 10rem;
+  background-image: linear-gradient(to right bottom, #0078A4, #6A3D84);
+}
+.info__map, .info__locations {
+  display: grid;
+  gap: 1rem;
+  grid-template-rows: min-content 1fr min-content min-content;
+  background-image: linear-gradient(to right bottom, rgba(255, 255, 255, 0.5), rgba(232, 232, 232, 0.5));
+  padding: 2.5rem;
+  border-radius: 2rem;
+}
+.info__map h2, .info__locations h2 {
+  grid-column: 1/-1;
+  font-weight: 500;
+  line-height: 1;
+}
+.info__map iframe, .info__locations iframe {
+  grid-column: 1/-1;
+  border-radius: 2rem;
+}
+.info__map {
+  grid-template-columns: 1fr 1fr;
+}
+.info__locations--list {
+  display: grid;
+  row-gap: 1rem;
+}
+
+.infocard {
+  display: flex;
+  align-items: center;
+  column-gap: 1rem;
+  padding: 0.7rem;
+  background-image: linear-gradient(to right bottom, rgba(255, 255, 255, 0.5), rgba(245, 245, 245, 0.5));
+  backdrop-filter: blur(1rem);
+  border-radius: 10rem;
+}
+.infocard__icon {
+  padding: 0.7rem;
+  border-radius: 10rem;
+  aspect-ratio: 1/1;
+}
+.infocard__icon svg {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+.infocard__content {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+.infocard__blue, .infocard__shop {
+  color: #0078A4;
+}
+.infocard__blue .infocard__icon, .infocard__shop .infocard__icon {
+  background-color: rgba(0, 120, 164, 0.2);
+}
+.infocard__green, .infocard__restaurant {
+  color: #228237;
+}
+.infocard__green .infocard__icon, .infocard__restaurant .infocard__icon {
+  background-color: rgba(34, 130, 55, 0.2);
+}
+.infocard__purple, .infocard__hotel {
+  grid-column: 1/-1;
+  color: #6A3D84;
+}
+.infocard__purple .infocard__icon, .infocard__hotel .infocard__icon {
+  background-color: rgba(106, 61, 132, 0.2);
 }
 
 /*# sourceMappingURL=globals.css.map */
