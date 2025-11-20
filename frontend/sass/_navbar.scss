@@ -1,0 +1,12 @@
+.navbar {
+  display: flex;
+  width: 100rem;
+  justify-content: space-around;
+  margin: auto;
+  padding: 1.5rem 0;
+
+  & a {
+    font-size: 1.8rem;
+    font-weight: 500;
+  }
+}

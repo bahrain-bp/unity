@@ -24,7 +24,12 @@ function Landing() {
           through interactive 3D spaces with real-time insights and personalized
           virtual assistance.
         </p>
-        <Link to="/info">Explore Now!</Link>
+        <Link to={"/info"} className="button">
+          Explore now!
+          <div className="hoverEffect">
+            <div></div>
+          </div>
+        </Link>
       </div>
       <section>
         <h2>Why BAHTWIN</h2>

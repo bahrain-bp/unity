@@ -7,9 +7,20 @@ import {
   SHOP,
   RESTAURANT,
   HOTEL,
+  ED,
 } from "../assets/icons";
 import { Link } from "react-router-dom";
 import locations from "../assets/locations.json";
+import blob1 from "../assets/blob1.png";
+import blob2 from "../assets/blob2.png";
+import blob3 from "../assets/blob3.png";
+import gradientBlob from "../assets/gradient-blob2.png";
+import Backdrop from "@mui/material/Backdrop";
+import Box from "@mui/material/Box";
+import Modal from "@mui/material/Modal";
+import Fade from "@mui/material/Fade";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
 
 function getTime() {
   const now = new Date();
@@ -24,27 +35,26 @@ function getTime() {
   return currentTime24Hour;
 }
 
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 800,
+  // bgcolor: "background.paper",
+  borderRadius: "2rem",
+  border: "1px solid #fff",
+  boxShadow: 24,
+  p: 4,
+};
+
 function Info() {
-  const [tempreture, setTempreture] = useState<string>("");
+  const [open, setOpen] = useState<boolean>(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
   const [loading, isLoading] = useState<boolean>(false);
   const [activeLocation, setActiveLocation] = useState<number>(0);
-
-  useEffect(() => {
-    isLoading(true);
-    fetch(
-      "http://api.weatherapi.com/v1/current.json?key=5f725f71d6c449889bc131608251211&q=Manama"
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setTempreture(data.current.temp_c);
-        isLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching data:", err);
-        isLoading(false);
-        setTempreture("--");
-      });
-  }, []);
 
   function setCardIcon(locType: string): React.ReactNode {
     if (locType === "hotel") {
@@ -60,64 +70,74 @@ function Info() {
 
   return (
     <div className="info">
+      {/* <img className="info__blob1" src={blob1} alt="blob1" />
+      <img className="info__blob2" src={blob2} alt="blob2" />
+      <img className="info__blob3" src={blob3} alt="blob3" /> */}
+      <img className="info__gradient" src={gradientBlob} alt="blob3" />
       <div className="info__container">
-        <div className="info__locations">
-          <h2>Nearby Services</h2>
-          <iframe
-            src={`https://www.google.com/maps/embed?pb=${locations[activeLocation].link}`}
-            width="100%"
-            height="300"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-          <div className="info__locations--list">
-            {locations.map((location, i) => {
-              return (
-                <InfoCard
-                  id={i}
-                  classes={`infocard__${location.type}${
-                    activeLocation === i ? " infocard__active" : ""
-                  }`}
-                  icon={setCardIcon(location.type)}
-                  content={location.name}
-                  onClick={(id) => setActiveLocation(id)}
-                />
-              );
-            })}
-          </div>
+        <h1>Start Exploring!</h1>
+        <p>
+          Discover your surroundings like never before. BAHTWIN guides you
+          through interactive 3D spaces with real-time insights and personalized
+          virtual assistance
+        </p>
+        <div className="info__container--btns">
+          <Link to={"/"} className="button">
+            {ED()}
+            Enter 3D Evironment
+            <div className="hoverEffect">
+              <div></div>
+            </div>
+          </Link>
+          <button onClick={handleOpen}>Show Nearby Services</button>
         </div>
-        <div className="info__map">
-          <h2>AWS Bahrain Office</h2>
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3266.8708029830345!2d50.580711269165995!3d26.250041502683594!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e49a5eeff168107%3A0x9d80348df1a5c82d!2sArcapita!5e0!3m2!1sen!2sbh!4v1763457357026!5m2!1sen!2sbh"
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-
-          <InfoCard
-            classes="infocard__purple"
-            icon={LOCATION()}
-            content="Acrapita, Second Floor"
-          />
-          <InfoCard
-            classes="infocard__blue"
-            icon={CLOUD()}
-            content={loading ? "--°" : parseInt(tempreture) + "°"}
-          />
-          <InfoCard
-            classes="infocard__green"
-            icon={CLOCK()}
-            content={getTime()}
-          />
-        </div>
-        <Link to="/">Start your journey!</Link>
       </div>
+      <Modal
+        aria-labelledby="transition-modal-title"
+        aria-describedby="transition-modal-description"
+        open={open}
+        onClose={handleClose}
+        className="locations_modal"
+        closeAfterTransition
+        slots={{ backdrop: Backdrop }}
+        slotProps={{
+          backdrop: {
+            timeout: 500,
+          },
+        }}
+      >
+        <Fade in={open}>
+          <Box sx={style}>
+            <div className="info__locations">
+              <h2>Nearby Services</h2>
+              <iframe
+                src={`https://www.google.com/maps/embed?pb=${locations[activeLocation].link}`}
+                width="100%"
+                height="300"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <div className="info__locations--list">
+                {locations.map((location, i) => {
+                  return (
+                    <InfoCard
+                      id={i}
+                      classes={`infocard__${location.type}${
+                        activeLocation === i ? " infocard__active" : ""
+                      }`}
+                      icon={setCardIcon(location.type)}
+                      content={location.name}
+                      onClick={(id) => setActiveLocation(id)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </Box>
+        </Fade>
+      </Modal>
     </div>
   );
 }
