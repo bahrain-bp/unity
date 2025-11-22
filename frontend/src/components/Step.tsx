@@ -12,6 +12,10 @@ function Step({ title, content, number }: StepProps) {
   gsap.registerPlugin(ScrollTrigger);
 
   useEffect(() => {
+    // const element = document.getElementById("step__line")!;
+    // const width = element.style.width;
+    // console.log(width);
+
     const TL = gsap.timeline({
       scrollTrigger: {
         trigger: ".landing__steps",
@@ -33,8 +37,14 @@ function Step({ title, content, number }: StepProps) {
       )
       .fromTo(
         ".step__line1",
-        { width: "0", opacity: 0 },
-        { width: "29%", opacity: 1, duration: 1 },
+        { scaleX: "0", opacity: 0 },
+        { scaleX: "1", opacity: 1, duration: 1 },
+        "-=1.9"
+      )
+      .fromTo(
+        ".step1",
+        { "--line-scale": 0, "--line-opacity": 0 },
+        { "--line-scale": 1, "--line-opacity": 1, duration: 1 },
         "-=1.9"
       )
       .fromTo(
@@ -52,8 +62,14 @@ function Step({ title, content, number }: StepProps) {
       )
       .fromTo(
         ".step__line2",
-        { width: "0", opacity: 0 },
-        { width: "29%", opacity: 1, duration: 1 },
+        { scaleX: "0", opacity: 0 },
+        { scaleX: "1", opacity: 1, duration: 1 },
+        "-=1.9"
+      )
+      .fromTo(
+        ".step2",
+        { "--line-scale": 0, "--line-opacity": 0 },
+        { "--line-scale": 1, "--line-opacity": 1, duration: 1 },
         "-=1.9"
       )
       .fromTo(

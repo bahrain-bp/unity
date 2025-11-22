@@ -4,8 +4,8 @@ function Navbar() {
   return(
     <div className="navbar">
       <Link to={"/"} >Home</Link>
-      <Link to={"/"} >Information</Link>
-      <Link to={"/"} >3D Environment</Link>
+      <Link to={"/info"} >Information</Link>
+      <Link to={"#"} >Register</Link>
     </div>
   )
 }

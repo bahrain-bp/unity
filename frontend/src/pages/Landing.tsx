@@ -81,6 +81,8 @@ function Landing() {
           />
           <span className="step__line1" />
           <span className="step__line2" />
+          <span className="step__line1M" />
+          <span className="step__line2M" />
         </div>
       </section>
       <section>

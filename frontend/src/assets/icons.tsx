@@ -178,3 +178,20 @@ export const SHOP = () => {
     </svg>
   );
 };
+export const FILTER = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+    </svg>
+  );
+};

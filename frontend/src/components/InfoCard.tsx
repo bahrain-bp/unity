@@ -1,15 +1,15 @@
 type InfoCardProps = {
-  id: number;
+  name: string;
   content: string;
   classes: string;
-  onClick: (id: number) => void;
+  onClick: (id: string) => void;
   icon: React.ReactNode;
 };
 
-function InfoCard({ id, icon, content, classes, onClick }: InfoCardProps) {
+function InfoCard({ name, icon, content, classes, onClick }: InfoCardProps) {
   return (
     <div
-      onClick={() => onClick(id)}
+      onClick={() => onClick(name)}
       className={`infocard${classes ? " " + classes : ""}`}
     >
       <span className="infocard__icon">{icon}</span>

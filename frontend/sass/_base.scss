@@ -23,4 +23,22 @@ body {
   background-color: var.$color-bg;
   color: var.$color-font;
   font-family: var.$font;
+
+  --dot-bg: var.$color-;
+  --dot-color: rgb(202, 202, 202);
+  --dot-size: 2px;
+  --dot-space: 22px;
+  background: linear-gradient(
+        90deg,
+        var.$color-bg calc(var(--dot-space) - var(--dot-size)),
+        transparent 1%
+      )
+      center / var(--dot-space) var(--dot-space),
+    linear-gradient(
+        var.$color-bg calc(var(--dot-space) - var(--dot-size)),
+        transparent 1%
+      )
+      center / var(--dot-space) var(--dot-space),
+    var(--dot-color);
+  position: relative;
 }
