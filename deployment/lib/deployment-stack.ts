@@ -2,49 +2,50 @@ import { Stack, StackProps, CfnOutput, RemovalPolicy } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 
 export class DeploymentStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // 1️ S3 Bucket for website hosting
-    const websiteBucket = new s3.Bucket(this, "WebsiteBucket", {
-      websiteIndexDocument: "index.html",
-      websiteErrorDocument: "index.html",
-      publicReadAccess: false,
+    // 1 S3 Bucket (PRIVATE — not using static website hosting)
+    const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
 
-    //  CloudFront OAI
-    const oai = new cloudfront.OriginAccessIdentity(this, "OAI");
+    // 2️ CloudFront Distribution 
+    const distribution = new cloudfront.Distribution(this, 'Distribution', {
+      defaultRootObject: 'index.html',
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
 
-    websiteBucket.grantRead(oai);
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
 
-    //  CloudFront Distribution
-    const distribution = new cloudfront.CloudFrontWebDistribution(this, "CFDistribution", {
-      originConfigs: [
+      errorResponses: [
         {
-          s3OriginSource: {
-            s3BucketSource: websiteBucket,
-            originAccessIdentity: oai,
-          },
-          behaviors: [{ isDefaultBehavior: true }],
+          httpStatus: 404,
+          responsePagePath: '/index.html', // React SPA fallback
+          responseHttpStatus: 200,
         },
       ],
-      defaultRootObject: "index.html",
     });
 
-    //  Deploy frontend build folder to S3
-    new s3deploy.BucketDeployment(this, "DeployWebsite", {
-      sources: [s3deploy.Source.asset("../frontend/dist")],
-      destinationBucket: websiteBucket,
+    // 3 Upload build files to S3
+    new s3deploy.BucketDeployment(this, 'DeployFrontend', {
+      sources: [s3deploy.Source.asset('../frontend/dist')],
+      destinationBucket: frontendBucket,
       distribution,
-      distributionPaths: ["/*"],
+      distributionPaths: ['/*'],
     });
 
-    //  Output CloudFront URL after deployment
+    // 4 Output URL
     new CfnOutput(this, "WebsiteURL", {
       value: distribution.distributionDomainName,
     });
