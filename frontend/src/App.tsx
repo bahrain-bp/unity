@@ -4,6 +4,7 @@ import "../styles/globals.css";
 import Landing from "./pages/Landing";
 import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
+import ChatButton from "./components/ChatButton";
 
 function App() {
   const year = new Date().getFullYear();
@@ -32,6 +33,7 @@ function App() {
             }
           />
         </Routes>
+        <ChatButton/>
       </Router>
 
       <footer className="footer">

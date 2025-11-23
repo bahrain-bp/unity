@@ -1,0 +1,121 @@
+.chat-box {
+  position: fixed;
+  bottom: 100px; 
+  right: 20px;
+  width: 300px;
+  height: 400px;
+  background: white;
+  border-radius: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.chat-header {
+  display: flex;
+//   align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0; 
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f0f0f0; /* Light gray circle for now */
+  margin-right: 12px;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-with {
+  font-size: 14px;
+  color: #666;
+}
+
+.peccy {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+.chat-body{
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 250px;
+    padding: 10px;
+}
+.bot-msg{
+    background-color: #f0f0f0;
+    border-radius: 20px;
+    padding: 10px 15px;
+    width: fit-content;
+    max-width: 70%;
+    font-size: 15px;
+    margin-top: 10px;
+    margin-left: 7px;
+    margin-right: auto;
+}
+.quick-questions{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.question{
+    background-color: #f0f0f0;
+    border-radius: 20px;
+    padding: 8px 15px;
+    width: 287px;
+    // width: fit-content;
+    max-width: 70%;
+    font-size: 15px;
+    margin-top: 10px;
+    margin-right: 7px;
+    border: none;
+}
+.chat-input {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  padding: 15px;
+  background: white;
+  border-radius: 0 0 30px 30px; // Matches your chat-box border-radius
+}
+
+.chat-input input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 10px 15px;
+  margin-right: 10px;
+  outline: none;
+  font-size: 14px;
+}
+
+.chat-input button {
+  background-color: #f0f0f0;
+  color: black;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.chat-input button:disabled{
+    background-color: #ccc;
+    color: #999;
+    cursor: not-allowed;
+}
+.user-msg {
+    background-color: #6A3D84;
+    color: white;
+    border-radius: 20px;
+    padding: 10px 15px;
+    width: fit-content;
+    font-size: 15px;
+    margin-top: 10px;
+    margin-left: auto; // Pushes to right
+    margin-right: 7px;
+}
