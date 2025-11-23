@@ -5,6 +5,11 @@ import { Construct } from "constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as iot from "aws-cdk-lib/aws-iot";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as iam from "aws-cdk-lib/aws-iam";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import * as path from "path";
 
 export class APIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, dbStack: DBStack, props?: cdk.StackProps) {
@@ -71,11 +76,11 @@ export class APIStack extends cdk.Stack {
     });
 
     // ────────────────────────────────
-    // 2. Lambda Function
+    // 2. Lambda Function (hello)
     // ────────────────────────────────
     const helloFn = new lambda.Function(this, "HelloHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
-      handler: "hello.handler", // points to lambda/hello.ts (exported handler)
+      handler: "hello.handler", // points to lambda/hello.ts -> compiled to JS in /lambda
       code: lambda.Code.fromAsset("lambda"),
       environment: {
         TABLE_NAME: dbStack.table.tableName,
@@ -96,27 +101,116 @@ export class APIStack extends cdk.Stack {
     });
 
     const helloResource = api.root.addResource("hello");
-
-    helloResource.addMethod(
-      "GET",
-      new apigw.LambdaIntegration(helloFn),
-      {
-        authorizer,
-        authorizationType: apigw.AuthorizationType.COGNITO,
-      }
-    );
+    helloResource.addMethod("GET", new apigw.LambdaIntegration(helloFn), {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    });
 
     new cdk.CfnOutput(this, "UnityApiUrl", {
       value: api.url,
     });
+
+    // ────────────────────────────────
+    // 4) IoT Core: Thing + Policy
+    // ────────────────────────────────
+    const thingName = "pi3-01";
+
+    const piThing = new iot.CfnThing(this, "PiThing", { thingName });
+
+    const piPolicy = new iot.CfnPolicy(this, "PiPolicy", {
+      policyName: "Pi3Policy",
+      policyDocument: {
+        Version: "2012-10-17",
+        Statement: [
+          {
+            Effect: "Allow",
+            Action: ["iot:Connect"],
+            Resource: [`arn:aws:iot:${this.region}:${this.account}:client/${thingName}*`],
+          },
+          {
+            Effect: "Allow",
+            Action: ["iot:Publish"],
+            Resource: [`arn:aws:iot:${this.region}:${this.account}:topic/${thingName}/#`],
+          },
+          {
+            Effect: "Allow",
+            Action: ["iot:Receive"],
+            Resource: [`arn:aws:iot:${this.region}:${this.account}:topic/${thingName}/#`],
+          },
+          {
+            Effect: "Allow",
+            Action: ["iot:Subscribe"],
+            Resource: [`arn:aws:iot:${this.region}:${this.account}:topicfilter/${thingName}/#`],
+          },
+        ],
+      },
+    });
+
+    // ────────────────────────────────
+    // 5) DynamoDB table for telemetry
+    //    PK=device (string), SK=ts (number, epoch seconds)
+    // ────────────────────────────────
+    const telemTable = new dynamodb.Table(this, "TelemetryTable", {
+      tableName: "PiTelemetry",
+      partitionKey: { name: "device", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // change to RETAIN in prod
+    });
+
+    new cdk.CfnOutput(this, "TelemetryTableName", { value: telemTable.tableName });
+
+    // ────────────────────────────────
+    // 6) IoT Rule → DynamoDB (v2 action)
+    // ────────────────────────────────
+    const iotRuleRole = new iam.Role(this, "IotRuleDdbRole", {
+      assumedBy: new iam.ServicePrincipal("iot.amazonaws.com"),
+    });
+    telemTable.grantWriteData(iotRuleRole);
+
+    new iot.CfnTopicRule(this, "SavePiTelemetryRule", {
+      topicRulePayload: {
+        sql: "SELECT device, ts, temp_c, humidity FROM 'pi3-01/telemetry'",
+        actions: [
+          {
+            dynamoDBv2: {
+              putItem: { tableName: telemTable.tableName },
+              roleArn: iotRuleRole.roleArn,
+            },
+          },
+        ],
+        ruleDisabled: false,
+        awsIotSqlVersion: "2016-03-23",
+      },
+    });
+
+    // ────────────────────────────────
+    // 7) Lambda (TypeScript) + API to read it back
+    //    GET /telemetry?device=pi3-01&limit=25
+    // ────────────────────────────────
+    const telemetryGetFn = new NodejsFunction(this, "TelemetryGetHandler", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/telemetry-get.ts"),
+      handler: "handler",
+      bundling: {
+        target: "node18",
+        minify: true,
+        sourceMap: false,
+      },
+      environment: {
+        TELEMETRY_TABLE: telemTable.tableName,
+      },
+    });
+
+    telemTable.grantReadData(telemetryGetFn);
+
+    const telemetryResource = api.root.addResource("telemetry");
+    telemetryResource.addMethod("GET", new apigw.LambdaIntegration(telemetryGetFn), {
+      authorizationType: apigw.AuthorizationType.NONE, // switch to COGNITO later if desired
+    });
+
+    // Useful outputs
+    new cdk.CfnOutput(this, "PiThingName", { value: thingName });
+    new cdk.CfnOutput(this, "PiPolicyName", { value: piPolicy.policyName! });
   }
 }
-
-
-// UserPoolId: us-east-1_L9gwjH6sW
-
-// UserPoolClientId: 36ctbjavcongmipvlrerann32t
-
-// UserPoolDomainUrl: https://unity-959171913764-dev.auth.us-east-1.amazoncognito.com
-
-// API URL: https://g3k3s3jhqk.execute-api.us-east-1.amazonaws.com/dev/

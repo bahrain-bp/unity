@@ -1,0 +1,8 @@
+
+// UserPoolId: us-east-1_L9gwjH6sW
+
+// UserPoolClientId: 36ctbjavcongmipvlrerann32t
+
+// UserPoolDomainUrl: https://unity-959171913764-dev.auth.us-east-1.amazoncognito.com
+
+// API URL: https://g3k3s3jhqk.execute-api.us-east-1.amazonaws.com/dev/
