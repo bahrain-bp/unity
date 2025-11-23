@@ -1,0 +1,156 @@
+@use "var";
+
+section,
+.landing__hero {
+  width: 120rem;
+  margin: auto;
+
+  & h2 {
+    font-size: 3rem;
+    text-align: center;
+    @media only screen and (max-width: var.$bp-7) {
+      font-size: 2.5rem;
+    }
+  }
+
+  & > p {
+    font-size: 1.7rem;
+    text-align: center;
+    color: var.$color-grey;
+  }
+
+  @media only screen and (max-width: var.$bp-12) {
+    width: 95vw;
+  }
+}
+
+section {
+  margin: 20rem auto;
+  display: grid;
+  row-gap: 2rem;
+
+  &:nth-child(2) {
+    margin-top: 0;
+  }
+
+  & > p {
+    width: 60%;
+    text-align: center;
+    margin: auto;
+    margin-bottom: 2rem;
+
+    @media only screen and (max-width: var.$bp-7) {
+      font-size: 1.6rem;
+      width: 80%;
+    }
+  }
+}
+
+footer {
+  // height: 20rem;
+  background-image: linear-gradient(
+    to right bottom,
+    rgba(255, 255, 255, 0.2),
+    rgba(245, 245, 245, 0.2)
+  );
+  border-top: 1px solid #fff;
+  z-index: 5;
+  position: relative;
+  width: 100%;
+
+  font-size: 1.8rem;
+  text-align: center;
+  padding: 1.5rem 1rem;
+
+  @media only screen and (max-width: var.$bp-6) {
+    font-size: 1.6rem;
+  }
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 3rem;
+  font-size: 1.8rem;
+  border: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10rem;
+  transition: all 0.02s;
+  font-weight: bold;
+  cursor: pointer;
+  color: rgb(37, 37, 37);
+  z-index: 0;
+  box-shadow: 0 0px 7px -5px rgba(0, 0, 0, 0.5);
+
+  @media only screen and (max-width: var.$bp-8) {
+    padding: 1.4rem 2.8rem;
+    font-size: 1.6rem;
+  }
+
+  & svg {
+    width: 3rem;
+    height: 3rem;
+    fill: black;
+    margin-right: 2rem;
+  }
+}
+
+.button:hover {
+  background: rgb(193, 228, 248);
+  color: rgb(33, 0, 85);
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.hoverEffect {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: -1;
+}
+
+.hoverEffect div {
+  background: rgb(222, 0, 75);
+  background: linear-gradient(
+    90deg,
+    var.$color-green 0%,
+    var.$color-purple 49%,
+    var.$color-blue 100%
+  );
+  border-radius: 40rem;
+  width: 27rem;
+  height: 27rem;
+  transition: 0.4s;
+  filter: blur(20px);
+  animation: effect infinite 3s linear;
+  opacity: 0.5;
+}
+
+.button:hover .hoverEffect div {
+  width: 8rem;
+  height: 8rem;
+}
+
+@keyframes effect {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
