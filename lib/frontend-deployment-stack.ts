@@ -9,30 +9,45 @@ export class FrontendDeploymentStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const frontendBucket = new s3.Bucket(this, "FrontendBucket", {
+    //  S3 bucket for frontend hosting (private, secure)
+    const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
+      removalPolicy: RemovalPolicy.DESTROY, // Change to RETAIN for production
+      autoDeleteObjects: true, // Change to false for production
+      serverAccessLogsPrefix: 'accesslogs/',
     });
 
-    const distribution = new cloudfront.Distribution(this, "FrontendDistribution", {
-      defaultRootObject: "index.html",
+    // CloudFront distribution with OAC (modern, secure)
+    const distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
+      defaultRootObject: 'index.html',
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
 
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(frontendBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
       },
+
+      // Required for   SPA to route correctly
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: "/index.html",
+        },
+      ],
     });
 
-    new s3deploy.BucketDeployment(this, "DeployFrontend", {
-      sources: [s3deploy.Source.asset("./frontend/dist")],
+    //  Deploy built frontend files to S3
+    new s3deploy.BucketDeployment(this, 'DeployFrontend', {
+      sources: [s3deploy.Source.asset('./frontend/dist')],
       destinationBucket: frontendBucket,
       distribution,
-      distributionPaths: ["/*"],
+      distributionPaths: ['/*'], // invalidates CloudFront cache
     });
 
+    //  Output CloudFront URL
     new CfnOutput(this, "FrontendURL", {
       value: distribution.distributionDomainName,
     });
