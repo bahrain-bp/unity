@@ -1,7 +1,8 @@
 import * as cdk from "aws-cdk-lib";
-import { MyCdkStack } from "../lib/my-cdk-app-stack";
+//import { MyCdkStack } from "../lib/my-cdk-app-stack";
 import { DBStack } from "../lib/DBstack"; // Import your DBStack
 import { APIStack } from "../lib/api-stack"; // Import your APIStack
+import { FrontendDeploymentStack } from "../lib/frontend-deployment-stack";
 
 const app = new cdk.App();
 
@@ -14,4 +15,6 @@ const dbStack = new DBStack(app, "DBStack", {
 new APIStack(app, "APIStack", dbStack); // Pass the DBStack as the second argument
 
 // Optionally, you can create your other stacks here if needed
-new MyCdkStack(app, "MyCdkAppStack");
+// new MyCdkStack(app, "MyCdkAppStack");
+
+new FrontendDeploymentStack(app, "FrontendDeploymentStack");
