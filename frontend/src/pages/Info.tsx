@@ -1,9 +1,17 @@
 import { useState } from "react";
 import InfoCard from "../components/InfoCard";
-import { LOCATION, SHOP, RESTAURANT, HOTEL, ED, FILTER } from "../assets/icons";
+import {
+  LOCATION,
+  SHOP,
+  RESTAURANT,
+  HOTEL,
+  ED,
+  FILTER,
+  X,
+} from "../assets/icons";
 import { Link } from "react-router-dom";
 import locations from "../assets/locations.json";
-import gradientBlob from "../assets/gradient-blob2.png";
+// import gradientBlob from "../assets/gradient-blob2.png";
 import Backdrop from "@mui/material/Backdrop";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
@@ -38,8 +46,9 @@ const style = {
   transform: "translate(-50%, -50%)",
   width: "90vw",
   maxWidth: 800,
+  maxHeight: "90vh",
   borderRadius: "2rem",
-  overflow: "scroll",
+  overflowY: "scroll",
   border: "1px solid #fff",
   boxShadow: 24,
   p: 4,
@@ -78,7 +87,8 @@ function Info() {
 
   return (
     <div className="info">
-      <img className="info__gradient" src={gradientBlob} alt="blob3" />
+      {/* <img className="info__gradient" src={gradientBlob} alt="blob3" /> */}
+      <span className="info__gradient" />
       <div className="info__container">
         <h1>Start Exploring!</h1>
         <p>
@@ -87,14 +97,14 @@ function Info() {
           virtual assistance
         </p>
         <div className="info__container--btns">
-          <Link to={"/"} className="button">
+          <Link to={"/"} className="btn">
             {ED()}
             Enter 3D Evironment
-            <div className="hoverEffect">
+            {/* <div className="hoverEffect">
               <div></div>
-            </div>
+            </div> */}
           </Link>
-          <button onClick={handleOpen}>Show Nearby Services</button>
+          <button className="btn" onClick={handleOpen}>Show Nearby Services</button>
         </div>
       </div>
       <Modal
@@ -114,7 +124,9 @@ function Info() {
         <Fade in={open}>
           <Box sx={style}>
             <div className="info__locations">
-              <h2>Nearby Services</h2>
+              <h2>
+                Nearby Services <span onClick={handleClose}>{X()}</span>
+              </h2>
               <iframe
                 src={`https://www.google.com/maps/embed?pb=${
                   locations.find((loc) => loc.name === activeLocation)?.link

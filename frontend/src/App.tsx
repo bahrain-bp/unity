@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-
 import "../styles/globals.css";
 import Landing from "./pages/Landing";
 import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
+import Authentication from "./pages/Authentication";
 
 function App() {
   const year = new Date().getFullYear();
@@ -28,6 +28,15 @@ function App() {
               <>
                 <Navbar />
                 <Info />
+              </>
+            }
+          />
+          <Route
+            path="/auth"
+            element={
+              <>
+                <Navbar />
+                <Authentication />
               </>
             }
           />

@@ -1,4 +1,4 @@
-@use "var";
+@use "var" as *;
 
 * {
   margin: 0;
@@ -11,31 +11,30 @@
   box-sizing: inherit;
 }
 
-
 html {
   box-sizing: border-box;
   font-size: 62.5%;
-  // scrollbar-color: var.$color-grey var.$color-primary;
+  // scrollbar-color: $color-grey $color-primary;
   scrollbar-width: thin;
 }
 
 body {
-  background-color: var.$color-bg;
-  color: var.$color-font;
-  font-family: var.$font;
+  background-color: $color-bg;
+  color: $color-font;
+  font-family: $font;
 
-  --dot-bg: var.$color-;
+  --dot-bg: $color-;
   --dot-color: rgb(202, 202, 202);
   --dot-size: 2px;
   --dot-space: 22px;
   background: linear-gradient(
         90deg,
-        var.$color-bg calc(var(--dot-space) - var(--dot-size)),
+        $color-bg calc(var(--dot-space) - var(--dot-size)),
         transparent 1%
       )
       center / var(--dot-space) var(--dot-space),
     linear-gradient(
-        var.$color-bg calc(var(--dot-space) - var(--dot-size)),
+        $color-bg calc(var(--dot-space) - var(--dot-size)),
         transparent 1%
       )
       center / var(--dot-space) var(--dot-space),
