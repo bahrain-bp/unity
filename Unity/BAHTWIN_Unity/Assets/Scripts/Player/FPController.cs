@@ -13,6 +13,9 @@ public class FPController : MonoBehaviour
     public Transform cameraTransform;
     public float lookSensitivity = 0.1f;
 
+    [Header("Animation")]
+    public Animator animator;
+
     private CharacterController controller;
     private Vector2 moveInput;
     private Vector2 lookInput;
@@ -24,6 +27,9 @@ public class FPController : MonoBehaviour
         controller = GetComponent<CharacterController>();
         if (cameraTransform == null && Camera.main != null)
             cameraTransform = Camera.main.transform;
+
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -39,6 +45,14 @@ public class FPController : MonoBehaviour
     {
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
 
+        // Walking animation control
+        if (animator != null)
+        {
+            bool isWalking = moveInput.sqrMagnitude > 0.01f;
+            animator.SetBool("IsWalking", isWalking);
+        }
+
+        // Gravity
         if (controller.isGrounded)
         {
             if (verticalVelocity < 0)
@@ -49,7 +63,14 @@ public class FPController : MonoBehaviour
             verticalVelocity += gravity * Time.deltaTime;
         }
 
+        // Jump physics
+        if (controller.isGrounded && moveInput.y > 0 && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
+
         move.y = verticalVelocity;
+
         controller.Move(move * speed * Time.deltaTime);
     }
 
@@ -65,8 +86,7 @@ public class FPController : MonoBehaviour
         transform.Rotate(Vector3.up * mouseX);
     }
 
-    // These three methods will be called by PlayerInput events
-
+    // Player Input System
     public void OnMove(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
