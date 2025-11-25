@@ -1,24 +1,44 @@
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import ChatMessage from "./ChatMessage"
+import Client from "../services/api"
+
+interface Message {
+    text: string
+    sender: "bot" | "user"
+}
 const Chatbot = () => {
-    const [msgs, setMsgs] = useState([
-        {text: "Hello! How can I help you?", sender: "bot"}
-    ])
+    const [msgs, setMsgs] = useState<Message[]>(() => {
+        const storedChat = localStorage.getItem("chatHistory")
+
+        return storedChat ? JSON.parse(storedChat) : [{text: "Hello! How can I help you?", sender: "bot"}]
+    })
+
     const [showQuestions, setShowQuestions] = useState(true)
     const [inputText, setInputText] = useState("")
+    const chatBottomRef = useRef<HTMLDivElement>(null)
 
-    const handleQuestion = async (questionText) => {
-        const userMsg = {text: questionText, sender: "user"}
+    useEffect(() => {
+        if(chatBottomRef.current) {
+            chatBottomRef.current.scrollTop = chatBottomRef.current.scrollHeight
+        }
+    }, [msgs])
+
+    useEffect(() => {
+        localStorage.setItem("chatHistory", JSON.stringify(msgs))
+    }, [msgs])
+
+    const handleQuestion = async (questionText: string) => {
+        const userMsg: Message = {text: questionText, sender: "user"}
         setMsgs(prev => [...prev, userMsg])
 
         setShowQuestions(false)
 
         const botRes = await getRes(questionText)
-        const botMsg = {text: botRes, sender: "bot"}
+        const botMsg: Message = {text: botRes, sender: "bot"}
         setMsgs(prev => [...prev, botMsg])
     }
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputText(e.target.value)
     }
 
@@ -28,10 +48,19 @@ const Chatbot = () => {
             setInputText("")
         }
     }
-    const getRes = async(question) => {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        return "This is a fake response to: " + question
+    // const getRes = async(question) => {
+    //     await new Promise(resolve => setTimeout(resolve, 1000))
+    //     return "This is a fake response to: " + question
+    // }
+    const getRes = async (question: string) => {
+        try {
+            const res = await Client.post("/assistant", {question})
+            return res.data.answer
+        } catch (error) {
+            throw error
+        }
     }
+    
     return(
         <>
         <div className="chat-box">
@@ -42,12 +71,12 @@ const Chatbot = () => {
                     <div className="peccy">Peccy</div>
                 </div>
             </div>
-            <div className="chat-body">
+            <div className="chat-body" ref={chatBottomRef}>
                 {msgs.map((msg, index) => (
                     <ChatMessage key={index} text={msg.text} sender = {msg.sender} />
                 ))}
 
-                {showQuestions && (
+                {showQuestions && msgs.length === 1 && (
                     <div className="quick-questions">
                         <button className="question" onClick={() => handleQuestion("What can I do on this platform?")}>What can I do on this platform?</button>
                         <button className="question" onClick={() => handleQuestion("How do I start exploring the building?")}>How do I start exploring the building?</button>

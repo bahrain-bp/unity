@@ -25,6 +25,7 @@
     "@aws-cdk/aws-s3": "^1.36.1",
     "@aws-cdk/aws-s3-deployment": "^1.78.0",
     "aws-cdk-lib": "^2.177.0",
+    "axios": "^1.13.2",
     "constructs": "^10.4.2"
   }
 }
