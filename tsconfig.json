@@ -27,8 +27,6 @@
   "exclude": [
     "node_modules",
     "cdk.out",
-    "frontend",
-    "lib",
-    "bin"
+    "frontend"
   ]
 }
