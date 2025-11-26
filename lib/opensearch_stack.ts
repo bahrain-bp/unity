@@ -12,6 +12,7 @@ export class OpenSearchStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+    const collectionName = "unity-kb-collection"
 
     // S3 bucket for knowledge base data
     this.dataBucket = new s3.Bucket(this, 'KnowledgeBaseBucket', {
@@ -40,7 +41,7 @@ export class OpenSearchStack extends cdk.Stack {
       name: 'kb-encryption-policy',
       type: 'encryption',
       policy: JSON.stringify({
-        Rules: [{ ResourceType: 'collection', Resource: ['collection/kb-collection'] }],
+        Rules: [{ ResourceType: 'collection', Resource: [`collection/${collectionName}`] }],
         AWSOwnedKey: true
       })
     });
@@ -50,8 +51,8 @@ export class OpenSearchStack extends cdk.Stack {
       type: 'network',
       policy: JSON.stringify([{
         Rules: [
-          { ResourceType: 'collection', Resource: ['collection/kb-collection'] },
-          { ResourceType: 'dashboard', Resource: ['collection/kb-collection'] }
+          { ResourceType: 'collection', Resource: [`collection/${collectionName}`] },
+          { ResourceType: 'dashboard', Resource: [`collection/${collectionName}`] }
         ],
         AllowFromPublic: true
       }])
@@ -59,7 +60,7 @@ export class OpenSearchStack extends cdk.Stack {
 
     // OpenSearch collection
     this.collection = new opensearchserverless.CfnCollection(this, 'Collection', {
-      name: 'kb-collection',
+      name: collectionName,
       type: 'VECTORSEARCH'
     });
 
@@ -74,12 +75,12 @@ export class OpenSearchStack extends cdk.Stack {
         Rules: [
           {
             ResourceType: 'collection',
-            Resource: ['collection/kb-collection'],
+            Resource: [`collection/${collectionName}`],
             Permission: ['aoss:CreateCollectionItems', 'aoss:DeleteCollectionItems', 'aoss:UpdateCollectionItems', 'aoss:DescribeCollectionItems']
           },
           {
             ResourceType: 'index',
-            Resource: ['index/kb-collection/*'],
+            Resource: [`index/${collectionName}/*`],
             Permission: ['aoss:CreateIndex', 'aoss:DeleteIndex', 'aoss:UpdateIndex', 'aoss:DescribeIndex', 'aoss:ReadDocument', 'aoss:WriteDocument']
           }
         ],
