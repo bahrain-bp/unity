@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-
 import { ED, NAVIGATION, VA } from "../assets/icons";
 import Feature from "../components/Feature";
 import Step from "../components/Step";
@@ -24,11 +23,11 @@ function Landing() {
           through interactive 3D spaces with real-time insights and personalized
           virtual assistance.
         </p>
-        <Link to={"/info"} className="button">
+        <Link to={"/info"} className="btn">
           Explore now!
-          <div className="hoverEffect">
+          {/* <div className="hoverEffect">
             <div></div>
-          </div>
+          </div> */}
         </Link>
       </div>
       <section>

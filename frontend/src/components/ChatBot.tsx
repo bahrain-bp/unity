@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import ChatMessage from "./ChatMessage"
 import Client from "../services/api"
+import peccy from "../assets/peccy.png"
 
 interface Message {
     text: string
@@ -60,12 +61,12 @@ const Chatbot = () => {
             throw error
         }
     }
-    
+
     return(
         <>
         <div className="chat-box">
             <div className="chat-header">
-                <div className="avatar-circle"></div>
+                <div className="avatar-circle"><img src={peccy}></img></div>
                 <div className="header-text">
                     <div className="chat-with">Chat with</div>
                     <div className="peccy">Peccy</div>

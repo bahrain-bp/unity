@@ -5,7 +5,7 @@ function Navbar() {
     <div className="navbar">
       <Link to={"/"} >Home</Link>
       <Link to={"/info"} >Information</Link>
-      <Link to={"#"} >Register</Link>
+      <Link to={"/auth"} >Register</Link>
     </div>
   )
 }
