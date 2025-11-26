@@ -8,8 +8,11 @@ section,
   & h2 {
     font-size: 3rem;
     text-align: center;
-    @media only screen and (max-width: $bp-7) {
+    @media only screen and (max-width: $bp-8) {
       font-size: 2.5rem;
+    }
+    @media only screen and (max-width: $bp-6) {
+      font-size: 2.2rem;
     }
   }
 
@@ -21,6 +24,9 @@ section,
 
   @media only screen and (max-width: $bp-12) {
     width: 95vw;
+  }
+  @media only screen and (max-width: $bp-7) {
+    width: 90vw;
   }
 }
 
@@ -43,12 +49,39 @@ section {
       font-size: 1.6rem;
       width: 80%;
     }
+    @media only screen and (max-width: $bp-5) {
+      font-size: 1.6rem;
+      width: 100%;
+    }
+  }
+}
+
+h1 {
+  font-family: $font-display;
+  font-size: 5rem;
+  text-align: center;
+  font-weight: 500;
+
+  @media only screen and (max-width: $bp-12) {
+    font-size: 4vw;
+  }
+  @media only screen and (max-width: $bp-9) {
+    font-size: 4.5vw;
+  }
+  @media only screen and (max-width: $bp-7) {
+    font-size: 3.5rem;
+  }
+  @media only screen and (max-width: $bp-6) {
+    font-size: 3rem;
+  }
+  @media only screen and (max-width: $bp-5) {
+    font-size: 3rem;
   }
 }
 
 .btn {
   color: $color-font;
-  font-size: 1.6rem !important;
+  font-size: 1.6rem;
   font-family: inherit;
   border: none;
 
@@ -70,8 +103,11 @@ footer {
   text-align: center;
   padding: 1.5rem 1rem;
 
-  @media only screen and (max-width: $bp-6) {
+  @media only screen and (max-width: $bp-8) {
     font-size: 1.6rem;
+  }
+  @media only screen and (max-width: $bp-6) {
+    font-size: 1.4rem;
   }
 }
 

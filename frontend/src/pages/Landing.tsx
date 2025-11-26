@@ -13,9 +13,9 @@ function Landing() {
       <div className="landing__hero">
         <span className="landing__hero--circle" />
         <div className="landing__hero--heading">
-          <h1>Reimagining</h1> <h1>Visitor</h1> <h1>Experience</h1>{" "}
-          <h1>Through</h1> <h1>Intelligent</h1> <h1>Virtual</h1>{" "}
-          <h1>Guidance.</h1>
+          <h1>
+            Reimagining Visitor Experience Through Intelligent Virtual Guidance.
+          </h1>
         </div>
 
         <p>
@@ -34,7 +34,7 @@ function Landing() {
         <h2>Why BAHTWIN</h2>
         <p className="section__description">
           Every BAHTWIN feature is crafted to make exploration effortless,
-          engaging, and intelligent — transforming how people experience digital
+          engaging, and intelligent, transforming how people experience digital
           environments.
         </p>
         <div className="landing__features">
@@ -58,9 +58,9 @@ function Landing() {
       <section>
         <h2>How It Works</h2>
         <p className="section__description">
-          Every BAHTWIN feature is crafted to make exploration effortless,
-          engaging, and intelligent — transforming how people experience digital
-          environments.
+          From virtual entry to on-site exploration, every step is guided by
+          intelligent systems that ensure a smooth, engaging, and informative
+          experience.
         </p>
         <div className="landing__steps">
           <Step
@@ -80,16 +80,11 @@ function Landing() {
           />
           <span className="step__line1" />
           <span className="step__line2" />
-          <span className="step__line1M" />
-          <span className="step__line2M" />
         </div>
       </section>
       <section>
         <h2>Partners & Collaborators</h2>
-        <p>
-          Lorem Ipsum is simply dummy text of the printing and typesetting
-          industry
-        </p>
+        <p>Partnerships That Make BAHTWIN Possible</p>
         <div className="landing__partners">
           <img src={tamkeen} alt="tamkeen logo" />
           <img src={aws} alt="aws logo" />

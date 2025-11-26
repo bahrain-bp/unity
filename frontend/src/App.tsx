@@ -4,6 +4,7 @@ import Landing from "./pages/Landing";
 import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
+import Environment from "./pages/Environment";
 
 function App() {
   const year = new Date().getFullYear();
@@ -37,6 +38,15 @@ function App() {
               <>
                 <Navbar />
                 <Authentication />
+              </>
+            }
+          />
+          <Route
+            path="/environment"
+            element={
+              <>
+                <Navbar />
+                <Environment />
               </>
             }
           />

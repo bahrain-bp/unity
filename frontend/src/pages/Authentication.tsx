@@ -1,16 +1,43 @@
-import { useState } from "react";
-import { MAIL, EYEC, EYEO, LOCK } from "../assets/icons";
+import { useState, useEffect, useRef } from "react";
+import { MAIL, EYEC, EYEO, LOCK, IMAGE, CAMERA } from "../assets/icons";
+import imagePlaceholder from "../assets/image.svg";
 
 function Authentication() {
   const [showPass1, setShowPass1] = useState<boolean>(false);
   const [showPass2, setShowPass2] = useState<boolean>(false);
-  const [authMode, setAuthMode] = useState<boolean>(false);
+  const [authMode, setAuthMode] = useState<boolean>(true);
+
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | ArrayBuffer | null>(
+    null
+  );
+
+  const filePickerRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!file) return;
+
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      setPreviewUrl(fileReader.result);
+    };
+    fileReader.readAsDataURL(file);
+  }, [file]);
+
+  const pickImageHandler = () => {
+    filePickerRef.current?.click();
+  };
+
+  const fileChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+    setFile(event.target.files[0]);
+  };
 
   return (
     <div className="auth-sec">
       <div className="auth">
         <div className="auth__logo">
-          <h2>Register</h2>
+          <h2>{authMode ? "Registration" : "Welcome back!"}</h2>
         </div>
         <div className="auth__mode">
           <span
@@ -31,6 +58,45 @@ function Authentication() {
           </p>
         </div>
         <form className="auth__form">
+          {authMode && (
+            <>
+              <label htmlFor="email" className="auth__form--label">
+                Profile Picture
+              </label>
+              <input
+                ref={filePickerRef}
+                style={{ display: "none" }}
+                type="file"
+                accept="image/*"
+                onChange={fileChangeHandler}
+                name="image"
+              />
+              <div className="auth__form--upload">
+                {previewUrl ? (
+                  <div
+                    className="auth__form--profilePicture"
+                    onClick={pickImageHandler}
+                  >
+                    <img
+                      src={
+                        previewUrl ? previewUrl.toString() : imagePlaceholder
+                      }
+                      alt="Preview"
+                    />
+                    <span>{CAMERA()}</span>
+                  </div>
+                ) : (
+                  <span
+                    onClick={pickImageHandler}
+                    className="auth__form--uploadPlaceholder"
+                  >
+                    {IMAGE()}
+                    <p>Upload your image here!</p>
+                  </span>
+                )}
+              </div>
+            </>
+          )}
           <label htmlFor="email" className="auth__form--label">
             Email Address
           </label>
@@ -43,7 +109,6 @@ function Authentication() {
               id="email"
             />
           </div>
-  
 
           <label htmlFor="password" className="auth__form--label">
             Password
@@ -80,7 +145,7 @@ function Authentication() {
             </>
           )}
         </form>
-        <button className="auth__button btn">Get Started</button>
+        <button className="auth__button btn">{authMode ? "Get Started" : "Login"}</button>
       </div>
     </div>
   );

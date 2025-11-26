@@ -305,3 +305,40 @@ export const MAIL = () => {
     </svg>
   );
 };
+export const IMAGE = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
+      <path d="M8.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 1 0 0-3z"></path>
+      <path d="m21 15-5-5L5 21"></path>
+    </svg>
+  );
+};
+export const CAMERA = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+      <path d="M12 9a4 4 0 1 0 0 8 4 4 0 1 0 0-8z"></path>
+    </svg>
+  );
+};
