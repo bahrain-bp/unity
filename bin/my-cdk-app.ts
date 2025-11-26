@@ -14,8 +14,7 @@ const dbStack = new DBStack(app, "Unity-DBStack", {
   // Any custom stack props you may have for DBStack
 });
 
-// Create the APIStack, passing in the DBStack as a dependency
-new APIStack(app, "Unity-APIStack", dbStack); // Pass the DBStack as the second argument
+
 
 // Optionally, you can create your other stacks here if needed
 // new MyCdkStack(app, "MyCdkAppStack");
@@ -47,5 +46,11 @@ const bedrockStack = new BedrockStack(app, 'Unity-BedrockStack', {
 
 indexStack.addDependency(openSearchStack);
 bedrockStack.addDependency(indexStack);
+
+// Create the APIStack, passing in the DBStack as a dependency
+new APIStack(app, "Unity-APIStack", {
+  dbStack: dbStack,
+  bedrockStack: bedrockStack,
+});
 
 new FrontendDeploymentStack(app, "Unity-FrontendDeploymentStack");

@@ -10,10 +10,19 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
+import { BedrockStack } from "./bedrock_stack";
+
+interface APIStackProps extends cdk.StackProps {
+  dbStack: DBStack;
+  bedrockStack: BedrockStack;
+}
 
 export class APIStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, dbStack: DBStack, props?: cdk.StackProps) {
-    super(scope, id, props);
+constructor(scope: Construct, id: string, props: APIStackProps) {
+  super(scope, id, props);
+
+  const dbStack = props.dbStack;
+  const bedrockStack = props.bedrockStack;
 
     // Ensure DBStack is created before APIStack
     this.addDependency(dbStack);
@@ -212,5 +221,28 @@ export class APIStack extends cdk.Stack {
     // Useful outputs
     new cdk.CfnOutput(this, "PiThingName", { value: thingName });
     new cdk.CfnOutput(this, "PiPolicyName", { value: piPolicy.policyName! });
+ 
+
+    // 8) Virtual Assistant API route (Picky)
+const virtualAssistantFn = bedrockStack.lambdaFunction;
+const assistantResource = api.root.addResource("assistant");
+
+// CORS — required for frontend
+assistantResource.addCorsPreflight({
+  allowOrigins: ["*"],   
+  allowMethods: ["POST"],
+});
+
+assistantResource.addMethod(
+  "POST",
+  new apigw.LambdaIntegration(virtualAssistantFn),
+  {
+    authorizationType: apigw.AuthorizationType.NONE,
+  }
+);
+
+
   }
 }
+
+
