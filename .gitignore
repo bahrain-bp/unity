@@ -5,6 +5,7 @@
 # Node modules & type declarations
 node_modules/
 *.d.ts
+**/package-lock.json
 
 # Jest configuration (kept tracked explicitly)
 !jest.config.js
