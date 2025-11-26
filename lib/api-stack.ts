@@ -234,13 +234,11 @@ assistantResource.addCorsPreflight({
   allowMethods: ["POST"],
 });
  
-assistantResource.addMethod(
-  "POST",
-  new apigw.LambdaIntegration(virtualAssistantFn),
+assistantResource.addMethod("POST", new apigw.LambdaIntegration(bedrockStack.lambdaFunction),
   {
-    authorizationType: apigw.AuthorizationType.NONE,
-  }
-);
+      // authorizer,
+      // authorizationType: apigw.AuthorizationType.COGNITO,
+    });
  
   }
 }

@@ -18,7 +18,7 @@ export class IndexStack extends cdk.Stack {
     // Vector index
     this.vectorIndex = new opensearchserverless.CfnIndex(this, 'VectorIndex', {
       collectionEndpoint: collection.attrCollectionEndpoint,
-      indexName: 'bedrock-knowledge-base-index',
+      indexName: 'unity-vector-index',
       mappings: {
         properties: {
           'bedrock-knowledge-base-vector': {
@@ -44,7 +44,7 @@ export class IndexStack extends cdk.Stack {
     // Output
     new cdk.CfnOutput(this, 'IndexName', {
       value: this.vectorIndex.indexName!,
-      exportName: 'VectorIndexName'
+      exportName: 'UnityIndexName'
     });
   }
 }

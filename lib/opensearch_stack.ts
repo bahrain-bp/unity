@@ -38,7 +38,7 @@ export class OpenSearchStack extends cdk.Stack {
 
     // OpenSearch Serverless policies
     const encryptionPolicy = new opensearchserverless.CfnSecurityPolicy(this, 'EncryptionPolicy', {
-      name: 'kb-encryption-policy',
+      name: 'unity-kb-encryption-policy',
       type: 'encryption',
       policy: JSON.stringify({
         Rules: [{ ResourceType: 'collection', Resource: [`collection/${collectionName}`] }],
@@ -47,7 +47,7 @@ export class OpenSearchStack extends cdk.Stack {
     });
 
     const networkPolicy = new opensearchserverless.CfnSecurityPolicy(this, 'NetworkPolicy', {
-      name: 'kb-network-policy',
+      name: 'unity-kb-network-policy',
       type: 'network',
       policy: JSON.stringify([{
         Rules: [
@@ -69,7 +69,7 @@ export class OpenSearchStack extends cdk.Stack {
 
     // Data access policy
     this.dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, 'DataAccessPolicy', {
-      name: 'kb-data-access-policy',
+      name: 'unity-kb-data-access-policy',
       type: 'data',
       policy: JSON.stringify([{
         Rules: [
@@ -102,7 +102,7 @@ export class OpenSearchStack extends cdk.Stack {
     // Outputs
     new cdk.CfnOutput(this, 'CollectionEndpoint', {
       value: this.collection.attrCollectionEndpoint,
-      exportName: 'CollectionEndpoint'
+      exportName: 'UnityCollectionEndpoint'
     });
   }
 }
