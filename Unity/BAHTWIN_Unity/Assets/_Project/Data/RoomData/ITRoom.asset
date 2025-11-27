@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 837964df7b4d54f4bb8c6cc9e0da3bfe, type: 3}
+  m_Name: ITRoom
+  m_EditorClassIdentifier: Assembly-CSharp::RoomSO
+  roomName: IT Room
+  roomID: 
+  roomNumber: 0
+  hasAV_VC: 0
+  capacity: 0
