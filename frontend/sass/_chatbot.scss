@@ -1,11 +1,15 @@
+@use "var" as *;
+
 .chat-box {
+  font-family: inherit;
   position: fixed;
-  bottom: 100px; 
+  bottom: 100px;
   right: 20px;
   width: 400px;
   height: 500px;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.25), 
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25),
     rgba(255, 255, 255, 0.1)
   );
   backdrop-filter: blur(10px);
@@ -16,16 +20,26 @@
 .chat-header {
   display: flex;
   padding: 15px;
-  border-bottom: 1px solid #e0e0e0; 
+  border-bottom: 1px solid $color-light-grey;
+  align-items: center;
+
+  & span {
+    margin-left: auto;
+    cursor: pointer;
+    & svg {
+      height: 2.5rem;
+      width: 2.5rem;
+    }
+  }
 }
 
 .avatar-circle {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #f0f0f0; 
+  background: $color-white;
   margin-right: 12px;
-  img{
+  img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -40,54 +54,67 @@
 
 .chat-with {
   font-size: 14px;
-  color: #666;
+  color: $color-dark-grey;
 }
 
 .peccy {
   font-size: 16px;
   font-weight: bold;
-  color: #333;
+  color: $color-font;
 }
-.chat-body{
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    height: 350px;
-    overflow-x: hidden;
+.chat-body {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 350px;
+  overflow-x: hidden;
 }
-.bot-msg{
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 248, 255, 0.8));
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 20px;
-    padding: 12px 18px;
-    width: fit-content;
-    max-width: 85%;
-    font-size: 15px;
-    margin-top: 10px;
-    margin-left: 7px;
-    margin-right: auto;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+.bot-msg {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(240, 248, 255, 0.8)
+  );
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 12px 18px;
+  width: fit-content;
+  max-width: 85%;
+  font-size: 15px;
+  margin-top: 10px;
+  margin-left: 7px;
+  margin-right: auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
-.quick-questions{
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+.quick-questions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
-.question{
-    background-color: #f0f0f0;
-    border-radius: 20px;
-    padding: 8px 15px;
-    width: 287px;
-    // width: fit-content;
-    max-width: 70%;
-    font-size: 15px;
-    margin-top: 10px;
-    margin-right: 7px;
-    border: none;
+.question {
+  background-color: $color-white;
+  border-radius: 20px;
+  padding: 8px 15px;
+  width: 287px;
+  max-width: 70%;
+  font-size: 15px;
+  margin-top: 10px;
+  margin-right: 7px;
+  border: none;
+  border: 1px solid $color-orange-2;
+  color: $color-orange-2;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .3s;
+
+  &:hover {
+    background-color: rgba($color-orange, 0.2);
+  }
 }
 .chat-input {
   position: absolute;
@@ -96,10 +123,11 @@
   right: 0;
   display: flex;
   padding: 15px;
-  background: white;
-  border-radius: 0 0 30px 30px; 
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.25), 
+  background: $color-white;
+  border-radius: 0 0 30px 30px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25),
     rgba(255, 255, 255, 0.1)
   );
   backdrop-filter: blur(10px);
@@ -109,42 +137,43 @@
 
 .chat-input input {
   flex: 1;
-  border: 1px solid #ddd;
+  border: 1px solid $color-light-grey;
   border-radius: 20px;
   padding: 10px 15px;
   margin-right: 10px;
   outline: none;
-  font-size: 14px;
+  font-size: 1.4rem;
+  font-family: inherit;
 }
 
 .chat-input button {
-  background-color: #f0f0f0;
-  color: black;
+  background: linear-gradient(135deg, $color-orange, $color-orange-2);
+  color: $color-white;
   border: none;
   border-radius: 20px;
   padding: 10px 12px;
   font-size: 14px;
   cursor: pointer;
+  font-family: inherit;
 }
-.chat-input button:disabled{
-    background-color: #ccc;
-    color: #999;
-    cursor: not-allowed;
+.chat-input button:disabled {
+  background: $color-grey;
+  color: $color-dark-grey;
+  cursor: not-allowed;
 }
 .user-msg {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 20px;
-    padding: 12px 18px;
-    width: fit-content;
-    max-width: 75%;
-    font-size: 15px;
-    margin-top: 10px;
-    margin-left: auto; 
-    margin-right: 7px;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, $color-orange, $color-orange-2);
+  color: $color-white;
+  border-radius: 20px;
+  padding: 12px 18px;
+  width: fit-content;
+  max-width: 75%;
+  font-size: 15px;
+  margin-top: 10px;
+  margin-left: auto;
+  margin-right: 7px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  box-shadow: 0 4px 15px rgba($color-orange, 0.3);
 }

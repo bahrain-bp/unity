@@ -46,7 +46,7 @@ const style = {
   transform: "translate(-50%, -50%)",
   width: "90vw",
   maxWidth: 800,
-  maxHeight: "90vh",
+  maxHeight: "80vh",
   borderRadius: "2rem",
   overflowY: "scroll",
   border: "1px solid #fff",
@@ -97,7 +97,7 @@ function Info() {
           virtual assistance
         </p>
         <div className="info__container--btns">
-          <Link to={"/"} className="btn">
+          <Link to={"/environment"} className="btn">
             {ED()}
             Enter 3D Evironment
             {/* <div className="hoverEffect">

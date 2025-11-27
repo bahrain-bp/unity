@@ -1,3 +1,5 @@
+@use "var" as *;
+
 .chat-button {
   position: fixed;
   bottom: 20px;
@@ -6,4 +8,12 @@
   height: 60px;
   border-radius: 50%;
   z-index: 10;
+  cursor: pointer;
+  @include boxshadow;
+
+  & svg {
+    fill: $color-orange;
+    width: 3rem;
+    height: 3rem;
+  }
 }

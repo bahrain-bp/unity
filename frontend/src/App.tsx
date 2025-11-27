@@ -4,7 +4,8 @@ import Landing from "./pages/Landing";
 import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
-import ChatButton from "./components/ChatButton";
+import Environment from "./pages/Environment";
+import Chatbot from "./components/ChatBot";
 
 function App() {
   const year = new Date().getFullYear();
@@ -41,12 +42,22 @@ function App() {
               </>
             }
           />
+          <Route
+            path="/environment"
+            element={
+              <>
+                <Navbar />
+                <Environment />
+              </>
+            }
+          />
         </Routes>
-        <ChatButton/>
       </Router>
-
+      <Chatbot />
       <footer className="footer">
-        <div className="footer__container">&copy;{year} Bahrain Amazon Web Services. All Rights Reserved</div>
+        <div className="footer__container">
+          &copy;{year} Bahrain Amazon Web Services. All Rights Reserved
+        </div>
       </footer>
     </>
   );

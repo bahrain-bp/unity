@@ -1,7 +1,8 @@
 @use "var" as *;
 
 .auth-sec {
-  min-height: 100vh;
+  min-height: calc(100vh - 0rem);
+  padding-bottom: 10rem;
   position: relative;
   display: flex;
   align-items: center;
@@ -18,6 +19,11 @@
   background-color: $color-white;
   border: 1px solid $color-grey;
   @include boxshadow;
+  margin-top: 10rem;
+  @media only screen and (max-width: $bp-5) {
+    padding: 2rem 2rem;
+    width: 90vw;
+  }
 
   & h2 {
     font-size: 2rem;
@@ -61,7 +67,7 @@
       width: 50%;
       height: 100%;
       transition: all 0.4s;
-      background-color: $color-blue;
+      background-color: $color-orange;
     }
   }
 
@@ -70,6 +76,10 @@
     flex-direction: column;
     width: 35rem;
     row-gap: 1.5rem;
+
+    @media only screen and (max-width: $bp-5) {
+      width: 100%;
+    }
 
     &--label {
       font-size: 1.4rem;
@@ -116,11 +126,81 @@
         vertical-align: sub;
       }
     }
+
+    &--profilePicture {
+      position: relative;
+      width: fit-content;
+      cursor: pointer;
+
+      &:hover img {
+        filter: brightness(0.8);
+      }
+
+      & img {
+        aspect-ratio: 1 / 1;
+        width: 10rem;
+        height: 10rem;
+        object-fit: cover;
+        border-radius: 10rem;
+        border: 1px solid $color-font;
+        transition: all 0.3s;
+        // @include boxshadow;
+      }
+
+      & span {
+        background-color: $color-bg;
+        border: 1px solid $color-font;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 5rem;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+
+        & svg {
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+      }
+    }
+
+    &--upload {
+      &Placeholder {
+        background-color: $color-bg;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border: 1px dashed $color-grey;
+        border-radius: 1rem;
+        padding: 1rem;
+        transition: all 0.3s;
+
+        & svg {
+          width: 5rem;
+          height: 5rem;
+          stroke: $color-dark-grey;
+        }
+
+        & p {
+          color: $color-dark-grey;
+          font-size: 1.2rem;
+        }
+
+        &:hover {
+          background-color: $color-grey;
+          cursor: pointer;
+        }
+      }
+    }
   }
 
   &__button {
     width: 100%;
-    background-color: $color-blue;
+    background-color: $color-orange;
     border-radius: 10rem;
     padding: 1rem 0;
     font-size: 1.5rem;
@@ -136,5 +216,5 @@
   }
 }
 .auth__form--input:focus-within {
-  outline: 2px solid rgba($color-blue, 0.8);
+  outline: 2px solid rgba($color-orange, 0.8);
 }

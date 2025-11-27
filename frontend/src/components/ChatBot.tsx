@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react"
 import ChatMessage from "./ChatMessage"
 import Client from "../services/api"
 import peccy from "../assets/peccy.png"
+import { CHAT } from "../assets/icons"
 
 interface Message {
     text: string
@@ -11,7 +12,7 @@ const Chatbot = () => {
     const [msgs, setMsgs] = useState<Message[]>(() => {
         const storedChat = localStorage.getItem("chatHistory")
 
-        return storedChat ? JSON.parse(storedChat) : [{text: "Hello! How can I help you?", sender: "bot"}]
+        return storedChat ? JSON.parse(storedChat) : [{ text: "Hello! How can I help you?", sender: "bot" }]
     })
 
     const [showQuestions, setShowQuestions] = useState(true)
@@ -19,7 +20,7 @@ const Chatbot = () => {
     const chatBottomRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if(chatBottomRef.current) {
+        if (chatBottomRef.current) {
             chatBottomRef.current.scrollTop = chatBottomRef.current.scrollHeight
         }
     }, [msgs])
@@ -29,13 +30,13 @@ const Chatbot = () => {
     }, [msgs])
 
     const handleQuestion = async (questionText: string) => {
-        const userMsg: Message = {text: questionText, sender: "user"}
+        const userMsg: Message = { text: questionText, sender: "user" }
         setMsgs(prev => [...prev, userMsg])
 
         setShowQuestions(false)
 
         const botRes = await getRes(questionText)
-        const botMsg: Message = {text: botRes, sender: "bot"}
+        const botMsg: Message = { text: botRes, sender: "bot" }
         setMsgs(prev => [...prev, botMsg])
     }
 
@@ -44,7 +45,7 @@ const Chatbot = () => {
     }
 
     const handleSend = () => {
-        if(inputText.trim()) {
+        if (inputText.trim()) {
             handleQuestion(inputText)
             setInputText("")
         }
@@ -55,42 +56,49 @@ const Chatbot = () => {
     // }
     const getRes = async (question: string) => {
         try {
-            const res = await Client.post("/assistant", {question})
+            const res = await Client.post("/assistant", { question })
             return res.data.answer
         } catch (error) {
             throw error
         }
     }
 
-    return(
-        <>
-        <div className="chat-box">
-            <div className="chat-header">
-                <div className="avatar-circle"><img src={peccy}></img></div>
-                <div className="header-text">
-                    <div className="chat-with">Chat with</div>
-                    <div className="peccy">Peccy</div>
-                </div>
-            </div>
-            <div className="chat-body" ref={chatBottomRef}>
-                {msgs.map((msg, index) => (
-                    <ChatMessage key={index} text={msg.text} sender = {msg.sender} />
-                ))}
+    const [IsOpen, setIsOpen] = useState(false)
 
-                {showQuestions && msgs.length === 1 && (
-                    <div className="quick-questions">
-                        <button className="question" onClick={() => handleQuestion("What can I do on this platform?")}>What can I do on this platform?</button>
-                        <button className="question" onClick={() => handleQuestion("How do I start exploring the building?")}>How do I start exploring the building?</button>
-                        <button className="question" onClick={() => handleQuestion("What is BAHTWIN?")}>What is BAHTWIN?</button>
+    return (
+        <>
+            <button className="chat-button" onClick={() => setIsOpen(!IsOpen)}>
+                {CHAT()}
+            </button>
+            {IsOpen &&
+                <div className="chat-box">
+                    <div className="chat-header">
+                        <div className="avatar-circle"><img src={peccy}></img></div>
+                        <div className="header-text">
+                            <div className="chat-with">Chat with</div>
+                            <div className="peccy">Peccy</div>
+                        </div>
                     </div>
-                )}
-                
-            </div>
-            <div className="chat-input">
-                <input type="text" placeholder="Type a question..." value={inputText} onChange={handleChange}/>
-                <button onClick={handleSend} disabled={!inputText.trim()}>Send</button>
-            </div>
-        </div>
+                    <div className="chat-body" ref={chatBottomRef}>
+                        {msgs.map((msg, index) => (
+                            <ChatMessage key={index} text={msg.text} sender={msg.sender} />
+                        ))}
+
+                        {showQuestions && msgs.length === 1 && (
+                            <div className="quick-questions">
+                                <button className="question" onClick={() => handleQuestion("What can I do on this platform?")}>What can I do on this platform?</button>
+                                <button className="question" onClick={() => handleQuestion("How do I start exploring the building?")}>How do I start exploring the building?</button>
+                                <button className="question" onClick={() => handleQuestion("What is BAHTWIN?")}>What is BAHTWIN?</button>
+                            </div>
+                        )}
+
+                    </div>
+                    <div className="chat-input">
+                        <input type="text" placeholder="Type a question..." value={inputText} onChange={handleChange} />
+                        <button onClick={handleSend} disabled={!inputText.trim()}>Send</button>
+                    </div>
+                </div>
+            }
         </>
     )
 }

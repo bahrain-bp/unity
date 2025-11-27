@@ -2,7 +2,7 @@
 
 .navbar {
   position: absolute;
-  top: 1rem;
+  top: 1.5rem;
   z-index: 4;
   left: 50%;
   transform: translateX(-50%);
@@ -22,13 +22,17 @@
   }
   @media only screen and (max-width: $bp-7) {
     grid-template-columns: repeat(3, 1fr);
+    width: 90vw;
   }
 
   & a {
     font-size: 1.8rem;
     font-weight: 500;
-    @media only screen and (max-width: $bp-6) {
+    @media only screen and (max-width: $bp-8) {
       font-size: 1.6rem;
+    }
+    @media only screen and (max-width: $bp-6) {
+      font-size: 1.5rem;
     }
   }
 }
