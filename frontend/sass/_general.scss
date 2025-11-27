@@ -1,4 +1,4 @@
-@use "var";
+@use "var" as *;
 
 section,
 .landing__hero {
@@ -8,19 +8,25 @@ section,
   & h2 {
     font-size: 3rem;
     text-align: center;
-    @media only screen and (max-width: var.$bp-7) {
+    @media only screen and (max-width: $bp-8) {
       font-size: 2.5rem;
+    }
+    @media only screen and (max-width: $bp-6) {
+      font-size: 2.2rem;
     }
   }
 
   & > p {
     font-size: 1.7rem;
     text-align: center;
-    color: var.$color-grey;
+    color: $color-dark-grey;
   }
 
-  @media only screen and (max-width: var.$bp-12) {
+  @media only screen and (max-width: $bp-12) {
     width: 95vw;
+  }
+  @media only screen and (max-width: $bp-7) {
+    width: 90vw;
   }
 }
 
@@ -39,21 +45,56 @@ section {
     margin: auto;
     margin-bottom: 2rem;
 
-    @media only screen and (max-width: var.$bp-7) {
+    @media only screen and (max-width: $bp-7) {
       font-size: 1.6rem;
       width: 80%;
     }
+    @media only screen and (max-width: $bp-5) {
+      font-size: 1.6rem;
+      width: 100%;
+    }
+  }
+}
+
+h1 {
+  font-family: $font-display;
+  font-size: 5rem;
+  text-align: center;
+  font-weight: 500;
+
+  @media only screen and (max-width: $bp-12) {
+    font-size: 4vw;
+  }
+  @media only screen and (max-width: $bp-9) {
+    font-size: 4.5vw;
+  }
+  @media only screen and (max-width: $bp-7) {
+    font-size: 3.5rem;
+  }
+  @media only screen and (max-width: $bp-6) {
+    font-size: 3rem;
+  }
+  @media only screen and (max-width: $bp-5) {
+    font-size: 3rem;
+  }
+}
+
+.btn {
+  color: $color-font;
+  font-size: 1.6rem;
+  font-family: inherit;
+  border: none;
+
+  &:hover {
+    cursor: pointer;
+    filter: brightness(0.8);
   }
 }
 
 footer {
   // height: 20rem;
-  background-image: linear-gradient(
-    to right bottom,
-    rgba(255, 255, 255, 0.2),
-    rgba(245, 245, 245, 0.2)
-  );
-  border-top: 1px solid #fff;
+  background-color: $color-white;
+  border-top: 1px solid $color-light-grey;
   z-index: 5;
   position: relative;
   width: 100%;
@@ -62,8 +103,11 @@ footer {
   text-align: center;
   padding: 1.5rem 1rem;
 
-  @media only screen and (max-width: var.$bp-6) {
+  @media only screen and (max-width: $bp-8) {
     font-size: 1.6rem;
+  }
+  @media only screen and (max-width: $bp-6) {
+    font-size: 1.4rem;
   }
 }
 
@@ -76,40 +120,30 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem 3rem;
-  font-size: 1.8rem;
   border: 0;
   position: relative;
   overflow: hidden;
-  border-radius: 10rem;
   transition: all 0.02s;
-  font-weight: bold;
   cursor: pointer;
-  color: rgb(37, 37, 37);
   z-index: 0;
   box-shadow: 0 0px 7px -5px rgba(0, 0, 0, 0.5);
-
-  @media only screen and (max-width: var.$bp-8) {
-    padding: 1.4rem 2.8rem;
-    font-size: 1.6rem;
-  }
 
   & svg {
     width: 3rem;
     height: 3rem;
-    fill: black;
+    fill: $color-font;
     margin-right: 2rem;
   }
 }
 
 .button:hover {
-  background: rgb(193, 228, 248);
-  color: rgb(33, 0, 85);
+  background: rgba($color-blue, 0.5);
+  // color: #d2c5e7;
 }
 
-.button:active {
-  transform: scale(0.97);
-}
+// .button:active {
+//   transform: scale(0.97);
+// }
 
 .hoverEffect {
   position: absolute;
@@ -125,19 +159,14 @@ a {
 
 .hoverEffect div {
   background: rgb(222, 0, 75);
-  background: linear-gradient(
-    90deg,
-    var.$color-green 0%,
-    var.$color-purple 49%,
-    var.$color-blue 100%
-  );
+  background: linear-gradient(90deg, #f16623 0%, #f16623 49%, #8323f1 100%);
   border-radius: 40rem;
   width: 27rem;
   height: 27rem;
   transition: 0.4s;
   filter: blur(20px);
   animation: effect infinite 3s linear;
-  opacity: 0.5;
+  opacity: 1;
 }
 
 .button:hover .hoverEffect div {

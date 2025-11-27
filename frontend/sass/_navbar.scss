@@ -1,8 +1,8 @@
-@use "var";
+@use "var" as *;
 
 .navbar {
   position: absolute;
-  top: 1rem;
+  top: 1.5rem;
   z-index: 4;
   left: 50%;
   transform: translateX(-50%);
@@ -13,23 +13,26 @@
   text-align: center;
   margin: auto;
   padding: 1.5rem 0;
-  background-color: var.$color-bg;
-  border: 1px solid var.$color-font;
+  background-color: $color-white;
   border-radius: 10rem;
-  box-shadow: 3px 3px 0px var.$color-font;
+  @include boxshadow();
 
-  @media only screen and (max-width: var.$bp-12) {
+  @media only screen and (max-width: $bp-12) {
     width: 95vw;
   }
-  @media only screen and (max-width: var.$bp-7) {
+  @media only screen and (max-width: $bp-7) {
     grid-template-columns: repeat(3, 1fr);
+    width: 90vw;
   }
 
   & a {
     font-size: 1.8rem;
     font-weight: 500;
-    @media only screen and (max-width: var.$bp-6) {
+    @media only screen and (max-width: $bp-8) {
       font-size: 1.6rem;
+    }
+    @media only screen and (max-width: $bp-6) {
+      font-size: 1.5rem;
     }
   }
 }

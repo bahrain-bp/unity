@@ -195,3 +195,166 @@ export const FILTER = () => {
     </svg>
   );
 };
+export const X = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M18 6 6 18"></path>
+      <path d="m6 6 12 12"></path>
+    </svg>
+  );
+};
+export const USER = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <path d="M12 3a4 4 0 1 0 0 8 4 4 0 1 0 0-8z"></path>
+    </svg>
+  );
+};
+export const EYEO = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+      <path d="M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6z"></path>
+    </svg>
+  );
+};
+export const EYEC = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+      <path d="m1 1 22 22"></path>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+    </svg>
+  );
+};
+export const LOCK = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+  );
+};
+export const MAIL = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <path d="m22 6-10 7L2 6"></path>
+    </svg>
+  );
+};
+export const IMAGE = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
+      <path d="M8.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 1 0 0-3z"></path>
+      <path d="m21 15-5-5L5 21"></path>
+    </svg>
+  );
+};
+export const CAMERA = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+      <path d="M12 9a4 4 0 1 0 0 8 4 4 0 1 0 0-8z"></path>
+    </svg>
+  );
+};
+export const CHAT = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      stroke="none"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+    </svg>
+  );
+};
