@@ -28,6 +28,7 @@
     "@aws-cdk/aws-lambda": "^1.19.0",
     "@aws-cdk/aws-s3": "^1.36.1",
     "@aws-cdk/aws-s3-deployment": "^1.78.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.940.0",
     "aws-cdk-lib": "^2.177.0",
     "constructs": "^10.4.2"
   }
