@@ -67,7 +67,7 @@
       width: 50%;
       height: 100%;
       transition: all 0.4s;
-      background-color: $color-blue;
+      background-color: $color-orange;
     }
   }
 
@@ -200,7 +200,7 @@
 
   &__button {
     width: 100%;
-    background-color: $color-blue;
+    background-color: $color-orange;
     border-radius: 10rem;
     padding: 1rem 0;
     font-size: 1.5rem;
@@ -216,5 +216,5 @@
   }
 }
 .auth__form--input:focus-within {
-  outline: 2px solid rgba($color-blue, 0.8);
+  outline: 2px solid rgba($color-orange, 0.8);
 }

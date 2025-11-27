@@ -6,7 +6,7 @@ export default function Environment() {
   useEffect(() => {
     // Load the Unity loader script dynamically
     const script = document.createElement("script");
-    script.src = "/Build/Bahtwin_Unity_version1.loader.js";
+    script.src = "/unity/Bahtwin_Unity_version1.loader.js";
     script.onload = () => {
       if ((window as any).createUnityInstance && canvasRef.current) {
         // Mobile adjustments
@@ -29,9 +29,9 @@ export default function Environment() {
         (window as any)
           .createUnityInstance(canvasRef.current, {
             arguments: [],
-            dataUrl: "/Build/Bahtwin_Unity_version1.data.unityweb",
-            frameworkUrl: "/Build/Bahtwin_Unity_version1.framework.js.unityweb",
-            codeUrl: "/Build/Bahtwin_Unity_version1.wasm.unityweb",
+            dataUrl: "/unity/Bahtwin_Unity_version1.data.unityweb",
+            frameworkUrl: "/unity/Bahtwin_Unity_version1.framework.js.unityweb",
+            codeUrl: "/unity/Bahtwin_Unity_version1.wasm.unityweb",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "DefaultCompany",
             productName: "BAHTWIN_Unity",

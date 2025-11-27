@@ -5,6 +5,7 @@ import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
+import Chatbot from "./components/ChatBot";
 
 function App() {
   const year = new Date().getFullYear();
@@ -52,9 +53,11 @@ function App() {
           />
         </Routes>
       </Router>
-
+      <Chatbot />
       <footer className="footer">
-        <div className="footer__container">&copy;{year} Bahrain Amazon Web Services. All Rights Reserved</div>
+        <div className="footer__container">
+          &copy;{year} Bahrain Amazon Web Services. All Rights Reserved
+        </div>
       </footer>
     </>
   );

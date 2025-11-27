@@ -109,7 +109,7 @@
       }
 
       &:nth-child(1) {
-        background-color: $color-blue;
+        background-color: $color-orange;
       }
       &:nth-child(2) {
         background-color: $color-white;
@@ -253,16 +253,16 @@
 
   &__blue,
   &__shop {
-    color: $color-blue;
+    color: $color-orange;
     & .infocard__icon {
-      background-color: rgba($color-blue, 0.2);
+      background-color: rgba($color-orange, 0.2);
     }
   }
   &__green,
   &__restaurant {
-    color: $color-green;
+    color: $color-blue;
     & .infocard__icon {
-      background-color: rgba($color-green, 0.2);
+      background-color: rgba($color-blue, 0.2);
     }
   }
   &__purple,
@@ -336,11 +336,11 @@
 }
 
 .css-vuhw6e-MuiButtonBase-root-MuiSwitchBase-root-MuiCheckbox-root.Mui-checked {
-  color: $color-blue !important;
+  color: $color-orange !important;
 }
 
 .css-1rju2q6-MuiButtonBase-root-MuiMenuItem-root.Mui-selected {
-  background-color: rgba($color-blue, 0.2) !important;
+  background-color: rgba($color-orange, 0.2) !important;
 }
 
 .MuiSelect-select {
@@ -364,7 +364,7 @@
 }
 
 .MuiOutlinedInput-notchedOutline[aria-expanded="true"] {
-  border-color: $color-blue !important;
+  border-color: $color-orange !important;
 }
 .MuiOutlinedInput-notchedOutline[aria-expanded="false"] {
   color: $color-light-grey !important;
