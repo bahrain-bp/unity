@@ -27,6 +27,9 @@ cdk.out/
 [Ll]ogs/
 UserSettings/
 
+# Unity package / editor settings – ignore these to avoid OS conflicts
+Unity/BAHTWIN_Unity/ProjectSettings/Packages/**
+
 # Memory and recording captures (can be large / sensitive)
 [Mm]emoryCaptures/
 [Rr]ecordings/
