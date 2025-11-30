@@ -49,19 +49,70 @@ export class APIStack extends cdk.Stack {
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
     });
 
-    const userPoolClient = new cognito.UserPoolClient(this, "UnityUserPoolClient", {
+    // Post-confirm trigger to auto-add 'visitor'
+    const postConfirmFn = new NodejsFunction(this, "PostConfirmVisitorHandler", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/post-confirm-visitor.ts"),
+      handler: "handler",
+      bundling: {
+        target: "node18",
+        minify: true,
+        sourceMap: false,
+      },
+    });
+
+    postConfirmFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["cognito-idp:AdminAddUserToGroup"],
+        resources: ["*"], // break circular dependency
+      })
+    );
+
+    userPool.addTrigger(
+      cognito.UserPoolOperation.POST_CONFIRMATION,
+      postConfirmFn
+    );
+
+    // app client with OAuth config
+    const userPoolClient = new cognito.UserPoolClient(this, "UnityUserPoolClientV2", {
       userPool,
       generateSecret: false,
       authFlows: { userSrp: true, userPassword: true },
       oAuth: {
         flows: {
           authorizationCodeGrant: true,
-          implicitCodeGrant: true,   // 👈 add this
+          implicitCodeGrant: true,   // so response_type=token works
         },
         callbackUrls: ["http://localhost:3000/callback"],
         logoutUrls: ["http://localhost:3000/"],
         scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL],
       },
+      supportedIdentityProviders: [
+        cognito.UserPoolClientIdentityProvider.COGNITO,
+      ],
+    });
+
+    // FORCE the low-level OAuth flags on the L1 resource
+    const cfnClient = userPoolClient.node.defaultChild as cognito.CfnUserPoolClient;
+    cfnClient.allowedOAuthFlowsUserPoolClient = true;
+    cfnClient.allowedOAuthFlows = ["code", "implicit"];   // must include "implicit" for response_type=token
+    cfnClient.allowedOAuthScopes = ["openid", "email"];
+    cfnClient.supportedIdentityProviders = ["COGNITO"];   // same as above, but at L1
+
+    // your groups (they’re fine)
+    new cognito.CfnUserPoolGroup(this, "AdminGroup", {
+      userPoolId: userPool.userPoolId,
+      groupName: "admin",
+    });
+
+    new cognito.CfnUserPoolGroup(this, "NewHireGroup", {
+      userPoolId: userPool.userPoolId,
+      groupName: "newhire",
+    });
+
+    new cognito.CfnUserPoolGroup(this, "VisitorGroup", {
+      userPoolId: userPool.userPoolId,
+      groupName: "visitor",
     });
 
     const userPoolDomain = new cognito.UserPoolDomain(this, "UnityUserPoolDomain", {
@@ -113,6 +164,71 @@ export class APIStack extends cdk.Stack {
     new cdk.CfnOutput(this, "UnityApiUrl", {
       value: api.url,
     });
+
+
+    // ────────────────────────────────
+    // Test Lambda: whoami (TypeScript)
+    // ────────────────────────────────
+    const whoamiFn = new NodejsFunction(this, "WhoAmIHandler", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/whoami.ts"),
+      handler: "handler",
+      bundling: {
+        target: "node18",
+        minify: true,
+        sourceMap: false,
+      },
+    });
+
+    // API: GET /whoami (no auth required)
+    const whoamiResource = api.root.addResource("whoami");
+    whoamiResource.addMethod(
+      "GET",
+      new apigw.LambdaIntegration(whoamiFn),
+      {
+        authorizationType: apigw.AuthorizationType.NONE,
+      }
+    );
+
+    // ────────────────────────────────
+    // Lambda: set-role (assign newhire/visitor)
+    // ────────────────────────────────
+    const setRoleFn = new NodejsFunction(this, "SetRoleHandler", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/set-role.ts"),
+      handler: "handler",
+      bundling: {
+        target: "node18",
+        minify: true,
+        sourceMap: false,
+      },
+      environment: {
+        USER_POOL_ID: userPool.userPoolId,
+      },
+    });
+
+    // Allow Lambda to manage groups in this user pool
+    setRoleFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "cognito-idp:AdminAddUserToGroup",
+          "cognito-idp:AdminRemoveUserFromGroup",
+          "cognito-idp:AdminListGroupsForUser",
+        ],
+        resources: ["*"], // break circular dependency
+      })
+    );
+
+    // API: POST /role (protected by Cognito authorizer)
+    const roleResource = api.root.addResource("role");
+    roleResource.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(setRoleFn),
+      {
+        authorizer,
+        authorizationType: apigw.AuthorizationType.COGNITO,
+      }
+    );
 
     // ────────────────────────────────
     // 4) IoT Core: Thing + Policy
@@ -210,7 +326,7 @@ export class APIStack extends cdk.Stack {
 
     const telemetryResource = api.root.addResource("telemetry");
     telemetryResource.addMethod("GET", new apigw.LambdaIntegration(telemetryGetFn), {
-      authorizationType: apigw.AuthorizationType.NONE, // switch to COGNITO later if desired
+      authorizationType: apigw.AuthorizationType.NONE, // switch to COGNITO later 
     });
 
     // Useful outputs
