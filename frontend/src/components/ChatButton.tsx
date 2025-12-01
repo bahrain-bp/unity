@@ -2,7 +2,7 @@ import { CHAT } from "../assets/icons"
 import { useState } from "react"
 import Chatbot from "./ChatBot"
 const ChatButton = () => {
-    const [IsOpen, setIsOpen] = useState(false)
+    const [IsOpen, setIsOpen] = useState<boolean>(false)
 
     return(
         <>
