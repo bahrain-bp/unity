@@ -1,0 +1,38 @@
+@use "var" as *;
+
+.navbar {
+  position: absolute;
+  top: 1.5rem;
+  z-index: 4;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  width: 120rem;
+  grid-template-columns: repeat(3, 20rem);
+  justify-content: space-around;
+  text-align: center;
+  margin: auto;
+  padding: 1.5rem 0;
+  background-color: $color-white;
+  border-radius: 10rem;
+  @include boxshadow();
+
+  @media only screen and (max-width: $bp-12) {
+    width: 95vw;
+  }
+  @media only screen and (max-width: $bp-7) {
+    grid-template-columns: repeat(3, 1fr);
+    width: 90vw;
+  }
+
+  & a {
+    font-size: 1.8rem;
+    font-weight: 500;
+    @media only screen and (max-width: $bp-8) {
+      font-size: 1.6rem;
+    }
+    @media only screen and (max-width: $bp-6) {
+      font-size: 1.5rem;
+    }
+  }
+}

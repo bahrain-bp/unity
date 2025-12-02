@@ -1,0 +1,39 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lora:ital,wght@0,400..700;1,400..700&display=swap");
+
+$color-orange: #ff8e3c;
+$color-orange-2: #ff7614;
+$color-blue: #42B4FF;
+$color-purple: #8361E0;
+$color-white: #F0F0F0;
+
+$color-font: #161D26;
+$color-bg: #ebebeb;
+$color-grey: #cfcfcf;
+$color-dark-grey: #6B6B6B;
+$color-light-grey: #D8D8D8;
+
+$bp-13: 1300px;
+$bp-12: 1250px;
+$bp-11: 1100px;
+$bp-10: 1000px;
+$bp-9: 900px;
+$bp-8: 800px;
+$bp-7: 700px;
+$bp-6: 600px;
+$bp-5: 500px;
+$bp-4: 400px;
+$bp-3-5: 350px;
+$bp-3: 300px;
+
+$font: "Inter", sans-serif;
+$font-display: "Lora", serif;
+
+@mixin boxshadow {
+  border: 1px solid $color-font !important;
+  box-shadow: 3px 3px 0px $color-font !important;
+  transition: all .3s;
+}
+@mixin glowBox($color, $spread) {
+  background-color: rgba($color, 0.2);
+  box-shadow: 0px 0px $spread rgba($color, 0.3);
+}

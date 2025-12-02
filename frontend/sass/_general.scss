@@ -1,0 +1,185 @@
+@use "var" as *;
+
+section,
+.landing__hero {
+  width: 120rem;
+  margin: auto;
+
+  & h2 {
+    font-size: 3rem;
+    text-align: center;
+    @media only screen and (max-width: $bp-8) {
+      font-size: 2.5rem;
+    }
+    @media only screen and (max-width: $bp-6) {
+      font-size: 2.2rem;
+    }
+  }
+
+  & > p {
+    font-size: 1.7rem;
+    text-align: center;
+    color: $color-dark-grey;
+  }
+
+  @media only screen and (max-width: $bp-12) {
+    width: 95vw;
+  }
+  @media only screen and (max-width: $bp-7) {
+    width: 90vw;
+  }
+}
+
+section {
+  margin: 20rem auto;
+  display: grid;
+  row-gap: 2rem;
+
+  &:nth-child(2) {
+    margin-top: 0;
+  }
+
+  & > p {
+    width: 60%;
+    text-align: center;
+    margin: auto;
+    margin-bottom: 2rem;
+
+    @media only screen and (max-width: $bp-7) {
+      font-size: 1.6rem;
+      width: 80%;
+    }
+    @media only screen and (max-width: $bp-5) {
+      font-size: 1.6rem;
+      width: 100%;
+    }
+  }
+}
+
+h1 {
+  font-family: $font-display;
+  font-size: 5rem;
+  text-align: center;
+  font-weight: 500;
+
+  @media only screen and (max-width: $bp-12) {
+    font-size: 4vw;
+  }
+  @media only screen and (max-width: $bp-9) {
+    font-size: 4.5vw;
+  }
+  @media only screen and (max-width: $bp-7) {
+    font-size: 3.5rem;
+  }
+  @media only screen and (max-width: $bp-6) {
+    font-size: 3rem;
+  }
+  @media only screen and (max-width: $bp-5) {
+    font-size: 3rem;
+  }
+}
+
+.btn {
+  color: $color-font;
+  font-size: 1.6rem;
+  font-family: inherit;
+  border: none;
+
+  &:hover {
+    cursor: pointer;
+    filter: brightness(0.8);
+  }
+}
+
+footer {
+  // height: 20rem;
+  background-color: $color-white;
+  border-top: 1px solid $color-light-grey;
+  z-index: 5;
+  position: relative;
+  width: 100%;
+
+  font-size: 1.8rem;
+  text-align: center;
+  padding: 1.5rem 1rem;
+
+  @media only screen and (max-width: $bp-8) {
+    font-size: 1.6rem;
+  }
+  @media only screen and (max-width: $bp-6) {
+    font-size: 1.4rem;
+  }
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.02s;
+  cursor: pointer;
+  z-index: 0;
+  box-shadow: 0 0px 7px -5px rgba(0, 0, 0, 0.5);
+
+  & svg {
+    width: 3rem;
+    height: 3rem;
+    fill: $color-font;
+    margin-right: 2rem;
+  }
+}
+
+.button:hover {
+  background: rgba($color-blue, 0.5);
+  // color: #d2c5e7;
+}
+
+// .button:active {
+//   transform: scale(0.97);
+// }
+
+.hoverEffect {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: -1;
+}
+
+.hoverEffect div {
+  background: rgb(222, 0, 75);
+  background: linear-gradient(90deg, #f16623 0%, #f16623 49%, #8323f1 100%);
+  border-radius: 40rem;
+  width: 27rem;
+  height: 27rem;
+  transition: 0.4s;
+  filter: blur(20px);
+  animation: effect infinite 3s linear;
+  opacity: 1;
+}
+
+.button:hover .hoverEffect div {
+  width: 8rem;
+  height: 8rem;
+}
+
+@keyframes effect {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

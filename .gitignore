@@ -5,6 +5,7 @@
 # Node modules & type declarations
 node_modules/
 *.d.ts
+**/package-lock.json
 
 # Jest configuration (kept tracked explicitly)
 !jest.config.js
@@ -25,6 +26,9 @@ cdk.out/
 [Bb]uilds/
 [Ll]ogs/
 UserSettings/
+
+# Unity package / editor settings – ignore these to avoid OS conflicts
+Unity/BAHTWIN_Unity/ProjectSettings/Packages/**
 
 # Memory and recording captures (can be large / sensitive)
 [Mm]emoryCaptures/
