@@ -10,25 +10,35 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
-
+import { BedrockStack } from "./bedrock_stack";
+ 
+ 
+interface APIStackProps extends cdk.StackProps {
+  dbStack: DBStack;
+  bedrockStack: BedrockStack;
+}
+ 
 export class APIStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, dbStack: DBStack, props?: cdk.StackProps) {
-    super(scope, id, props);
-
+constructor(scope: Construct, id: string, props: APIStackProps) {
+  super(scope, id, props);
+ 
+ const dbStack = props.dbStack;
+  const bedrockStack = props.bedrockStack;
+ 
     // Ensure DBStack is created before APIStack
     this.addDependency(dbStack);
-
+ 
     // DynamoDB Outputs (already present)
     new cdk.CfnOutput(this, "BahtwinTableName", {
       value: dbStack.table.tableName,
       description: "Name of the DynamoDB table used by BAHTWIN",
     });
-
+ 
     new cdk.CfnOutput(this, "BahtwinTableArn", {
       value: dbStack.table.tableArn,
       description: "ARN of the DynamoDB table used by BAHTWIN",
     });
-
+ 
     // ────────────────────────────────
     // 1. Cognito User Pool
     // ────────────────────────────────
@@ -75,6 +85,7 @@ export class APIStack extends cdk.Stack {
 
     // app client with OAuth config
     const userPoolClient = new cognito.UserPoolClient(this, "UnityUserPoolClientV2", {
+
       userPool,
       generateSecret: false,
       authFlows: { userSrp: true, userPassword: true },
@@ -114,12 +125,12 @@ export class APIStack extends cdk.Stack {
       userPoolId: userPool.userPoolId,
       groupName: "visitor",
     });
-
+ 
     const userPoolDomain = new cognito.UserPoolDomain(this, "UnityUserPoolDomain", {
       userPool,
       cognitoDomain: { domainPrefix: `unity-${this.account}-dev` },
     });
-
+ 
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
     });
@@ -129,7 +140,7 @@ export class APIStack extends cdk.Stack {
     new cdk.CfnOutput(this, "UserPoolDomainUrl", {
       value: userPoolDomain.baseUrl(),
     });
-
+ 
     // ────────────────────────────────
     // 2. Lambda Function (hello)
     // ────────────────────────────────
@@ -142,7 +153,7 @@ export class APIStack extends cdk.Stack {
         USER_POOL_ID: userPool.userPoolId,
       },
     });
-
+ 
     // ────────────────────────────────
     // 3. API Gateway + Cognito Authorizer
     // ────────────────────────────────
@@ -150,17 +161,17 @@ export class APIStack extends cdk.Stack {
       restApiName: "Unity Service",
       deployOptions: { stageName: "dev" },
     });
-
+ 
     const authorizer = new apigw.CognitoUserPoolsAuthorizer(this, "UnityCognitoAuthorizer", {
       cognitoUserPools: [userPool],
     });
-
+ 
     const helloResource = api.root.addResource("hello");
     helloResource.addMethod("GET", new apigw.LambdaIntegration(helloFn), {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
-
+ 
     new cdk.CfnOutput(this, "UnityApiUrl", {
       value: api.url,
     });
@@ -230,13 +241,14 @@ export class APIStack extends cdk.Stack {
       }
     );
 
+
     // ────────────────────────────────
     // 4) IoT Core: Thing + Policy
     // ────────────────────────────────
     const thingName = "pi3-01";
-
+ 
     const piThing = new iot.CfnThing(this, "PiThing", { thingName });
-
+ 
     const piPolicy = new iot.CfnPolicy(this, "PiPolicy", {
       policyName: "Pi3Policy",
       policyDocument: {
@@ -265,7 +277,7 @@ export class APIStack extends cdk.Stack {
         ],
       },
     });
-
+ 
     // ────────────────────────────────
     // 5) DynamoDB table for telemetry
     //    PK=device (string), SK=ts (number, epoch seconds)
@@ -277,9 +289,9 @@ export class APIStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY, // change to RETAIN in prod
     });
-
+ 
     new cdk.CfnOutput(this, "TelemetryTableName", { value: telemTable.tableName });
-
+ 
     // ────────────────────────────────
     // 6) IoT Rule → DynamoDB (v2 action)
     // ────────────────────────────────
@@ -287,7 +299,7 @@ export class APIStack extends cdk.Stack {
       assumedBy: new iam.ServicePrincipal("iot.amazonaws.com"),
     });
     telemTable.grantWriteData(iotRuleRole);
-
+ 
     new iot.CfnTopicRule(this, "SavePiTelemetryRule", {
       topicRulePayload: {
         sql: "SELECT device, ts, temp_c, humidity FROM 'pi3-01/telemetry'",
@@ -303,7 +315,7 @@ export class APIStack extends cdk.Stack {
         awsIotSqlVersion: "2016-03-23",
       },
     });
-
+ 
     // ────────────────────────────────
     // 7) Lambda (TypeScript) + API to read it back
     //    GET /telemetry?device=pi3-01&limit=25
@@ -321,14 +333,14 @@ export class APIStack extends cdk.Stack {
         TELEMETRY_TABLE: telemTable.tableName,
       },
     });
-
+ 
     telemTable.grantReadData(telemetryGetFn);
-
+ 
     const telemetryResource = api.root.addResource("telemetry");
     telemetryResource.addMethod("GET", new apigw.LambdaIntegration(telemetryGetFn), {
       authorizationType: apigw.AuthorizationType.NONE, // switch to COGNITO later 
     });
-
+ 
     // Useful outputs
     new cdk.CfnOutput(this, "PiThingName", { value: thingName });
     new cdk.CfnOutput(this, "PiPolicyName", { value: piPolicy.policyName! });
@@ -391,6 +403,23 @@ export class APIStack extends cdk.Stack {
         authorizationType: apigw.AuthorizationType.COGNITO,
       }
     );
+
+       // 8) Virtual Assistant API route (Picky)
+      const virtualAssistantFn = bedrockStack.lambdaFunction;
+      const assistantResource = api.root.addResource("assistant");
+
+      // CORS — required for frontend
+      assistantResource.addCorsPreflight({
+        allowOrigins: ["*"],  
+        allowMethods: ["POST"],
+      });
+
+      assistantResource.addMethod("POST", new apigw.LambdaIntegration(bedrockStack.lambdaFunction),
+        {
+            // authorizer,
+            // authorizationType: apigw.AuthorizationType.COGNITO,
+          });
+ 
 
   }
 }

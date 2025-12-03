@@ -23,7 +23,7 @@ export class BedrockStack extends cdk.Stack {
 
     // Knowledge Base
     this.knowledgeBase = new bedrock.CfnKnowledgeBase(this, 'KnowledgeBase', {
-      name: 'my-knowledge-base',
+      name: 'unity-knowledge-base',
       roleArn: bedrockRole.roleArn,
       knowledgeBaseConfiguration: {
         type: 'VECTOR',
@@ -40,7 +40,7 @@ export class BedrockStack extends cdk.Stack {
             textField: 'AMAZON_BEDROCK_TEXT_CHUNK',
             vectorField: 'bedrock-knowledge-base-vector'
           },
-          vectorIndexName: 'bedrock-knowledge-base-index'
+          vectorIndexName: 'unity-vector-index'
         }
       }
     });
@@ -49,7 +49,7 @@ export class BedrockStack extends cdk.Stack {
 
     // Data Source
     const dataSource = new bedrock.CfnDataSource(this, 'DataSource', {
-      name: 's3-data-source',
+      name: 'unity-s3-data-source',
       knowledgeBaseId: this.knowledgeBase.attrKnowledgeBaseId,
       dataSourceConfiguration: {
         type: 'S3',
@@ -83,12 +83,12 @@ export class BedrockStack extends cdk.Stack {
     // Outputs
     new cdk.CfnOutput(this, 'KnowledgeBaseId', {
       value: this.knowledgeBase.attrKnowledgeBaseId,
-      exportName: 'KnowledgeBaseId'
+      exportName: 'UnityKnowledgeBaseId'
     });
 
     new cdk.CfnOutput(this, 'DataBucketName', {
       value: dataBucket.bucketName,
-      exportName: 'DataBucketName'
+      exportName: 'UnityDataBucketName'
     });
   }
 }
