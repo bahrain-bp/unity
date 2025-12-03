@@ -159,13 +159,42 @@ public class AudioManager : MonoBehaviour
         source.Play();
         return source;
     }
-    
+
     public void StopLoop(AudioSource source)
     {
         if (source == null) return;
         source.Stop();
         ReturnAudioSource(source);
     }
+
+    public IEnumerator FadeIn(AudioSource source, float duration, float targetVolume)
+    {
+        float t = 0f;
+        float start = 0f;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            source.volume = Mathf.Lerp(start, targetVolume, t / duration);
+            yield return null;
+        }
+    }
+
+    public IEnumerator FadeOutAndStop(AudioSource source, float duration)
+    {
+        float t = 0f;
+        float start = source.volume;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            source.volume = Mathf.Lerp(start, 0f, t / duration);
+            yield return null;
+        }
+
+        StopLoop(source); // return to pool
+    }
+
 
 
     

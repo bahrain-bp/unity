@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Walk
   m_EditorClassIdentifier: Assembly-CSharp::AudioData
   clip: {fileID: 8300000, guid: 46664a201c25e7f42a6a91b16d71bb9f, type: 3}
-  volume: 1
+  volume: 0.2
   pitch: 1
   spatialBlend: 0
   loop: 0

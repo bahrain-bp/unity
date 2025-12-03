@@ -19,6 +19,9 @@ public class FPController : MonoBehaviour
     [Header("Audio")]
     public AudioData walkingAudio;
     public AudioSource walkingSource;
+    private float walkDelayTimer = 0f;
+    public float walkStartDelay = 0.4f;
+
 
     private CharacterController controller;
     private Vector2 moveInput;
@@ -66,23 +69,35 @@ public class FPController : MonoBehaviour
         // Walking audio control
         if (isWalking && controller.isGrounded)
         {
-            if (walkingSource == null)
+            walkDelayTimer += Time.deltaTime;
+
+            if (walkDelayTimer >= walkStartDelay)
             {
-                walkingSource = AudioManager.Instance.PlayLoopWithRandomStart(walkingAudio, transform);
-            }
-            else
-            {
-                walkingSource.pitch = Mathf.Lerp(0.9f, 1.1f, moveInput.magnitude);
+                if (walkingSource == null)
+                {
+                    walkingSource = AudioManager.Instance.PlayLoopWithRandomStart(walkingAudio, transform);
+
+                    // fade in over 0.4 seconds
+                    StartCoroutine(AudioManager.Instance.FadeIn(walkingSource, 0.4f, walkingAudio.volume));
+                }
+                else
+                {
+                    walkingSource.pitch = Mathf.Lerp(0.9f, 1.1f, moveInput.magnitude);
+                }
             }
         }
         else
         {
+            walkDelayTimer = 0f;
+
             if (walkingSource != null)
             {
-                AudioManager.Instance.StopLoop(walkingSource);
+                // fade out over 0.3 seconds
+                StartCoroutine(AudioManager.Instance.FadeOutAndStop(walkingSource, 0.3f));
                 walkingSource = null;
             }
         }
+
 
         // Gravity
         if (controller.isGrounded)
