@@ -12756,9 +12756,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6833608653943777448, guid: 270329ed464a16b44a6b749afe2a21be, type: 3}
       propertyPath: m_text
-      value: 'Office
+      value: 'Flex Room
 
-        (02.140)'
+        (02.138)'
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -28229,6 +28229,104 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &921332453
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 921332455}
+  - component: {fileID: 921332454}
+  m_Layer: 0
+  m_Name: NavDebug
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &921332454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 921332453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23da03da2fc60491a8b47aedab894984, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  startPoint: {fileID: 262655455}
+  roomId: 613
+  refreshInterval: 0.25
+  drawOnlyDuringPlayMode: 1
+  showWarnings: 0
+--- !u!4 &921332455
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 921332453}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -49.25714, y: 3.48566, z: 95.2753}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &923342529
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 923342531}
+  - component: {fileID: 923342530}
+  m_Layer: 0
+  m_Name: NavigationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &923342530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 923342529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 935308108e73d429cb52333b9d57a01e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  runDebugOnStart: 0
+  debugStartPoint: {fileID: 262655455}
+  debugRoomKey: 613
+  logKeysInConsole: 0
+  logWarnings: 0
+--- !u!4 &923342531
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 923342529}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -49.25714, y: 3.48566, z: 95.2753}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &933070951
 Mesh:
   m_ObjectHideFlags: 0
@@ -51408,9 +51506,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6833608653943777448, guid: 270329ed464a16b44a6b749afe2a21be, type: 3}
       propertyPath: m_text
-      value: 'Office
-
-        (02.140)'
+      value: "Conference Room \n(02.506)"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -92697,3 +92793,5 @@ SceneRoots:
   - {fileID: 677394978}
   - {fileID: 292992696}
   - {fileID: 457786464}
+  - {fileID: 923342531}
+  - {fileID: 921332455}
