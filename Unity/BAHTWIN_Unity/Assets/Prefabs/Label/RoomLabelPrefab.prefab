@@ -107,9 +107,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Room Name
+  m_text: 'Conference Room
 
-    02.500'
+    (02.504)'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -207,5 +207,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6de2b718a5bae3245b23d098555357fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomLabel
-  roomData: {fileID: 0}
+  roomData: {fileID: 11400000, guid: ccb1297dd8df4c24284496925b40836a, type: 2}
   textMesh: {fileID: 6833608653943777448}
