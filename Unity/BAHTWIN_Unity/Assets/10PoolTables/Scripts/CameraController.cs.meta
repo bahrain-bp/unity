@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 0ecf1dfba461d32499023e4824ddd2ab
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68196
+  packageName: Pool Billiard Table Multi-Pack
+  packageVersion: 1.2
+  assetPath: Assets/10PoolTables/Scripts/CameraController.cs
+  uploadId: 460728
