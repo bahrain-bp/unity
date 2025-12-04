@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2a01ef0babe7c4e4d8a0c1fe05a2a64e
+timeCreated: 1463271030
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 63401
+  packageName: Super Coffee Pack!
+  packageVersion: 1.0
+  assetPath: Assets/Scene/Misc/Main Camera 1.controller
+  uploadId: 221738
