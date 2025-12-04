@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c4df9d8d43ed9d84da6ab902350862b5
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 235285
+  packageName: Business Office
+  packageVersion: 1.1
+  assetPath: Assets/AK Studio Art/Business Office/Settings/HDRP/HDRenderPipelineAsset.asset
+  uploadId: 752278
