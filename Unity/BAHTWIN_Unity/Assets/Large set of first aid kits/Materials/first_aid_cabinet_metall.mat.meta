@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f5d4d21bf3236544b89fdafa933967ac
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 261375
+  packageName: Large set of first aid kits
+  packageVersion: 1.0
+  assetPath: Assets/Large set of first aid kits/Materials/first_aid_cabinet_metall.mat
+  uploadId: 748883
