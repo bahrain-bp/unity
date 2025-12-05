@@ -5,7 +5,7 @@ import { FrontendDeploymentStack } from "../lib/frontend-deployment-stack";
 import { OpenSearchStack } from '../lib/opensearch_stack';
 import { BedrockStack } from '../lib/bedrock_stack';
 import { IndexStack } from '../lib/index_stack';
-import { FacialRecognitionStack, FacialRecognitionStack } from "../lib/FacialRecognitionStack";
+import { FacialRecognitionStack } from "../lib/FacialRecognitionStack";
  
 const app = new cdk.App();
  
