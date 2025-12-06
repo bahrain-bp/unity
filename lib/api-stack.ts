@@ -5,7 +5,6 @@ import { Construct } from "constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as iot from "aws-cdk-lib/aws-iot";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -49,7 +48,6 @@ export class APIStack extends cdk.Stack {
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
     });
 
-    // Post-confirm trigger to auto-add 'visitor'
     const postConfirmFn = new NodejsFunction(this, "PostConfirmVisitorHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/post-confirm-visitor.ts"),
@@ -64,7 +62,7 @@ export class APIStack extends cdk.Stack {
     postConfirmFn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["cognito-idp:AdminAddUserToGroup"],
-        resources: ["*"], // break circular dependency
+        resources: ["*"],
       })
     );
 
@@ -73,7 +71,6 @@ export class APIStack extends cdk.Stack {
       postConfirmFn
     );
 
-    // app client with OAuth config
     const userPoolClient = new cognito.UserPoolClient(this, "UnityUserPoolClientV2", {
       userPool,
       generateSecret: false,
@@ -81,7 +78,7 @@ export class APIStack extends cdk.Stack {
       oAuth: {
         flows: {
           authorizationCodeGrant: true,
-          implicitCodeGrant: true,   // so response_type=token works
+          implicitCodeGrant: true,
         },
         callbackUrls: ["http://localhost:3000/callback"],
         logoutUrls: ["http://localhost:3000/"],
@@ -92,14 +89,12 @@ export class APIStack extends cdk.Stack {
       ],
     });
 
-    // FORCE the low-level OAuth flags on the L1 resource
     const cfnClient = userPoolClient.node.defaultChild as cognito.CfnUserPoolClient;
     cfnClient.allowedOAuthFlowsUserPoolClient = true;
-    cfnClient.allowedOAuthFlows = ["code", "implicit"];   // must include "implicit" for response_type=token
+    cfnClient.allowedOAuthFlows = ["code", "implicit"];
     cfnClient.allowedOAuthScopes = ["openid", "email"];
-    cfnClient.supportedIdentityProviders = ["COGNITO"];   // same as above, but at L1
+    cfnClient.supportedIdentityProviders = ["COGNITO"];
 
-    // your groups (they’re fine)
     new cognito.CfnUserPoolGroup(this, "AdminGroup", {
       userPoolId: userPool.userPoolId,
       groupName: "admin",
@@ -135,7 +130,7 @@ export class APIStack extends cdk.Stack {
     // ────────────────────────────────
     const helloFn = new lambda.Function(this, "HelloHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
-      handler: "hello.handler", // points to lambda/hello.ts -> compiled to JS in /lambda
+      handler: "hello.handler",
       code: lambda.Code.fromAsset("lambda"),
       environment: {
         TABLE_NAME: dbStack.table.tableName,
@@ -165,9 +160,8 @@ export class APIStack extends cdk.Stack {
       value: api.url,
     });
 
-
     // ────────────────────────────────
-    // Test Lambda: whoami (TypeScript)
+    // whoami
     // ────────────────────────────────
     const whoamiFn = new NodejsFunction(this, "WhoAmIHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -180,18 +174,13 @@ export class APIStack extends cdk.Stack {
       },
     });
 
-    // API: GET /whoami (no auth required)
     const whoamiResource = api.root.addResource("whoami");
-    whoamiResource.addMethod(
-      "GET",
-      new apigw.LambdaIntegration(whoamiFn),
-      {
-        authorizationType: apigw.AuthorizationType.NONE,
-      }
-    );
+    whoamiResource.addMethod("GET", new apigw.LambdaIntegration(whoamiFn), {
+      authorizationType: apigw.AuthorizationType.NONE,
+    });
 
     // ────────────────────────────────
-    // Lambda: set-role (assign newhire/visitor)
+    // set-role
     // ────────────────────────────────
     const setRoleFn = new NodejsFunction(this, "SetRoleHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -207,7 +196,6 @@ export class APIStack extends cdk.Stack {
       },
     });
 
-    // Allow Lambda to manage groups in this user pool
     setRoleFn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: [
@@ -215,144 +203,21 @@ export class APIStack extends cdk.Stack {
           "cognito-idp:AdminRemoveUserFromGroup",
           "cognito-idp:AdminListGroupsForUser",
         ],
-        resources: ["*"], // break circular dependency
+        resources: ["*"],
       })
     );
 
-    // API: POST /role (protected by Cognito authorizer)
     const roleResource = api.root.addResource("role");
-    roleResource.addMethod(
-      "POST",
-      new apigw.LambdaIntegration(setRoleFn),
-      {
-        authorizer,
-        authorizationType: apigw.AuthorizationType.COGNITO,
-      }
-    );
-
-    // ────────────────────────────────
-    // 4) IoT Core: Thing + Policy
-    // ────────────────────────────────
-    const thingName = "pi3-01";
-
-    const piThing = new iot.CfnThing(this, "PiThing", { thingName });
-
-    const piPolicy = new iot.CfnPolicy(this, "PiPolicy", {
-      policyName: "Pi3Policy",
-      policyDocument: {
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Effect: "Allow",
-            Action: ["iot:Connect"],
-            Resource: [`arn:aws:iot:${this.region}:${this.account}:client/${thingName}*`],
-          },
-          {
-            Effect: "Allow",
-            Action: ["iot:Publish"],
-            Resource: [`arn:aws:iot:${this.region}:${this.account}:topic/${thingName}/#`],
-          },
-          {
-            Effect: "Allow",
-            Action: ["iot:Receive"],
-            Resource: [`arn:aws:iot:${this.region}:${this.account}:topic/${thingName}/#`],
-          },
-          {
-            Effect: "Allow",
-            Action: ["iot:Subscribe"],
-            Resource: [`arn:aws:iot:${this.region}:${this.account}:topicfilter/${thingName}/#`],
-          },
-        ],
-      },
+    roleResource.addMethod("POST", new apigw.LambdaIntegration(setRoleFn), {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
     // ────────────────────────────────
-    // 5) DynamoDB table for telemetry
-    //    PK=device (string), SK=ts (number, epoch seconds)
+    // PlugActions: use table from DBStack
     // ────────────────────────────────
-    const telemTable = new dynamodb.Table(this, "TelemetryTable", {
-      tableName: "PiTelemetry",
-      partitionKey: { name: "device", type: dynamodb.AttributeType.STRING },
-      sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // change to RETAIN in prod
-    });
+    const plugActionsTable: dynamodb.Table = dbStack.plugActionsTable;
 
-    new cdk.CfnOutput(this, "TelemetryTableName", { value: telemTable.tableName });
-
-    // ────────────────────────────────
-    // 6) IoT Rule → DynamoDB (v2 action)
-    // ────────────────────────────────
-    const iotRuleRole = new iam.Role(this, "IotRuleDdbRole", {
-      assumedBy: new iam.ServicePrincipal("iot.amazonaws.com"),
-    });
-    telemTable.grantWriteData(iotRuleRole);
-
-    new iot.CfnTopicRule(this, "SavePiTelemetryRule", {
-      topicRulePayload: {
-        sql: "SELECT device, ts, temp_c, humidity FROM 'pi3-01/telemetry'",
-        actions: [
-          {
-            dynamoDBv2: {
-              putItem: { tableName: telemTable.tableName },
-              roleArn: iotRuleRole.roleArn,
-            },
-          },
-        ],
-        ruleDisabled: false,
-        awsIotSqlVersion: "2016-03-23",
-      },
-    });
-
-    // ────────────────────────────────
-    // 7) Lambda (TypeScript) + API to read it back
-    //    GET /telemetry?device=pi3-01&limit=25
-    // ────────────────────────────────
-    const telemetryGetFn = new NodejsFunction(this, "TelemetryGetHandler", {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      entry: path.join(__dirname, "../lambda/telemetry-get.ts"),
-      handler: "handler",
-      bundling: {
-        target: "node18",
-        minify: true,
-        sourceMap: false,
-      },
-      environment: {
-        TELEMETRY_TABLE: telemTable.tableName,
-      },
-    });
-
-    telemTable.grantReadData(telemetryGetFn);
-
-    const telemetryResource = api.root.addResource("telemetry");
-    telemetryResource.addMethod("GET", new apigw.LambdaIntegration(telemetryGetFn), {
-      authorizationType: apigw.AuthorizationType.NONE, // switch to COGNITO later 
-    });
-
-    // Useful outputs
-    new cdk.CfnOutput(this, "PiThingName", { value: thingName });
-    new cdk.CfnOutput(this, "PiPolicyName", { value: piPolicy.policyName! });
-
-    // ────────────────────────────────
-    // 8) DynamoDB table for plug actions (audit + cooldown)
-    //    PK = user_id (string), SK = ts (number, epoch seconds)
-    // ────────────────────────────────
-    const plugActionsTable = new dynamodb.Table(this, "PlugActionsTable", {
-      tableName: "PlugActions",
-      partitionKey: { name: "user_id", type: dynamodb.AttributeType.STRING },
-      sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // change to RETAIN in prod
-    });
-
-    new cdk.CfnOutput(this, "PlugActionsTableName", {
-      value: plugActionsTable.tableName,
-      description: "Audit table for plug control actions",
-    });
-
-    // ────────────────────────────────
-    // 9) Lambda to handle plug control + cooldown + logging
-    // ────────────────────────────────
     const plugControlFn = new NodejsFunction(this, "PlugControlHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/plug-control.ts"),
@@ -365,10 +230,7 @@ export class APIStack extends cdk.Stack {
       environment: {
         PLUG_ACTIONS_TABLE: plugActionsTable.tableName,
         VOICE_MONKEY_BASE_URL: "https://api-v2.voicemonkey.io/trigger",
-        // Voice Monkey token 
         VOICE_MONKEY_TOKEN: "881b17b3b798802187d4133d2cf40875_6242d41e604eec9e5d59b713c3e751e7",
-        // Mapping plugId + state → Voice Monkey device ids
-        // this later if more plugs added
         PLUG_DEVICE_MAP: JSON.stringify({
           plug1: { on: "turnonplugone", off: "turnoffplugone" },
           plug2: { on: "turnonplugtwo", off: "turnoffplugtwo" },
@@ -379,18 +241,49 @@ export class APIStack extends cdk.Stack {
 
     plugActionsTable.grantReadWriteData(plugControlFn);
 
-    // ────────────────────────────────
-    // 10) API Gateway: /plugs POST → plugControlFn (protected by Cognito)
-    // ────────────────────────────────
     const plugsResource = api.root.addResource("plugs");
-    plugsResource.addMethod(
-      "POST",
-      new apigw.LambdaIntegration(plugControlFn),
-      {
-        authorizer,
-        authorizationType: apigw.AuthorizationType.COGNITO,
-      }
-    );
+    plugsResource.addMethod("POST", new apigw.LambdaIntegration(plugControlFn), {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    });
 
+    plugsResource.addCorsPreflight({
+      allowOrigins: ["http://localhost:8080"],
+      allowMethods: ["OPTIONS", "POST"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    });
+
+    // ────────────────────────────────
+    // Telemetry query: use IoTDeviceTelemetry table from DBStack
+    // ────────────────────────────────
+    const iotTelemetryTable: dynamodb.Table = dbStack.iotTelemetryTable;
+
+    const telemetryQueryFn = new NodejsFunction(this, "TelemetryQueryHandler", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/telemetry-query.ts"),
+      handler: "handler",
+      bundling: {
+        target: "node18",
+        minify: true,
+        sourceMap: false,
+      },
+      environment: {
+        TELEMETRY_TABLE: iotTelemetryTable.tableName,
+      },
+    });
+
+    iotTelemetryTable.grantReadData(telemetryQueryFn);
+
+    const telemetryResource = api.root.addResource("telemetry");
+    telemetryResource.addMethod("GET", new apigw.LambdaIntegration(telemetryQueryFn), {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    });
+
+    telemetryResource.addCorsPreflight({
+      allowOrigins: ["http://localhost:8080"],
+      allowMethods: ["OPTIONS", "GET"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    });
   }
 }
