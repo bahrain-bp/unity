@@ -1402,3 +1402,9 @@ body {
 }
 
 /*# sourceMappingURL=globals.css.map */
+
+
+/* Upload status styles */
+.uploading { color: blue; font-weight: 500; }
+.success { color: green; font-weight: 500; }
+.error { color: red; font-weight: 500; }

@@ -47,10 +47,12 @@ bedrockStack.addDependency(indexStack);
 new APIStack(app, "Unity-APIStack", {
   dbStack,
   bedrockStack,
+  preregBucket: dbStack.preRegBucket,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
   }
 });
+
  
 new FrontendDeploymentStack(app, "Unity-FrontendDeploymentStack");

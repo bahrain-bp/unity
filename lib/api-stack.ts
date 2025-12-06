@@ -11,11 +11,13 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import { BedrockStack } from "./bedrock_stack";
- 
+import * as s3 from "aws-cdk-lib/aws-s3";
+
  
 interface APIStackProps extends cdk.StackProps {
   dbStack: DBStack;
   bedrockStack: BedrockStack;
+  preregBucket: s3.Bucket;
 }
  
 export class APIStack extends cdk.Stack {
@@ -23,6 +25,12 @@ constructor(scope: Construct, id: string, props: APIStackProps) {
   super(scope, id, props);
  
  const dbStack = props.dbStack;
+const preregBucket = props.preregBucket;
+
+new cdk.CfnOutput(this, "PreregistrationImagesBucketName", {
+  value: preregBucket.bucketName,
+});
+
   const bedrockStack = props.bedrockStack;
  
     // Ensure DBStack is created before APIStack
@@ -420,6 +428,54 @@ constructor(scope: Construct, id: string, props: APIStackProps) {
             // authorizationType: apigw.AuthorizationType.COGNITO,
           });
  
+const generatePresignedUrlFn = new NodejsFunction(this, "GeneratePresignedUrlHandler", {
+  runtime: lambda.Runtime.NODEJS_18_X,
+  entry: path.join(__dirname, "../lambda/generatePresignedUploadUrl.ts"),
+  handler: "handler",
+  environment: {
+    BUCKET_NAME: preregBucket.bucketName, // <-- use local variable from props
+  },
+});
+
+// Permissions
+preregBucket.grantPut(generatePresignedUrlFn);
+preregBucket.grantRead(generatePresignedUrlFn);
+
+
+const uploadImageResource = api.root.addResource("upload-image");
+
+// Add CORS first
+// Rename the resource path
+
+// Add CORS first
+uploadImageResource.addCorsPreflight({
+  allowOrigins: ["*"],        // replace "*" with your frontend URL in production
+  allowMethods: ["POST"],
+});
+
+
+// **No Cognito auth required for pre-registration**
+uploadImageResource.addMethod(
+  "POST",
+  new apigw.LambdaIntegration(generatePresignedUrlFn),
+  {
+    authorizationType: apigw.AuthorizationType.NONE,
+  }
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   }
 }
