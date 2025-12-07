@@ -12152,7 +12152,8 @@ MonoBehaviour:
   lookSensitivity: 0.1
   animator: {fileID: 1422591661}
   walkingAudio: {fileID: 11400000, guid: 98fdb4ee9f8baa642809244c85f05107, type: 2}
-  walkingSource: {fileID: 0}
+  jumpAudio: {fileID: 11400000, guid: e2eb728b033bd984980c7da98d0f2dc6, type: 2}
+  landAudio: {fileID: 11400000, guid: 955a3101cf63ad343bb3a9feeafb0f78, type: 2}
   walkStartDelay: 0.4
 --- !u!114 &262655457
 MonoBehaviour:

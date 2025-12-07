@@ -18,7 +18,9 @@ public class FPController : MonoBehaviour
 
     [Header("Audio")]
     public AudioData walkingAudio;
-    public AudioSource walkingSource;
+    private AudioSource walkingSource;
+    public AudioData jumpAudio;
+    public AudioData landAudio;
     private float walkDelayTimer = 0f;
     public float walkStartDelay = 0.4f;
 
@@ -28,6 +30,7 @@ public class FPController : MonoBehaviour
     private Vector2 lookInput;
     private float xRotation;
     private float verticalVelocity;
+    private bool wasGrounded = true;
 
     void Start()
     {
@@ -115,6 +118,20 @@ public class FPController : MonoBehaviour
         {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
+        
+        // Jump audio
+        if (controller.isGrounded && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            AudioManager.Instance.PlaySound2D(jumpAudio);
+        }
+
+        // Landing audio
+        if (!wasGrounded && controller.isGrounded)
+        {
+            AudioManager.Instance.PlaySound2D(landAudio);
+        }
+        wasGrounded = controller.isGrounded;
 
         move.y = verticalVelocity;
 
