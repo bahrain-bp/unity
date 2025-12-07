@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cb49fc04b59ade44d9be32e38f7af78c
+timeCreated: 1461429775
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 63401
+  packageName: Super Coffee Pack!
+  packageVersion: 1.0
+  assetPath: Assets/Models/Tray/Material/tray.mat
+  uploadId: 221738
