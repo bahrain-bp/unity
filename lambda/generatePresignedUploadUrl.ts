@@ -40,7 +40,7 @@ export const handler = async (event: any) => {
         ["content-length-range", 0, MAX_FILE_SIZE_MB * 1024 * 1024],
         ["starts-with", "$Content-Type", fileType],
       ],
-      Expires: 300, // 5 minutes
+      Expires: 3600, // 60 minutes
     });
 
     // Return response to frontend

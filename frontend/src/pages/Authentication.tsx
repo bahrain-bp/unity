@@ -33,7 +33,7 @@ function Authentication() {
     filePickerRef.current?.click();
   };
 
-  const fileChangeHandler = async (event: React.ChangeEvent<HTMLInputElement>) => {
+const fileChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
   if (!event.target.files || event.target.files.length === 0) return;
   const selectedFile = event.target.files[0];
 
@@ -48,42 +48,54 @@ function Authentication() {
     return;
   }
 
+  // JUST store file for now — DON'T upload yet
   setFile(selectedFile);
-  setUploading(true);
   setUploadResult("");
+};
+
+const uploadImage = async () => {
+  if (!file) {
+    setUploadResult("Please select a file first.");
+    return;
+  }
+
+  setUploading(true);
 
   try {
-    // Get presigned URL from API
+    // Get fresh presigned URL
     const presignedData = (await PreRegImageUploadClient.post("/upload-image", {
-      fileType: selectedFile.type,
+      fileType: file.type,
     })).data;
 
-    // Prepare FormData with required S3 fields
+    // Prepare FormData
     const formData = new FormData();
     Object.entries(presignedData.fields).forEach(([key, value]) => {
       formData.append(key, value as string);
     });
-    formData.append("file", selectedFile);
+    formData.append("file", file);
 
-    // Upload directly to S3
+    // Upload to S3
     const uploadResponse = await fetch(presignedData.url, {
       method: "POST",
       body: formData,
     });
 
     if (uploadResponse.ok || uploadResponse.status === 204) {
-setUploadResult("Upload complete");
+      setUploadResult("Upload complete");
       setUploadedFileKey(presignedData.fileKey);
     } else {
       throw new Error(`Upload failed: ${uploadResponse.status}`);
     }
+
   } catch (err: any) {
-    console.error(err);
     setUploadResult(`Upload failed: ${err.message}`);
   } finally {
     setUploading(false);
   }
 };
+
+
+
 
 
   return (
@@ -124,33 +136,47 @@ setUploadResult("Upload complete");
                 onChange={fileChangeHandler}
                 name="image"
               />
-              <div className="auth__form--upload">
-                {previewUrl ? (
-                  <div
-                    className="auth__form--profilePicture"
-                    onClick={pickImageHandler}
-                  >
-                    <img
-                      src={
-                        previewUrl ? previewUrl.toString() : imagePlaceholder
-                      }
-                      alt="Preview"
-                    />
-                    <span>{CAMERA()}</span>
-                  </div>
-                ) : (
-                  <span
-                    onClick={pickImageHandler}
-                    className="auth__form--uploadPlaceholder"
-                  >
-                    {IMAGE()}
-                    <p>Upload your image here!</p>
-                  </span>
-                )}
-                {uploading && <p className="uploading">Uploading...</p>}
-                {uploadResult && <p className={uploadResult.includes("complete") ? "success" : "error"}>{uploadResult}</p>}</div>
+         <div className="auth__form--upload">
+  {previewUrl ? (
+    <div
+      className="auth__form--profilePicture"
+      onClick={pickImageHandler}
+    >
+      <img
+        src={previewUrl ? previewUrl.toString() : imagePlaceholder}
+        alt="Preview"
+      />
+      <span>{CAMERA()}</span>
+    </div>
+  ) : (
+    <span
+      onClick={pickImageHandler}
+      className="auth__form--uploadPlaceholder"
+    >
+      {IMAGE()}
+      <p>Upload your image here!</p>
+    </span>
+  )}
+
+  {/* ⬇⬇⬇ ADD THE BUTTON HERE ⬇⬇⬇ */}
+  <button 
+    onClick={uploadImage} 
+    disabled={!file || uploading} 
+    className="upload-btn"
+  >
+    {uploading ? "Uploading…" : "Upload Image"}
+  </button>
+
+  {/* result message */}
+  {uploadResult && (
+    <p className={uploadResult.includes("complete") ? "success" : "error"}>
+      {uploadResult}
+    </p>
+  )}
+</div>
             </>
           )}
+
           <label htmlFor="email" className="auth__form--label">
             Email Address
           </label>
@@ -206,3 +232,4 @@ setUploadResult("Upload complete");
 }
 
 export default Authentication;
+ 

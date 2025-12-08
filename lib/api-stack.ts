@@ -428,19 +428,29 @@ new cdk.CfnOutput(this, "PreregistrationImagesBucketName", {
             // authorizationType: apigw.AuthorizationType.COGNITO,
           });
  
+
+
+
+
+
+
+// Lambda function responsible for generating presigned S3 upload URLs
+// used by the frontend during user pre-registration to securely upload images.   
 const generatePresignedUrlFn = new NodejsFunction(this, "GeneratePresignedUrlHandler", {
-  runtime: lambda.Runtime.NODEJS_18_X,
+  runtime: lambda.Runtime.NODEJS_24_X,
   entry: path.join(__dirname, "../lambda/generatePresignedUploadUrl.ts"),
   handler: "handler",
   environment: {
-    BUCKET_NAME: preregBucket.bucketName, // <-- use local variable from props
+    BUCKET_NAME: preregBucket.bucketName,
   },
 });
 
-// Permissions
+// Allow Lambda to upload and read objects in the S3 bucket (needed for presigned URL generation).
 preregBucket.grantPut(generatePresignedUrlFn);
 preregBucket.grantRead(generatePresignedUrlFn);
 
+
+//API Gateway Route for Upload
 
 const uploadImageResource = api.root.addResource("upload-image");
 
