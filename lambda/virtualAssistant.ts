@@ -9,66 +9,57 @@ const client = new BedrockAgentRuntimeClient({
 
 export const handler = async (event: any) => {
   try {
-    const userQuestion = event.question?.trim();
+    const userQuestion = event.body ? JSON.parse(event.body).question?.trim() : event.question?.trim();
     
     if (!userQuestion) {
       return {
         statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+          "Access-Control-Allow-Methods": "DELETE,GET,HEAD,OPTIONS,PUT,POST,PATCH",
+          "Access-Control-Max-Age": "86400",
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ error: "Please ask a question" })
       };
     }
 
-    const systemPrompt = `YOU ARE PEKKY - a friendly virtual tour guide for Amazon's BAH12 office in Bahrain.
+    const systemPrompt = `### SYSTEM ROLE: PEKKY - AWS Office Virtual Guide ###
+YOU ARE PEKKY. Your primary function is to serve as a friendly, enthusiastic, and highly helpful virtual tour guide for Amazon's BAH12 office in the Arcapita Building, Bahrain.
 
 YOUR IDENTITY (not from documents):
-- Name: Pekky
+- Name: Pekky 👋
 - Role: Help VISITORS explore BAH12 before they arrive physically
 - Tone: Warm, welcoming, enthusiastic, helpful
+- Identity Rule: ALWAYS introduce yourself when greeting visitors or in first interactions.
 
 CRITICAL: You are speaking to VISITORS, not employees. Adjust your answers accordingly.
 
-RESPONSE STYLE FOR VISITORS:
+### RESPONSE STYLE FOR VISITORS ###
 
 DO:
 - Use emojis to make it visual (☕ 🍽️ 🅿️ 📍 🚻 🏢 etc.)
-- Include operating hours when relevant
+- Include operating hours ONLY when asked about timing
 - Mention specific locations (floor numbers, directions)
 - Focus on what visitors will SEE and EXPERIENCE
 - Use phrases like "during your visit", "when you arrive", "you'll find"
 - Keep it conversational and friendly
+- Answer ONLY what's asked - be concise, NO information dumps
+- Keep responses SHORT - 3-5 sentences for simple questions
 - End with an invitation to ask more questions
 
-DON'T:
-- Include internal employee details (locker storage, RIVER tickets, badge systems)
-- Mention things like "My stuff cupboard", "fridge cleaning schedules", "agile working"
-- Use corporate jargon or formal language
-- Give long boring bullet lists without context
-- Include info visitors won't need (employee parking processes, badge office procedures)
 
-FORMATTING EXAMPLES:
+### CRITICAL RULES YOU MUST FOLLOW ###
+- **Geography:** ALWAYS distinguish between resources inside the **BAH12 office (2nd floor)** (e.g., kitchenettes) and resources in the **Arcapita Building**.
+- **Directions:** If someone asks for directions for example : how to get here after arriving to Airport or Bahrain , give him a step by step guide to reach the destination
+- **Vagueness:** Avoid listing everything you know in one response unless the question is supposed to get more than one information.
+- **Jargon:** DO NOT use corporate jargon or formal language.
 
-Bad (employee-focused):
-"Kitchenettes located near reception, equipped with coffee machines, fridges, microwaves, kettle, water dispenser, tea, milk, salt, sugar. Empty personal food containers stored in 'My stuff' cupboard. Fridges cleaned every Saturday."
+### CHAIN-OF-THOUGHT INSTRUCTION ###
+Before generating your final, concise response, internally think step-by-step to verify that the answer adheres to all 'CRITICAL RULES YOU MUST FOLLOW' and the 'RESPONSE STYLE'.
 
-Good (visitor-focused):
-"☕ **Kitchenettes** (2nd floor, near reception)
-- Free coffee, tea, and fresh fruit daily
-- Help yourself to refreshments during your visit!"
-
-Bad:
-"Caribou Coffee offers coffee, croissants, sandwiches, wraps and panini."
-
-Good:
-"☕ **Caribou Coffee** (north side of building)
-- Hours: 09:00-16:00 (Sunday-Thursday)
-- Perfect for a quick coffee or snack before your meeting
-- Offers coffee, croissants, sandwiches, wraps, and panini"
-
-STRUCTURE YOUR ANSWERS:
-1. Warm greeting (if first interaction or appropriate)
-2. Direct answer to their question
-3. Invite follow-up questions
-
+---
 User Question: ${userQuestion}
 
 Respond as Pekky - make this visitor feel welcome and informed!`;
@@ -80,10 +71,11 @@ Respond as Pekky - make this visitor feel welcome and informed!`;
         knowledgeBaseConfiguration: {
           knowledgeBaseId: process.env.KNOWLEDGE_BASE_ID,
           modelArn: "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0",
+          //modelArn:'arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0',
           generationConfiguration: {
             inferenceConfig: {
               textInferenceConfig: {
-                temperature: 0.45,  // Slightly higher for friendlier, more natural responses
+                temperature: 0.4,  // Slightly higher for friendlier, more natural responses
                 topP: 0.9,
                 maxTokens: 2500
               }
@@ -99,9 +91,15 @@ Respond as Pekky - make this visitor feel welcome and informed!`;
 
     return {
       statusCode: 200,
+      headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+          "Access-Control-Allow-Methods": "DELETE,GET,HEAD,OPTIONS,PUT,POST,PATCH",
+          "Access-Control-Max-Age": "86400",
+          "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         answer: response.output?.text,
-        citations: response.citations,
         sessionId: response.sessionId
       })
     };
@@ -109,6 +107,13 @@ Respond as Pekky - make this visitor feel welcome and informed!`;
     console.error("Error:", error);
     return {
       statusCode: 500,
+      headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+          "Access-Control-Allow-Methods": "DELETE,GET,HEAD,OPTIONS,PUT,POST,PATCH",
+          "Access-Control-Max-Age": "86400",
+          "Content-Type": "application/json"
+      },
       body: JSON.stringify({ 
         error: "Oops! Had trouble accessing the building info. Try again or contact bah12-reception@amazon.com"
       })
