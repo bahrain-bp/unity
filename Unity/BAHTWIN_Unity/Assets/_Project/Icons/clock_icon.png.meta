@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: aa5ad195ef59ba24faaead5ef144b6d9
+guid: 5bb51f9b72a4ac04fba8a1201550eb2d
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -110,57 +110,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: menu_icon_0
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 69
-        width: 91
-        height: 8
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 7c1a330e1e2772c4d9b08f641f11c9c5
-      internalID: -433630318
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: menu_icon_1
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 34
-        width: 91
-        height: 9
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 6406fae974b27884aaa99e50765eac96
-      internalID: -1793483404
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: menu_icon_2
+      name: clock_icon_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 91
-        height: 8
+        width: 65
+        height: 65
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -169,20 +125,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ac4352b5011434346927529bbbfd2ef9
-      internalID: 1305163575
+      spriteID: d115fa1ba73facb42852bfa9626c9d13
+      internalID: 1369338311
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: menu_icon_3
+      name: clock_icon_1
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 91
-        height: 77
+        width: 65
+        height: 65
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -191,8 +147,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c9a1edd2c0c850847bd4dd8a22986b08
-      internalID: -445297335
+      spriteID: c9b3d132824af4a41acd4e27202a692b
+      internalID: -324352813
       vertices: []
       indices: 
       edges: []
@@ -201,7 +157,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 93c496fcb185e3748b77893b609818cc
+    spriteID: be70ed6fa8e3067458491f1f74a51db6
     internalID: 0
     vertices: []
     indices: 
@@ -213,10 +169,8 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      menu_icon_0: -433630318
-      menu_icon_1: -1793483404
-      menu_icon_2: 1305163575
-      menu_icon_3: -445297335
+      clock_icon_0: 1369338311
+      clock_icon_1: -324352813
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
