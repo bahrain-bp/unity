@@ -16,11 +16,21 @@ public class FPController : MonoBehaviour
     [Header("Animation")]
     public Animator animator;
 
+    [Header("Audio")]
+    public AudioData walkingAudio;
+    private AudioSource walkingSource;
+    public AudioData jumpAudio;
+    public AudioData landAudio;
+    private float walkDelayTimer = 0f;
+    public float walkStartDelay = 0.4f;
+
+
     private CharacterController controller;
     private Vector2 moveInput;
     private Vector2 lookInput;
     private float xRotation;
     private float verticalVelocity;
+    private bool wasGrounded = true;
 
     void Start()
     {
@@ -45,12 +55,52 @@ public class FPController : MonoBehaviour
     {
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
 
+        bool isWalking = moveInput.sqrMagnitude > 0.01f;
+
+        // DEBUG CHECKS
+        if (controller == null) Debug.LogError("CONTROLLER IS NULL");
+        if (AudioManager.Instance == null) Debug.LogError("AUDIOMANAGER INSTANCE IS NULL");
+        if (walkingAudio == null) Debug.LogError("WALKING AUDIODATA IS NULL");
+
+
         // Walking animation control
         if (animator != null)
-        {
-            bool isWalking = moveInput.sqrMagnitude > 0.01f;
+        {    
             animator.SetBool("IsWalking", isWalking);
         }
+
+        // Walking audio control
+        if (isWalking && controller.isGrounded)
+        {
+            walkDelayTimer += Time.deltaTime;
+
+            if (walkDelayTimer >= walkStartDelay)
+            {
+                if (walkingSource == null)
+                {
+                    walkingSource = AudioManager.Instance.PlayLoopWithRandomStart(walkingAudio, transform);
+
+                    // fade in over 0.4 seconds
+                    StartCoroutine(AudioManager.Instance.FadeIn(walkingSource, 0.4f, walkingAudio.volume));
+                }
+                else
+                {
+                    walkingSource.pitch = Mathf.Lerp(0.9f, 1.1f, moveInput.magnitude);
+                }
+            }
+        }
+        else
+        {
+            walkDelayTimer = 0f;
+
+            if (walkingSource != null)
+            {
+                // fade out over 0.3 seconds
+                StartCoroutine(AudioManager.Instance.FadeOutAndStop(walkingSource, 0.3f));
+                walkingSource = null;
+            }
+        }
+
 
         // Gravity
         if (controller.isGrounded)
@@ -68,6 +118,20 @@ public class FPController : MonoBehaviour
         {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
+        
+        // Jump audio
+        if (controller.isGrounded && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            AudioManager.Instance.PlaySound2D(jumpAudio);
+        }
+
+        // Landing audio
+        if (!wasGrounded && controller.isGrounded)
+        {
+            AudioManager.Instance.PlaySound2D(landAudio);
+        }
+        wasGrounded = controller.isGrounded;
 
         move.y = verticalVelocity;
 

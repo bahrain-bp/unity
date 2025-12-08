@@ -9595,6 +9595,60 @@ MonoBehaviour:
   m_SelectedFaces: 
   m_SelectedEdges: []
   m_SelectedVertices: 
+--- !u!1 &146629015
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 146629017}
+  - component: {fileID: 146629016}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &146629016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 146629015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0961356a9b0d34c4ca22bb76eaed0c60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  audioMixer: {fileID: 24100000, guid: ecf0bae5bce0d584997ee1c050470151, type: 2}
+  sfxMixerGroup: {fileID: 8569642351457014206, guid: ecf0bae5bce0d584997ee1c050470151, type: 2}
+  musicMixerGroup: {fileID: 1899205747740797706, guid: ecf0bae5bce0d584997ee1c050470151, type: 2}
+  poolSize: 10
+  musicSource1: {fileID: 0}
+  musicSource2: {fileID: 0}
+  masterVolume: 1
+  sfxVolume: 1
+  musicVolume: 1
+  crossfadeDuration: 1
+--- !u!4 &146629017
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 146629015}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -141.74614, y: -0.08452, z: 128.94084}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &158287368
 GameObject:
   m_ObjectHideFlags: 0
@@ -12097,6 +12151,10 @@ MonoBehaviour:
   cameraTransform: {fileID: 326018450}
   lookSensitivity: 0.1
   animator: {fileID: 1422591661}
+  walkingAudio: {fileID: 11400000, guid: 98fdb4ee9f8baa642809244c85f05107, type: 2}
+  jumpAudio: {fileID: 11400000, guid: e2eb728b033bd984980c7da98d0f2dc6, type: 2}
+  landAudio: {fileID: 11400000, guid: 955a3101cf63ad343bb3a9feeafb0f78, type: 2}
+  walkStartDelay: 0.4
 --- !u!114 &262655457
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -93637,3 +93695,4 @@ SceneRoots:
   - {fileID: 1672256045}
   - {fileID: 923342531}
   - {fileID: 921332455}
+  - {fileID: 146629017}
