@@ -4,6 +4,7 @@ import {
   QueryCommand,
   PutItemCommand,
 } from "@aws-sdk/client-dynamodb";
+import { jsonResponse } from "./http-response"; // <-- added
 
 const ddb = new DynamoDBClient({});
 
@@ -29,50 +30,35 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const userId = claims?.sub as string | undefined;
 
     if (!userId) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ message: "Unauthorized: no user id" }),
-      };
+      return jsonResponse(401, { message: "Unauthorized: no user id" });
     }
 
     // ────────────────────────────────
     // 2) Parse body: { plugId, state }
     // ────────────────────────────────
     if (!event.body) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: "Missing body" }),
-      };
+      return jsonResponse(400, { message: "Missing body" });
     }
 
     let parsed: any;
     try {
       parsed = JSON.parse(event.body);
     } catch {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: "Invalid JSON" }),
-      };
+      return jsonResponse(400, { message: "Invalid JSON" });
     }
 
     const plugId = (parsed.plugId || "").toString();
     const state = (parsed.state || "").toString().toLowerCase(); // "on" | "off"
 
     if (!plugId || !["on", "off"].includes(state)) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message:
-            "Invalid payload. Expected { plugId: 'plug1'|'plug2', state: 'on'|'off' }",
-        }),
-      };
+      return jsonResponse(400, {
+        message:
+          "Invalid payload. Expected { plugId: 'plug1'|'plug2', state: 'on'|'off' }",
+      });
     }
 
     if (!PLUG_DEVICE_MAP[plugId]) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: `Unknown plugId: ${plugId}` }),
-      };
+      return jsonResponse(400, { message: `Unknown plugId: ${plugId}` });
     }
 
     const deviceId =
@@ -104,16 +90,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
       if (diff < COOLDOWN_SECONDS) {
         const retryAfter = COOLDOWN_SECONDS - diff;
-        return {
-          statusCode: 429,
-          headers: {
-            "Retry-After": retryAfter.toString(),
-          },
-          body: JSON.stringify({
+        return jsonResponse(
+          429,
+          {
             message: `Cooldown active. Please wait ${retryAfter} seconds.`,
             retryAfter,
-          }),
-        };
+          },
+          { "Retry-After": retryAfter.toString() }
+        );
       }
     }
 
@@ -131,14 +115,11 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const vmText = await vmRes.text();
     if (!vmRes.ok) {
       console.error("Voice Monkey error:", vmRes.status, vmText);
-      return {
-        statusCode: 502,
-        body: JSON.stringify({
-          message: "Failed to trigger Voice Monkey",
-          status: vmRes.status,
-          response: vmText,
-        }),
-      };
+      return jsonResponse(502, {
+        message: "Failed to trigger Voice Monkey",
+        status: vmRes.status,
+        response: vmText,
+      });
     }
 
     // ────────────────────────────────
@@ -158,21 +139,15 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     await ddb.send(put);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        ok: true,
-        plugId,
-        state,
-        vmResponse: vmText,
-        nextAllowedAt: nowSeconds + COOLDOWN_SECONDS,
-      }),
-    };
+    return jsonResponse(200, {
+      ok: true,
+      plugId,
+      state,
+      vmResponse: vmText,
+      nextAllowedAt: nowSeconds + COOLDOWN_SECONDS,
+    });
   } catch (err: any) {
     console.error("Unexpected error:", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: "Internal server error" }),
-    };
+    return jsonResponse(500, { message: "Internal server error" });
   }
 };

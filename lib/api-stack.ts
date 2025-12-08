@@ -247,12 +247,6 @@ export class APIStack extends cdk.Stack {
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
-    plugsResource.addCorsPreflight({
-      allowOrigins: ["http://localhost:8080"],
-      allowMethods: ["OPTIONS", "POST"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
-
     // ────────────────────────────────
     // Telemetry query: use IoTDeviceTelemetry table from DBStack
     // ────────────────────────────────
@@ -280,10 +274,23 @@ export class APIStack extends cdk.Stack {
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
+    plugsResource.addCorsPreflight({
+      allowOrigins: [
+        "http://localhost:8080",
+        "http://localhost:5173",     
+      ],
+      allowMethods: ["OPTIONS", "POST"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    });
+
     telemetryResource.addCorsPreflight({
-      allowOrigins: ["http://localhost:8080"],
+      allowOrigins: [
+        "http://localhost:8080",
+        "http://localhost:5173",  
+      ],
       allowMethods: ["OPTIONS", "GET"],
       allowHeaders: ["Content-Type", "Authorization"],
     });
+
   }
 }
