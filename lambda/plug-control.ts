@@ -4,7 +4,8 @@ import {
   QueryCommand,
   PutItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import { jsonResponse } from "./http-response"; // <-- added
+import { jsonResponse } from "./http-response";
+import { broadcastToAll } from "./ws-broadcast";
 
 const ddb = new DynamoDBClient({});
 
@@ -90,6 +91,30 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
       if (diff < COOLDOWN_SECONDS) {
         const retryAfter = COOLDOWN_SECONDS - diff;
+
+        // Broadcast cooldown info, but don't break the HTTP flow if it fails
+        try {
+          await broadcastToAll({
+            type: "plug_action",
+            source: "plug-control",
+            ts: nowSeconds,
+            payload: {
+              plugId,
+              state, // requested state
+              userId,
+              cooldown: {
+                active: true,
+                retryAfter,
+                nextAllowedAt: nowSeconds + retryAfter,
+              },
+              status: 429,
+              message: `Cooldown active. Please wait ${retryAfter} seconds.`,
+            },
+          });
+        } catch (e) {
+          console.error("WS broadcast (cooldown) failed:", e);
+        }
+
         return jsonResponse(
           429,
           {
@@ -133,19 +158,46 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         plug_id: { S: plugId },
         action: { S: state },
         vm_device: { S: deviceId },
-        vm_response: { S: vmText.slice(0, 500) }, // keep it short
+        vm_response: { S: vmText.slice(0, 500) }, // truncate if too long
       },
     });
 
     await ddb.send(put);
 
-    return jsonResponse(200, {
+    const responseBody = {
       ok: true,
       plugId,
       state,
       vmResponse: vmText,
       nextAllowedAt: nowSeconds + COOLDOWN_SECONDS,
-    });
+    };
+
+    // ────────────────────────────────
+    // 6) Broadcast successful action over WebSocket
+    // ────────────────────────────────
+    try {
+      await broadcastToAll({
+        type: "plug_action",
+        source: "plug-control",
+        ts: nowSeconds,
+        payload: {
+          plugId,
+          state,
+          userId,
+          cooldown: {
+            active: false,
+            nextAllowedAt: nowSeconds + COOLDOWN_SECONDS,
+          },
+          status: 200,
+          message: "Plug action accepted",
+        },
+      });
+    } catch (e) {
+      console.error("WS broadcast (success) failed:", e);
+      // don't change HTTP result
+    }
+
+    return jsonResponse(200, responseBody);
   } catch (err: any) {
     console.error("Unexpected error:", err);
     return jsonResponse(500, { message: "Internal server error" });

@@ -7,8 +7,12 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import { DBStack } from "./DBstack";
+import { UnityWebSocketStack } from "./unity-websocket-stack";
 
-interface IoTStackProps extends cdk.StackProps {}
+interface IoTStackProps extends cdk.StackProps {
+  dbStack: DBStack;
+  wsStack: UnityWebSocketStack;
+}
 
 interface DeviceConfig {
   name: string;
@@ -16,11 +20,14 @@ interface DeviceConfig {
 }
 
 export class IoTStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, dbStack: DBStack, props?: IoTStackProps) {
+  constructor(scope: Construct, id: string, props: IoTStackProps) {
     super(scope, id, props);
 
-    // Ensure DBStack is created before IoTStack
+    const { dbStack, wsStack } = props;
+
+    // Ensure DBStack and WebSocketStack are created before IoTStack
     this.addDependency(dbStack);
+    this.addDependency(wsStack);
 
     // ────────────────────────────────
     // 0) Device list (3 devices × 2 sensors)
@@ -96,7 +103,7 @@ export class IoTStack extends cdk.Stack {
     const telemetryTable: dynamodb.Table = dbStack.iotTelemetryTable;
 
     // ────────────────────────────────
-    // 4) Lambda: ingest telemetry from IoT Core → DynamoDB
+    // 4) Lambda: ingest telemetry from IoT Core → DynamoDB + WebSocket broadcast
     // ────────────────────────────────
     const telemetryIngestFn = new NodejsFunction(this, "TelemetryIngestHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -109,10 +116,24 @@ export class IoTStack extends cdk.Stack {
       },
       environment: {
         TELEMETRY_TABLE: telemetryTable.tableName,
+        WS_CONNECTIONS_TABLE: wsStack.connectionsTable.tableName,
+        WS_MANAGEMENT_ENDPOINT: wsStack.managementEndpoint,
       },
     });
 
     telemetryTable.grantWriteData(telemetryIngestFn);
+    wsStack.connectionsTable.grantReadData(telemetryIngestFn);
+
+    // Allow managing WebSocket connections
+    telemetryIngestFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["execute-api:ManageConnections"],
+        resources: [
+          `arn:aws:execute-api:${this.region}:${this.account}:` +
+            `${wsStack.webSocketApi.apiId}/${wsStack.stage.stageName}/*/@connections/*`,
+        ],
+      })
+    );
 
     // Allow IoT to invoke this Lambda (rule-restricted below)
     telemetryIngestFn.addPermission("AllowIotInvoke", {

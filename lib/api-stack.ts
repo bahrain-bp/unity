@@ -10,18 +10,20 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import { BedrockStack } from "./bedrock_stack";
- 
+import { UnityWebSocketStack } from "./unity-websocket-stack";
  
 interface APIStackProps extends cdk.StackProps {
   dbStack: DBStack;
   bedrockStack: BedrockStack;
+  wsStack: UnityWebSocketStack;
 }
  
 export class APIStack extends cdk.Stack {
 constructor(scope: Construct, id: string, props: APIStackProps) {
   super(scope, id, props);
- 
- const dbStack = props.dbStack;
+
+  const wsStack = props.wsStack;
+  const dbStack = props.dbStack;
   const bedrockStack = props.bedrockStack;
  
     // Ensure DBStack is created before APIStack
@@ -228,7 +230,7 @@ constructor(scope: Construct, id: string, props: APIStackProps) {
     // PlugActions: use table from DBStack
     // ────────────────────────────────
     const plugActionsTable: dynamodb.Table = dbStack.plugActionsTable;
-    
+
     const plugControlFn = new NodejsFunction(this, "PlugControlHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/plug-control.ts"),
@@ -247,11 +249,24 @@ constructor(scope: Construct, id: string, props: APIStackProps) {
           plug2: { on: "turnonplugtwo", off: "turnoffplugtwo" },
         }),
         COOLDOWN_SECONDS: "30",
+
+        WS_CONNECTIONS_TABLE: wsStack.connectionsTable.tableName,
+        WS_MANAGEMENT_ENDPOINT: wsStack.managementEndpoint,
       },
     });
 
     plugActionsTable.grantReadWriteData(plugControlFn);
+    wsStack.connectionsTable.grantReadData(plugControlFn);
 
+    plugControlFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["execute-api:ManageConnections"],
+        resources: [
+          `arn:aws:execute-api:${this.region}:${this.account}:${wsStack.webSocketApi.apiId}/${wsStack.stage.stageName}/*/@connections/*`,
+        ],
+      })
+    );
+    
     const plugsResource = api.root.addResource("plugs");
     plugsResource.addMethod("POST", new apigw.LambdaIntegration(plugControlFn), {
       authorizer,

@@ -1,5 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { broadcastToAll } from "./ws-broadcast"; 
 
 const client = new DynamoDBClient({});
 const ddb = DynamoDBDocumentClient.from(client);
@@ -56,9 +57,10 @@ export const handler = async (event: any) => {
     }
   }
 
-  const metricKeys = event.metric_keys && Array.isArray(event.metric_keys)
-    ? event.metric_keys
-    : Object.keys(metrics);
+  const metricKeys =
+    event.metric_keys && Array.isArray(event.metric_keys)
+      ? event.metric_keys
+      : Object.keys(metrics);
 
   if (metricKeys.length === 0) {
     console.warn("No numeric metrics found in event", { event });
@@ -76,12 +78,7 @@ export const handler = async (event: any) => {
   };
 
   // Optional extra fields we want to keep
-  const passthroughKeys = [
-    "status",
-    "parking_space",
-    "slot_id",
-    "type",
-  ];
+  const passthroughKeys = ["status", "parking_space", "slot_id", "type"];
 
   for (const key of passthroughKeys) {
     if (event[key] !== undefined) {
@@ -97,6 +94,33 @@ export const handler = async (event: any) => {
   );
 
   console.log("Wrote item:", item);
+
+  // 4) Broadcast over WebSocket (non-blocking for ingestion)
+  const telemetryEvent = {
+    type: "telemetry",
+    source: "telemetry-ingest",
+    ts,
+    payload: {
+      device,
+      sensor_id: sensorId,
+      sensor_type: sensorType,
+      metrics,
+      metric_keys: metricKeys,
+      ts,
+      // pass through extra context if you want it on the frontend
+      status: item.status,
+      parking_space: item.parking_space,
+      slot_id: item.slot_id,
+      type: item.type,
+    },
+  };
+
+  try {
+    await broadcastToAll(telemetryEvent);
+  } catch (err) {
+    console.error("Failed to broadcast telemetry over WebSocket:", err);
+    // don’t throw — ingestion to DynamoDB already succeeded
+  }
 
   return { status: "ok" };
 };
