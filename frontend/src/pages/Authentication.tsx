@@ -112,6 +112,7 @@ function Authentication() {
 
     setLoading(true);
     const result = await signUp(account.email, account.password);
+    console.log(result);
 
     if (result.success) {
       setMessage(result.message);
