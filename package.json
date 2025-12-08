@@ -32,6 +32,7 @@
     "@aws-sdk/client-cognito-identity-provider": "^3.940.0",
     "@aws-sdk/client-iot-data-plane": "^3.940.0",
     "aws-cdk-lib": "^2.177.0",
+    "axios": "^1.13.2",
     "constructs": "^10.4.2"
   }
 }

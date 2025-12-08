@@ -1,0 +1,10 @@
+
+# Simple low-poly arrow
+o Arrow
+v 0 0 0
+v 0.2 0 0.5
+v -0.2 0 0.5
+v 0.1 0 -0.3
+v -0.1 0 -0.3
+f 1 2 3
+f 1 4 5

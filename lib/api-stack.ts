@@ -9,25 +9,35 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
-
+import { BedrockStack } from "./bedrock_stack";
+ 
+ 
+interface APIStackProps extends cdk.StackProps {
+  dbStack: DBStack;
+  bedrockStack: BedrockStack;
+}
+ 
 export class APIStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, dbStack: DBStack, props?: cdk.StackProps) {
-    super(scope, id, props);
-
+constructor(scope: Construct, id: string, props: APIStackProps) {
+  super(scope, id, props);
+ 
+ const dbStack = props.dbStack;
+  const bedrockStack = props.bedrockStack;
+ 
     // Ensure DBStack is created before APIStack
     this.addDependency(dbStack);
-
+ 
     // DynamoDB Outputs (already present)
     new cdk.CfnOutput(this, "BahtwinTableName", {
       value: dbStack.table.tableName,
       description: "Name of the DynamoDB table used by BAHTWIN",
     });
-
+ 
     new cdk.CfnOutput(this, "BahtwinTableArn", {
       value: dbStack.table.tableArn,
       description: "ARN of the DynamoDB table used by BAHTWIN",
     });
-
+ 
     // ────────────────────────────────
     // 1. Cognito User Pool
     // ────────────────────────────────
@@ -72,6 +82,7 @@ export class APIStack extends cdk.Stack {
     );
 
     const userPoolClient = new cognito.UserPoolClient(this, "UnityUserPoolClientV2", {
+
       userPool,
       generateSecret: false,
       authFlows: { userSrp: true, userPassword: true },
@@ -109,12 +120,12 @@ export class APIStack extends cdk.Stack {
       userPoolId: userPool.userPoolId,
       groupName: "visitor",
     });
-
+ 
     const userPoolDomain = new cognito.UserPoolDomain(this, "UnityUserPoolDomain", {
       userPool,
       cognitoDomain: { domainPrefix: `unity-${this.account}-dev` },
     });
-
+ 
     new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
     });
@@ -124,7 +135,7 @@ export class APIStack extends cdk.Stack {
     new cdk.CfnOutput(this, "UserPoolDomainUrl", {
       value: userPoolDomain.baseUrl(),
     });
-
+ 
     // ────────────────────────────────
     // 2. Lambda Function (hello)
     // ────────────────────────────────
@@ -137,7 +148,7 @@ export class APIStack extends cdk.Stack {
         USER_POOL_ID: userPool.userPoolId,
       },
     });
-
+ 
     // ────────────────────────────────
     // 3. API Gateway + Cognito Authorizer
     // ────────────────────────────────
@@ -145,17 +156,17 @@ export class APIStack extends cdk.Stack {
       restApiName: "Unity Service",
       deployOptions: { stageName: "dev" },
     });
-
+ 
     const authorizer = new apigw.CognitoUserPoolsAuthorizer(this, "UnityCognitoAuthorizer", {
       cognitoUserPools: [userPool],
     });
-
+ 
     const helloResource = api.root.addResource("hello");
     helloResource.addMethod("GET", new apigw.LambdaIntegration(helloFn), {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
-
+ 
     new cdk.CfnOutput(this, "UnityApiUrl", {
       value: api.url,
     });
@@ -212,12 +223,12 @@ export class APIStack extends cdk.Stack {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
-
+ 
     // ────────────────────────────────
     // PlugActions: use table from DBStack
     // ────────────────────────────────
     const plugActionsTable: dynamodb.Table = dbStack.plugActionsTable;
-
+    
     const plugControlFn = new NodejsFunction(this, "PlugControlHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/plug-control.ts"),
@@ -291,6 +302,23 @@ export class APIStack extends cdk.Stack {
       allowMethods: ["OPTIONS", "GET"],
       allowHeaders: ["Content-Type", "Authorization"],
     });
+
+       // 8) Virtual Assistant API route (Picky)
+      const virtualAssistantFn = bedrockStack.lambdaFunction;
+      const assistantResource = api.root.addResource("assistant");
+
+      // CORS — required for frontend
+      assistantResource.addCorsPreflight({
+        allowOrigins: ["*"],  
+        allowMethods: ["POST"],
+      });
+
+      assistantResource.addMethod("POST", new apigw.LambdaIntegration(bedrockStack.lambdaFunction),
+        {
+            // authorizer,
+            // authorizationType: apigw.AuthorizationType.COGNITO,
+          });
+ 
 
   }
 }
