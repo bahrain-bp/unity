@@ -12640,7 +12640,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.16666667
+  m_VoxelSize: 0.33333334
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: 26e1b82b246c44b52ac78c3ea5275d2e, type: 2}
   m_BuildHeightMesh: 0
@@ -28162,15 +28162,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: b46a6345eb41644ffb8b163d51215a91, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.5
+      value: 1.274625
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b46a6345eb41644ffb8b163d51215a91, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.5
+      value: 1.274625
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b46a6345eb41644ffb8b163d51215a91, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.5
+      value: 1.274625
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b46a6345eb41644ffb8b163d51215a91, type: 3}
       propertyPath: m_LocalPosition.x
@@ -28232,6 +28232,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 9de991ba5f53d4a90912ceeaea82f101, type: 2}
+    - target: {fileID: 5866666021909216657, guid: b46a6345eb41644ffb8b163d51215a91, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -28239,6 +28243,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b46a6345eb41644ffb8b163d51215a91, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7050416744347780666}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b46a6345eb41644ffb8b163d51215a91, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7050416744347780667}
   m_SourcePrefab: {fileID: 100100000, guid: b46a6345eb41644ffb8b163d51215a91, type: 3}
 --- !u!1001 &908281554
 PrefabInstance:
@@ -93725,12 +93732,12 @@ NavMeshAgent:
   m_GameObject: {fileID: 4356072467926435576}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
-  m_Speed: 2
-  m_Acceleration: 5
+  m_Radius: 0.7
+  m_Speed: 5
+  m_Acceleration: 10
   avoidancePriority: 50
   m_AngularSpeed: 360
-  m_StoppingDistance: 0.5
+  m_StoppingDistance: 1
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
@@ -93738,6 +93745,21 @@ NavMeshAgent:
   m_BaseOffset: 0.02
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &7050416744347780667
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4356072467926435576}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a4a08b503c214543881f70ca2f00389, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PeccyFollower
+  player: {fileID: 262655455}
+  followPlayer: 0
+  stopDistance: 4
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
