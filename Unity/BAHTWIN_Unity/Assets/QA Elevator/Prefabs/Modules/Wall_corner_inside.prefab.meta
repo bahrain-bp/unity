@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: de536aeacc6a8284395b582da1a16b16
+timeCreated: 1504112524
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Prefabs/Modules/Wall_corner_inside.prefab
+  uploadId: 671330

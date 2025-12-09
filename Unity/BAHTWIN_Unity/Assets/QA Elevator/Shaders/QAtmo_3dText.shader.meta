@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: ef83b776906115f478ce029eb2727afc
+timeCreated: 1501852773
+licenseType: Store
+ShaderImporter:
+  defaultTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Shaders/QAtmo_3dText.shader
+  uploadId: 671330

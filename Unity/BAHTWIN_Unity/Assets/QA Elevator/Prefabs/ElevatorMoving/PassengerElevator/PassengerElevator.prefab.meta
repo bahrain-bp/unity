@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7f2cd424f77449e4e95f41a417fc00ff
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Prefabs/ElevatorMoving/PassengerElevator/PassengerElevator.prefab
+  uploadId: 671330
