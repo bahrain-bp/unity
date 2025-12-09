@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a0bb7c4cb17864eaea784ce7d8781e62
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 233085
+  packageName: Free Sockets and Switches
+  packageVersion: 1.1.0
+  assetPath: Assets/SocketsAndSwitches/Material/256x256/WhiteDirt/LightSwitchesMaterial.mat
+  uploadId: 582063

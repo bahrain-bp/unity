@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 561760cd5eacd44ffa879d0b7c5030dd
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 233085
+  packageName: Free Sockets and Switches
+  packageVersion: 1.1.0
+  assetPath: Assets/SocketsAndSwitches/Material/128x128/Black/SocketCase02Material.mat
+  uploadId: 582063

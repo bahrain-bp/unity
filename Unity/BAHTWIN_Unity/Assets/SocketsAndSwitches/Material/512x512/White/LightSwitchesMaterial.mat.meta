@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9d1e97e3a48064f06a55f1305125406a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 233085
+  packageName: Free Sockets and Switches
+  packageVersion: 1.1.0
+  assetPath: Assets/SocketsAndSwitches/Material/512x512/White/LightSwitchesMaterial.mat
+  uploadId: 582063

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e5f056d5d1ab84964ae8d7e9e4bcc0fd
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 233085
+  packageName: Free Sockets and Switches
+  packageVersion: 1.1.0
+  assetPath: Assets/SocketsAndSwitches/Material/2048x2048/BlackDirt/InsideMaterial.mat
+  uploadId: 582063

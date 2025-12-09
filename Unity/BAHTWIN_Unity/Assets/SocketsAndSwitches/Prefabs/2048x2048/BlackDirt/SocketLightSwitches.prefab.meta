@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 49f55b94843c84fdcaa685a2877a2e0d
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 233085
+  packageName: Free Sockets and Switches
+  packageVersion: 1.1.0
+  assetPath: Assets/SocketsAndSwitches/Prefabs/2048x2048/BlackDirt/SocketLightSwitches.prefab
+  uploadId: 582063

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: dcccedbaf387d4c8fb6c5ac1a2f1fb1d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 233085
+  packageName: Free Sockets and Switches
+  packageVersion: 1.1.0
+  assetPath: Assets/SocketsAndSwitches/Material/256x256/WhiteDirt/SocketCase02Material.mat
+  uploadId: 582063
