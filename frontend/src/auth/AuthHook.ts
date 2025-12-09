@@ -11,10 +11,10 @@ import {
 
 import { authContext } from "./AuthContext";
 
-import { AmplifyAuthConfig } from "../config/auth";
+import { AwsConfigAuth } from "../config/auth";
 
 import type { ResourcesConfig } from "aws-amplify";
-Amplify.configure(AmplifyAuthConfig as ResourcesConfig);
+Amplify.configure(AwsConfigAuth as ResourcesConfig);
 
 export interface UseAuth {
   isLoading: boolean;
@@ -113,7 +113,6 @@ export const useProvideAuth = (): UseAuth => {
           userId: result.userId,
           success: true, 
           message: "Please check your email for verification code",
-          userId: result.userId 
         };
       }
       

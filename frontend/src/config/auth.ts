@@ -1,7 +1,7 @@
 // frontend/src/config/auth.ts
 
 // config/auth.ts - No explicit type
-export const AmplifyAuthConfig = {
+export const AwsConfigAuth = {
   Auth: {
     Cognito: {
       region: import.meta.env.VITE_APP_AUTH_REGION,
