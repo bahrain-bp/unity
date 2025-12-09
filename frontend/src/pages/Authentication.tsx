@@ -115,7 +115,9 @@ function Authentication() {
 
     if (result.success) {
       setMessage(result.message);
-      setShowVerification(true);
+      // setShowVerification(true);
+      // set sign up is successful
+      console.log(result)
     } else {
       setError(result.message);
     }

@@ -96,7 +96,8 @@ export const useProvideAuth = (): UseAuth => {
       if (result.isSignUpComplete) {
         return { success: true, message: "Sign up successful" };
       } else if (result.nextStep.signUpStep === "CONFIRM_SIGN_UP") {
-        return { 
+        return {
+          userId: result.userId,
           success: true, 
           message: "Please check your email for verification code" 
         };
