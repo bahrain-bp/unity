@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0ab6557c28eec1f449204f6e10c0e166
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Materials/Emissive_white.mat
+  uploadId: 671330

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: edcf3bb1f19e54249adbf8e971acbc09
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Scripts/ElevatorDirectionArrow.cs
+  uploadId: 671330
