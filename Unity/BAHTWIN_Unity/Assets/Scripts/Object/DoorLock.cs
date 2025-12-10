@@ -1,55 +1,125 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DoorLock : MonoBehaviour
 {
-    public AudioSource doorOpenSound;
+    [Header("Audio")]
+    public AudioSource doorOpenSound;   // optional
+    public AudioSource doorCloseSound;  // optional
 
-    private bool isOpened = false;
+    [Header("Rotation Settings")]
+    public float doorOpenAngle = 90f;   // use 90 or -90 for direction
+    public float rotationSpeed = 2f;    // how fast it opens/closes
+    public float stayOpenDelay = 1f;    // time to wait after player leaves
 
-    private Quaternion defaultRot;
+    private Quaternion closedRot;
     private Quaternion openRot;
 
-    public float smooth = 2.0f;
-    public float DoorOpenAngle = 90.0f;
-    public float rotationTolerance = 1.0f;
+    private bool playerInside = false;
+
+    private Coroutine openRoutine;
+    private Coroutine closeRoutine;
 
     void Start()
     {
-        // Store the default rotation
-        defaultRot = transform.rotation;
+        // Save start rotation as "closed"
+        closedRot = transform.rotation;
 
-        // Calculate the open rotation
-        openRot = Quaternion.Euler(defaultRot.eulerAngles + Vector3.up * DoorOpenAngle);
-    }
-
-    void Update()
-    {
-        // Rotate door toward open state if it is supposed to be open
-        if (isOpened && Quaternion.Angle(transform.rotation, openRot) > rotationTolerance)
-        {
-            transform.rotation = Quaternion.Slerp(transform.rotation, openRot, Time.deltaTime * smooth);
-        }
-    }
-
-    private void OpenDoor()
-    {
-        // Mark as opened and play sound
-        isOpened = true;
-
-        if (doorOpenSound != null)
-        {
-            doorOpenSound.Play();
-        }
+        // Open rotation relative to the closed one
+        openRot = closedRot * Quaternion.Euler(0f, doorOpenAngle, 0f);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // When the player enters the trigger, open the door
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player")) return;
+
+        playerInside = true;
+
+        // If it's trying to close, cancel that
+        if (closeRoutine != null)
         {
-            OpenDoor();
+            StopCoroutine(closeRoutine);
+            closeRoutine = null;
         }
+
+        // Start opening if not already opening
+        if (openRoutine == null)
+        {
+            openRoutine = StartCoroutine(OpenDoorRoutine());
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (!other.CompareTag("Player")) return;
+
+        playerInside = false;
+
+        // If the door is already fully open (no openRoutine running),
+        // we can start the "wait then close" straight away.
+        if (openRoutine == null && closeRoutine == null)
+        {
+            closeRoutine = StartCoroutine(CloseDoorAfterDelayRoutine());
+        }
+    }
+
+    private IEnumerator OpenDoorRoutine()
+    {
+        if (doorOpenSound != null)
+            doorOpenSound.Play();
+
+        Quaternion startRot = transform.rotation;
+        float t = 0f;
+
+        // Always finish opening fully once started
+        while (Quaternion.Angle(transform.rotation, openRot) > 0.1f)
+        {
+            t += Time.deltaTime * rotationSpeed;
+            transform.rotation = Quaternion.Slerp(startRot, openRot, t);
+            yield return null;
+        }
+
+        transform.rotation = openRot; // snap exactly
+        openRoutine = null;
+
+        // If the player already left while it was opening,
+        // start the close-after-delay routine now.
+        if (!playerInside && closeRoutine == null)
+        {
+            closeRoutine = StartCoroutine(CloseDoorAfterDelayRoutine());
+        }
+    }
+
+    private IEnumerator CloseDoorAfterDelayRoutine()
+    {
+        // Wait a bit; if player comes back, cancel closing
+        float elapsed = 0f;
+        while (elapsed < stayOpenDelay)
+        {
+            if (playerInside)
+            {
+                closeRoutine = null;
+                yield break; // someone came back, stop closing
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (doorCloseSound != null)
+            doorCloseSound.Play();
+
+        Quaternion startRot = transform.rotation;
+        float t = 0f;
+
+        while (Quaternion.Angle(transform.rotation, closedRot) > 0.1f)
+        {
+            t += Time.deltaTime * rotationSpeed;
+            transform.rotation = Quaternion.Slerp(startRot, closedRot, t);
+            yield return null;
+        }
+
+        transform.rotation = closedRot;
+        closeRoutine = null;
     }
 }
