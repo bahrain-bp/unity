@@ -1,8 +1,8 @@
 export const AwsConfigAuth = {
   Auth: {
     Cognito: {
-      userPoolId: "us-east-1_pcnCiDaXa",
-      userPoolClientId: import.meta.env.VITE_APP_AUTH_USER_POOL_WEB_CLIENT_ID,
+      userPoolId: "us-east-1_3TSi7JPvf",
+      userPoolClientId: "7nq4lkthr815h7ucksnl0cirm6",
       loginWith: {
         email: true,
       },

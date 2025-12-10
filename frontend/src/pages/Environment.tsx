@@ -4,11 +4,13 @@ export default function Environment() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    // Load the Unity loader script dynamically
-    const script = document.createElement("script");
-    script.src = "/unity/Bahtwin_Unity_version1.loader.js";
-    script.onload = () => {
-      if ((window as any).createUnityInstance && canvasRef.current) {
+    // --- Unity loader script ---
+    const loaderScript = document.createElement("script");
+    loaderScript.src = "/unity/Bahtwin_Unity_version1.loader.js";
+    loaderScript.onload = () => {
+      const w = window as any;
+
+      if (w.createUnityInstance && canvasRef.current) {
         // Mobile adjustments
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
           const meta = document.createElement("meta");
@@ -21,12 +23,11 @@ export default function Environment() {
           canvas.style.width = "100%";
           canvas.style.height = "100vh";
           // canvas.style.position = "fixed";
-
           document.body.style.textAlign = "left";
         }
 
         // Create Unity instance
-        (window as any)
+        w
           .createUnityInstance(canvasRef.current, {
             arguments: [],
             dataUrl: "/unity/Bahtwin_Unity_version1.data.unityweb",
@@ -37,14 +38,42 @@ export default function Environment() {
             productName: "BAHTWIN_Unity",
             productVersion: "0.1.0",
           })
-          .catch((message: any) => alert(message));
+          .then((instance: any) => {
+            console.log("Unity instance ready");
+            // expose globally (optional, but useful)
+            w.unityInstance = instance;
+
+            // Initialize Smart Plug bridge if it’s loaded
+            if (w.initSmartPlugBridge) {
+              console.log("Initializing SmartPlug bridge…");
+              w.initSmartPlugBridge(instance);
+            } else {
+              console.warn(
+                "initSmartPlugBridge not found. Is /js/unity-realtime-bridge.js loaded?"
+              );
+            }
+          })
+          .catch((message: any) => {
+            console.error("Unity load error:", message);
+            alert(message);
+          });
       }
     };
 
-    document.body.appendChild(script);
+    document.body.appendChild(loaderScript);
+
+    // --- Smart Plug bridge script (/public/js/unity-smartplug-bridge.js) ---
+    const bridgeScript = document.createElement("script");
+    bridgeScript.src = "/js/unity-realtime-bridge.js";
+    document.body.appendChild(bridgeScript);
 
     return () => {
-      document.body.removeChild(script);
+      if (loaderScript.parentNode) {
+        loaderScript.parentNode.removeChild(loaderScript);
+      }
+      if (bridgeScript.parentNode) {
+        bridgeScript.parentNode.removeChild(bridgeScript);
+      }
     };
   }, []);
 
@@ -60,8 +89,6 @@ export default function Environment() {
       <canvas
         ref={canvasRef}
         id="unity-canvas"
-        // width={960}
-        // height={600}
         tabIndex={-1}
         style={{
           width: "100%",

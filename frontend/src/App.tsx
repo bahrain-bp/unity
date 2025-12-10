@@ -5,6 +5,7 @@ import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
+import SmartPlugEnvironment from "./pages/SmartPlugEnvironment";
 import Chatbot from "./components/ChatBot";
 
 function App() {
@@ -47,7 +48,7 @@ function App() {
             element={
               <>
                 <Navbar />
-                <Environment />
+                <SmartPlugEnvironment />
               </>
             }
           />
