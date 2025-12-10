@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 07ad0a44e32268e438b575921dbdcc70
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 324534
+  packageName: Cabinets Vol. 1
+  packageVersion: 1.0.0
+  assetPath: Assets/CabinetsVol1/Material/TX_Cabinets_1_8.mat
+  uploadId: 767381
