@@ -34,6 +34,7 @@ public class GameManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
+        // TODO: Refactor code to game flow manager that will function all game states.
         currentFlow = initialFlow;
         if (logTransitions)
             Debug.Log($"[GameManager] Initial flow: {currentFlow}");
