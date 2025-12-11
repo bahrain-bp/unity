@@ -28,7 +28,7 @@
     "node_modules",
     "cdk.out",
     "frontend",
-    "bin",
+    //"bin",
     "lib",
     "test",
     "Unity"

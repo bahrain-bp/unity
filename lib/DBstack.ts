@@ -2,11 +2,13 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Stack, StackProps, RemovalPolicy, CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
 
 export class DBStack extends Stack {
   public readonly table: dynamodb.Table;
   public readonly userManagementTable: dynamodb.Table;
   public readonly preRegBucket: s3.Bucket;
+    public readonly chatbotTable : dynamodb.TableV2;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -42,6 +44,14 @@ export class DBStack extends Stack {
       allowedHeaders: ["*"],
     });
 
+    this.chatbotTable = new dynamodb.TableV2(this, 'chatbotTable', {
+            partitionKey: { name: 'sessionId', type: dynamodb.AttributeType.STRING },
+        });
+
+        new cdk.CfnOutput(this , 'tablenameoutput' , {
+            value: this.chatbotTable.tableName,
+            exportName: 'UnityChatbotTable',
+        });
 
   }
 }
