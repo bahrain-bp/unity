@@ -11,28 +11,23 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import { BedrockStack } from "./bedrock_stack";
-import * as s3 from "aws-cdk-lib/aws-s3";
+
 
  
 interface APIStackProps extends cdk.StackProps {
   dbStack: DBStack;
   bedrockStack: BedrockStack;
-  preregBucket: s3.Bucket;
 }
  
 export class APIStack extends cdk.Stack {
 constructor(scope: Construct, id: string, props: APIStackProps) {
   super(scope, id, props);
  
- const dbStack = props.dbStack;
-const preregBucket = props.preregBucket;
-
-new cdk.CfnOutput(this, "PreregistrationImagesBucketName", {
-  value: preregBucket.bucketName,
-});
-
+  const dbStack = props.dbStack;
   const bedrockStack = props.bedrockStack;
- 
+  const preRegBucket = dbStack.preRegBucket;
+  const userTable = dbStack.userManagementTable;
+  
     // Ensure DBStack is created before APIStack
     this.addDependency(dbStack);
  
@@ -427,28 +422,23 @@ new cdk.CfnOutput(this, "PreregistrationImagesBucketName", {
             // authorizer,
             // authorizationType: apigw.AuthorizationType.COGNITO,
           });
- 
 
 
 
 
-
-
+          
 // Lambda function responsible for generating presigned S3 upload URLs
 // used by the frontend during user pre-registration to securely upload images.   
-const generatePresignedUrlFn = new NodejsFunction(this, "GeneratePresignedUrlHandler", {
-  runtime: lambda.Runtime.NODEJS_24_X,
-  entry: path.join(__dirname, "../lambda/generatePresignedUploadUrl.ts"),
-  handler: "handler",
-  environment: {
-    BUCKET_NAME: preregBucket.bucketName,
-  },
-});
-
-// Allow Lambda to upload and read objects in the S3 bucket (needed for presigned URL generation).
-preregBucket.grantPut(generatePresignedUrlFn);
-preregBucket.grantRead(generatePresignedUrlFn);
-
+    const generatePresignedUrlFn = new NodejsFunction(this, "GeneratePresignedUrlHandler", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, "../lambda/generate-presigned-url.ts"),
+      handler: "handler",
+      environment: {
+        BUCKET_NAME: preRegBucket.bucketName,
+      },
+    });
+      
+         preRegBucket.grantReadWrite(generatePresignedUrlFn);
 
 //API Gateway Route for Upload
 
@@ -472,19 +462,6 @@ uploadImageResource.addMethod(
     authorizationType: apigw.AuthorizationType.NONE,
   }
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   }

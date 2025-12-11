@@ -1,21 +1,25 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
-import { v4 as uuidv4 } from "uuid";
 
 // AWS S3 client
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 
-// Allowed file types and max size
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 const MAX_FILE_SIZE_MB = 5;
 
 export const handler = async (event: any) => {
   try {
-    // Parse incoming request
     const body = JSON.parse(event.body || "{}");
     const fileType = body.fileType;
+    const userId = body.userId; 
 
-    // Validate file type
+    if (!userId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "Missing userId parameter" }),
+      };
+    }
+
     if (!fileType || !ALLOWED_IMAGE_TYPES.includes(fileType)) {
       return {
         statusCode: 400,
@@ -23,39 +27,34 @@ export const handler = async (event: any) => {
       };
     }
 
-    // Generate temporary session ID & file key
-    const sessionId = uuidv4();
-    const fileId = uuidv4();
+    // Extract extension
     const fileExtension = fileType.split("/")[1].replace(/\+.*$/, "");
-    const fileKey = `temp/registration/${sessionId}/${fileId}.${fileExtension}`;
 
-    // Create presigned POST
+    // FINAL STANDARDIZED STORAGE PATH
+const fileKey = `visitor-images/${userId}/profile.${fileExtension}`;
+
     const presignedPost = await createPresignedPost(s3, {
       Bucket: process.env.BUCKET_NAME!,
       Key: fileKey,
-      Fields: {
-        "Content-Type": fileType,
-      },
+      Fields: { "Content-Type": fileType },
       Conditions: [
         ["content-length-range", 0, MAX_FILE_SIZE_MB * 1024 * 1024],
         ["starts-with", "$Content-Type", fileType],
       ],
-      Expires: 3600, // 60 minutes
+      Expires: 300, // 5 minutes
     });
 
-    // Return response to frontend
     return {
       statusCode: 200,
       headers: {
-        "Access-Control-Allow-Origin": "*", // restrict in production
+        "Access-Control-Allow-Origin": "*",
       },
       body: JSON.stringify({
         url: presignedPost.url,
         fields: presignedPost.fields,
-        sessionId,
         fileKey,
+        userId,
         expiresIn: 300,
-        maxFileSizeMB: MAX_FILE_SIZE_MB,
       }),
     };
   } catch (error) {
