@@ -462,5 +462,82 @@ uploadImageResource.addMethod(
 );
 
 
+
+
+
+
+
+
+
+
+
+
+const preRegisterCheckFn = new lambda.Function(this, "PreRegisterCheckHandler", {
+  runtime: lambda.Runtime.PYTHON_3_9,
+  handler: "PreRegisterCheck.handler",
+  code: lambda.Code.fromAsset("lambda"),
+  timeout: cdk.Duration.seconds(30),
+  environment: {
+    BUCKET_NAME: preRegBucket.bucketName,
+    USER_MANAGEMENT_TABLE: userTable.tableName,   // REQUIRED
+    COLLECTION_ID: "VisitorFaceCollection",
+  },
+});
+
+preRegBucket.grantReadWrite(preRegisterCheckFn);
+userTable.grantReadWriteData(preRegisterCheckFn);
+
+const validateImageResource = api.root.addResource("validate-image");
+
+validateImageResource.addCorsPreflight({
+  allowOrigins: ["*"],
+  allowMethods: ["POST"],
+});
+
+validateImageResource.addMethod(
+  "POST",
+  new apigw.LambdaIntegration(preRegisterCheckFn),
+  {
+    authorizationType: apigw.AuthorizationType.NONE,
+  }
+);
+
+
+
+// ────────────────────────────────
+// GET IMAGE (return presigned GET URL)
+// ────────────────────────────────
+const getImageFn = new NodejsFunction(this, "GetPresignedDownloadUrlHandler", {
+  runtime: lambda.Runtime.NODEJS_18_X,
+  entry: path.join(__dirname, "../lambda/generatePresignedDownloadUrl.ts"),
+  handler: "handler",
+  environment: {
+    BUCKET_NAME: preRegBucket.bucketName,
+  },
+});
+
+preRegBucket.grantRead(getImageFn);
+
+const getImageResource = api.root.addResource("get-image");
+
+getImageResource.addCorsPreflight({
+  allowOrigins: ["*"],
+  allowMethods: ["GET"],
+});
+
+getImageResource.addMethod(
+  "GET",
+  new apigw.LambdaIntegration(getImageFn),
+  {
+    authorizationType: apigw.AuthorizationType.NONE,
+  }
+);
+
+
+
+
+
+
+
   }
 }
