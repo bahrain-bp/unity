@@ -19,14 +19,17 @@ function Authentication() {
   const [showPass1, setShowPass1] = useState<boolean>(false);
   const [showPass2, setShowPass2] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<boolean>(true);
-  const navigate = useNavigate();
-  const { signUp, confirmSignUp, signIn } = useAuth();
+  const [isSignedUp, setIsSignedUp] = useState<boolean>(false);
+  const [tempToken, setTempToken] = useState(null);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [showVerification, setShowVerification] = useState(false);
+
+  const navigate = useNavigate();
+  const { signUp, confirmSignUp, signIn } = useAuth();
 
   const [account, setAccount] = useState({
     email: "",
@@ -116,13 +119,18 @@ function Authentication() {
 
     if (result.success) {
       setMessage(result.message);
-      setShowVerification(true);
+      setTempToken(result.userId);
+      //setShowVerification(true);
     } else {
       setError(result.message);
     }
 
     setLoading(false);
   };
+
+  const handleImageUpload = async (userId: string) => {
+    return userId;
+  }
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
