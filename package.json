@@ -32,6 +32,7 @@
     "@aws-sdk/client-bedrock-agent-runtime": "^3.940.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.940.0",
     "@aws-sdk/client-iot-data-plane": "^3.940.0",
+    "@aws-sdk/client-rekognition": "^3.948.0",
     "@aws-sdk/client-s3": "^3.946.0",
     "@aws-sdk/s3-presigned-post": "^3.946.0",
     "@aws-sdk/s3-request-presigner": "^3.946.0",

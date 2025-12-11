@@ -1,0 +1,25 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.handler = void 0;
+const client_cognito_identity_provider_1 = require("@aws-sdk/client-cognito-identity-provider");
+const client = new client_cognito_identity_provider_1.CognitoIdentityProviderClient({});
+const DEFAULT_GROUP = "visitor";
+const handler = async (event, _context, callback) => {
+    try {
+        const username = event.userName; // user
+        const poolId = event.userPoolId; // comes from trigger event
+        await client.send(new client_cognito_identity_provider_1.AdminAddUserToGroupCommand({
+            UserPoolId: poolId,
+            Username: username,
+            GroupName: DEFAULT_GROUP,
+        }));
+        callback(null, event);
+    }
+    catch (err) {
+        console.error("Error adding user to visitor group:", err);
+        // Don't block confirmation even if this fails:
+        callback(null, event);
+    }
+};
+exports.handler = handler;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicG9zdC1jb25maXJtLXZpc2l0b3IuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJwb3N0LWNvbmZpcm0tdmlzaXRvci50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFLQSxnR0FHbUQ7QUFFbkQsTUFBTSxNQUFNLEdBQUcsSUFBSSxnRUFBNkIsQ0FBQyxFQUFFLENBQUMsQ0FBQztBQUNyRCxNQUFNLGFBQWEsR0FBRyxTQUFTLENBQUM7QUFFekIsTUFBTSxPQUFPLEdBQUcsS0FBSyxFQUMxQixLQUFrQyxFQUNsQyxRQUFpQixFQUNqQixRQUFrQixFQUNsQixFQUFFO0lBQ0YsSUFBSSxDQUFDO1FBQ0gsTUFBTSxRQUFRLEdBQUcsS0FBSyxDQUFDLFFBQVEsQ0FBQyxDQUFLLE9BQU87UUFDNUMsTUFBTSxNQUFNLEdBQUcsS0FBSyxDQUFDLFVBQVUsQ0FBQyxDQUFLLDJCQUEyQjtRQUVoRSxNQUFNLE1BQU0sQ0FBQyxJQUFJLENBQ2YsSUFBSSw2REFBMEIsQ0FBQztZQUM3QixVQUFVLEVBQUUsTUFBTTtZQUNsQixRQUFRLEVBQUUsUUFBUTtZQUNsQixTQUFTLEVBQUUsYUFBYTtTQUN6QixDQUFDLENBQ0gsQ0FBQztRQUVGLFFBQVEsQ0FBQyxJQUFJLEVBQUUsS0FBSyxDQUFDLENBQUM7SUFDeEIsQ0FBQztJQUFDLE9BQU8sR0FBRyxFQUFFLENBQUM7UUFDYixPQUFPLENBQUMsS0FBSyxDQUFDLHFDQUFxQyxFQUFFLEdBQUcsQ0FBQyxDQUFDO1FBQzFELCtDQUErQztRQUMvQyxRQUFRLENBQUMsSUFBSSxFQUFFLEtBQUssQ0FBQyxDQUFDO0lBQ3hCLENBQUM7QUFDSCxDQUFDLENBQUM7QUF2QlcsUUFBQSxPQUFPLFdBdUJsQiIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7XHJcbiAgQ29nbml0b1VzZXJQb29sVHJpZ2dlckV2ZW50LFxyXG4gIENvbnRleHQsXHJcbiAgQ2FsbGJhY2ssXHJcbn0gZnJvbSBcImF3cy1sYW1iZGFcIjtcclxuaW1wb3J0IHtcclxuICBDb2duaXRvSWRlbnRpdHlQcm92aWRlckNsaWVudCxcclxuICBBZG1pbkFkZFVzZXJUb0dyb3VwQ29tbWFuZCxcclxufSBmcm9tIFwiQGF3cy1zZGsvY2xpZW50LWNvZ25pdG8taWRlbnRpdHktcHJvdmlkZXJcIjtcclxuXHJcbmNvbnN0IGNsaWVudCA9IG5ldyBDb2duaXRvSWRlbnRpdHlQcm92aWRlckNsaWVudCh7fSk7XHJcbmNvbnN0IERFRkFVTFRfR1JPVVAgPSBcInZpc2l0b3JcIjtcclxuXHJcbmV4cG9ydCBjb25zdCBoYW5kbGVyID0gYXN5bmMgKFxyXG4gIGV2ZW50OiBDb2duaXRvVXNlclBvb2xUcmlnZ2VyRXZlbnQsXHJcbiAgX2NvbnRleHQ6IENvbnRleHQsXHJcbiAgY2FsbGJhY2s6IENhbGxiYWNrXHJcbikgPT4ge1xyXG4gIHRyeSB7XHJcbiAgICBjb25zdCB1c2VybmFtZSA9IGV2ZW50LnVzZXJOYW1lOyAgICAgLy8gdXNlclxyXG4gICAgY29uc3QgcG9vbElkID0gZXZlbnQudXNlclBvb2xJZDsgICAgIC8vIGNvbWVzIGZyb20gdHJpZ2dlciBldmVudFxyXG5cclxuICAgIGF3YWl0IGNsaWVudC5zZW5kKFxyXG4gICAgICBuZXcgQWRtaW5BZGRVc2VyVG9Hcm91cENvbW1hbmQoe1xyXG4gICAgICAgIFVzZXJQb29sSWQ6IHBvb2xJZCxcclxuICAgICAgICBVc2VybmFtZTogdXNlcm5hbWUsXHJcbiAgICAgICAgR3JvdXBOYW1lOiBERUZBVUxUX0dST1VQLFxyXG4gICAgICB9KVxyXG4gICAgKTtcclxuXHJcbiAgICBjYWxsYmFjayhudWxsLCBldmVudCk7XHJcbiAgfSBjYXRjaCAoZXJyKSB7XHJcbiAgICBjb25zb2xlLmVycm9yKFwiRXJyb3IgYWRkaW5nIHVzZXIgdG8gdmlzaXRvciBncm91cDpcIiwgZXJyKTtcclxuICAgIC8vIERvbid0IGJsb2NrIGNvbmZpcm1hdGlvbiBldmVuIGlmIHRoaXMgZmFpbHM6XHJcbiAgICBjYWxsYmFjayhudWxsLCBldmVudCk7XHJcbiAgfVxyXG59O1xyXG4iXX0=

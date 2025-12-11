@@ -5,7 +5,7 @@ import { FrontendDeploymentStack } from "../lib/frontend-deployment-stack";
 import { OpenSearchStack } from '../lib/opensearch_stack';
 import { BedrockStack } from '../lib/bedrock_stack';
 import { IndexStack } from '../lib/index_stack';
- 
+
 const app = new cdk.App();
  
 // Create the DBStack
@@ -34,6 +34,7 @@ const indexStack = new IndexStack(app, 'Unity-IndexStack', {
 const bedrockStack = new BedrockStack(app, 'Unity-BedrockStack', {
   openSearchStack,
   indexStack,
+  dbStack,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
