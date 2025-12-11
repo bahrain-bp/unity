@@ -42,20 +42,6 @@ export class DBStack extends Stack {
       allowedHeaders: ["*"],
     });
 
-    // CloudFormation Outputs
-    new CfnOutput(this, "UnityBahtwinTableNameOutput", {
-      value: this.table.tableName,
-      exportName: "UnityBahtwinTableName",
-    });
 
-    new CfnOutput(this, "UserManagementTableNameOutput", {
-      value: this.userManagementTable.tableName,
-      exportName: "UserManagementTableName",
-    });
-
-    new CfnOutput(this, "PreregistrationImagesBucketNameOutput", {
-      value: this.preRegBucket.bucketName,
-      exportName: "PreregistrationImagesBucketName",
-    });
   }
 }

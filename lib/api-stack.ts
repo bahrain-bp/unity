@@ -12,8 +12,6 @@ import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import { BedrockStack } from "./bedrock_stack";
 
-
- 
 interface APIStackProps extends cdk.StackProps {
   dbStack: DBStack;
   bedrockStack: BedrockStack;
@@ -431,7 +429,7 @@ constructor(scope: Construct, id: string, props: APIStackProps) {
 // used by the frontend during user pre-registration to securely upload images.   
     const generatePresignedUrlFn = new NodejsFunction(this, "GeneratePresignedUrlHandler", {
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: path.join(__dirname, "../lambda/generate-presigned-url.ts"),
+      entry: path.join(__dirname, "../lambda/generatePresignedUploadUrl.ts"),
       handler: "handler",
       environment: {
         BUCKET_NAME: preRegBucket.bucketName,
