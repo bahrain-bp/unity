@@ -6,13 +6,13 @@ export const AwsConfigAuth = {
       loginWith: {
         email: true,
       },
-      signUpVerificationMethod: "code",
+      signUpVerificationMethod: "code" as const,
       userAttributes: {
         email: {
           required: true,
         },
       },
-      allowGuestAccess: false,
+      // allowGuestAccess: false,
       passwordFormat: {
         minLength: 8,
         requireLowercase: true,
@@ -22,4 +22,4 @@ export const AwsConfigAuth = {
       },
     },
   },
-};
+} as const;

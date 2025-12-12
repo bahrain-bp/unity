@@ -1,69 +1,69 @@
-import { useState, useRef, useEffect } from "react"
-import ChatMessage from "./ChatMessage"
-import Client from "../services/api"
-import peccy from "../assets/peccy.png"
-import { CHAT, X } from "../assets/icons"
+import { useState, useRef, useEffect } from "react";
+import ChatMessage from "./ChatMessage";
+import { Client } from "../services/api";
+import peccy from "../assets/peccy.png";
+import { CHAT, X } from "../assets/icons";
 
 interface Message {
-  text: string
-  sender: "bot" | "user"
+  text: string;
+  sender: "bot" | "user";
 }
 
 const Chatbot = () => {
   const [msgs, setMsgs] = useState<Message[]>(() => {
-    const storedChat = localStorage.getItem("chatHistory")
+    const storedChat = localStorage.getItem("chatHistory");
 
     return storedChat
       ? JSON.parse(storedChat)
-      : [{ text: "Hello! How can I help you?", sender: "bot" }]
-  })
+      : [{ text: "Hello! How can I help you?", sender: "bot" }];
+  });
 
-  const [showQuestions, setShowQuestions] = useState(true)
-  const [inputText, setInputText] = useState("")
-  const chatBottomRef = useRef<HTMLDivElement>(null)
-  const [isOpen, setIsOpen] = useState<boolean>(false)
+  const [showQuestions, setShowQuestions] = useState(true);
+  const [inputText, setInputText] = useState("");
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (chatBottomRef.current) {
-      chatBottomRef.current.scrollTop = chatBottomRef.current.scrollHeight
+      chatBottomRef.current.scrollTop = chatBottomRef.current.scrollHeight;
     }
-  }, [msgs])
+  }, [msgs]);
 
   useEffect(() => {
-    localStorage.setItem("chatHistory", JSON.stringify(msgs))
-  }, [msgs])
+    localStorage.setItem("chatHistory", JSON.stringify(msgs));
+  }, [msgs]);
 
   const getRes = async (question: string) => {
     try {
-      const res = await Client.post("/assistant", { question })
-      return res.data.answer
+      const res = await Client.post("/assistant", { question });
+      return res.data.answer;
     } catch (error) {
-      console.error(error)
-      return "Sorry, something went wrong while fetching the response."
+      console.error(error);
+      return "Sorry, something went wrong while fetching the response.";
     }
-  }
+  };
 
   const handleQuestion = async (questionText: string) => {
-    const userMsg: Message = { text: questionText, sender: "user" }
-    setMsgs(prev => [...prev, userMsg])
+    const userMsg: Message = { text: questionText, sender: "user" };
+    setMsgs((prev) => [...prev, userMsg]);
 
-    setShowQuestions(false)
+    setShowQuestions(false);
 
-    const botRes = await getRes(questionText)
-    const botMsg: Message = { text: botRes, sender: "bot" }
-    setMsgs(prev => [...prev, botMsg])
-  }
+    const botRes = await getRes(questionText);
+    const botMsg: Message = { text: botRes, sender: "bot" };
+    setMsgs((prev) => [...prev, botMsg]);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputText(e.target.value)
-  }
+    setInputText(e.target.value);
+  };
 
   const handleSend = () => {
     if (inputText.trim()) {
-      handleQuestion(inputText)
-      setInputText("")
+      handleQuestion(inputText);
+      setInputText("");
     }
-  }
+  };
 
   return (
     <>
@@ -93,14 +93,18 @@ const Chatbot = () => {
               <div className="quick-questions">
                 <button
                   className="question"
-                  onClick={() => handleQuestion("What can I do on this platform?")}
+                  onClick={() =>
+                    handleQuestion("What can I do on this platform?")
+                  }
                 >
                   What can I do on this platform?
                 </button>
 
                 <button
                   className="question"
-                  onClick={() => handleQuestion("How do I start exploring the building?")}
+                  onClick={() =>
+                    handleQuestion("How do I start exploring the building?")
+                  }
                 >
                   How do I start exploring the building?
                 </button>
@@ -129,7 +133,7 @@ const Chatbot = () => {
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
-export default Chatbot
+export default Chatbot;
