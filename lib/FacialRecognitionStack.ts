@@ -6,10 +6,47 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { aws_rekognition as rekognition } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as path from 'path';
+
 
 export class FacialRecognitionStack extends cdk.Stack {
+  public readonly userTable: dynamodb.Table;
+
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+
+        // Users Table
+    
+        this.userTable = new dynamodb.Table(this, 'userTable', {
+          tableName: 'UserManagementTable',
+          partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+          billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // serverless
+          removalPolicy: cdk.RemovalPolicy.DESTROY, // only for dev/testing
+        });
+
+        this.userTable.addGlobalSecondaryIndex({
+      indexName: 'EmailIndex',
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+        // Add GSI for faceId
+    this.userTable.addGlobalSecondaryIndex({
+      indexName: 'FaceIdIndex',
+      partitionKey: { name: 'faceId', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL, // include all columns
+    });
+        
+        // Add extra attributes 
+        this.userTable.addGlobalSecondaryIndex({
+          indexName: 'visitedIndex',
+          partitionKey: { name: 'visited', type: dynamodb.AttributeType.STRING },
+          projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+
 
     //create S3 Bucked
     const bucket = new s3.Bucket(this, 'BahtwinTestBucket',{
@@ -32,9 +69,24 @@ export class FacialRecognitionStack extends cdk.Stack {
       environment:{
         BUCKET_NAME: bucket.bucketName,
         COLLECTION_ID: collection.collectionId,
+        USER_TABLE:this.userTable.tableName,
       },
       timeout:cdk.Duration.seconds(30),
       functionName: 'PreRegisterCheck', 
+      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+    });
+
+        //create lambda for to extract user photo
+    const ExtractPhoto = new lambda.Function(this, 'ExtractPhoto',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'ExtractPhoto.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment:{
+        BUCKET_NAME: bucket.bucketName,
+        USER_TABLE: this.userTable.tableName,
+      },
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'ExtractPhoto', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
  
@@ -46,17 +98,52 @@ export class FacialRecognitionStack extends cdk.Stack {
       environment:{
         BUCKET_NAME: bucket.bucketName,
         COLLECTION_ID: collection.collectionId,
+        USER_TABLE: this.userTable.tableName,
       },
       timeout:cdk.Duration.seconds(30),
       functionName: 'ArrivalRekognition', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
 
+        //create lambda to send feedback
+const sendFeedbackLambda = new lambda.Function(this, 'SendFeedbackLambda', {
+  runtime: lambda.Runtime.PYTHON_3_11,
+  handler: 'sendFeedbackLambda.handler',
+  code: lambda.Code.fromAsset(path.join(__dirname, '../lambda'), {
+    bundling: {
+      image: lambda.Runtime.PYTHON_3_11.bundlingImage,
+      command: [
+        "bash", "-c",
+        `
+        pip install -r requirements.txt -t /asset-output &&
+        cp -r . /asset-output
+        `
+      ],
+    },
+  }),
+  environment: {
+    JWT_SECRET: 'secret',  // same as before
+    FRONTEND_URL: 'https://localhost:5173/visitorfeedback',  // your frontend link
+    GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending
+    GMAIL_PASS: 'thun ojje rdpt ocjg',        // Gmail app password
+  },
+  timeout: cdk.Duration.seconds(30),
+  functionName: 'SendFeedbackLambda',
+  logRetention: logs.RetentionDays.ONE_DAY
+});
+
+
     // Permissions
     bucket.grantReadWrite(PreRegisterCheck);
     bucket.grantReadWrite(ArrivalRekognition);
+    this.userTable.grantReadWriteData(PreRegisterCheck);
+    this.userTable.grantReadWriteData(ArrivalRekognition);
+    const arrivalRole = ArrivalRekognition.role!;
+    sendFeedbackLambda.grantInvoke(arrivalRole);
+    bucket.grantRead(ExtractPhoto);
+    this.userTable.grantReadData(ExtractPhoto);
 
-        PreRegisterCheck.addToRolePolicy(
+      PreRegisterCheck.addToRolePolicy(
       new iam.PolicyStatement({
         actions: [
           'rekognition:IndexFaces',
@@ -90,13 +177,26 @@ const visitorResource = api_arrival.root.addResource('visitor');
 // create arrival resource under the visitor resource
 const arrivalResource = visitorResource.addResource('arrival');
 
+// create register resource under the visitor resource
+const registerResource = visitorResource.addResource('register');
+
+//create extract photo resource under the visitor resource
+const extractPhotoResource = visitorResource.addResource('retrivePhoto');
 // connect POST to Lambda
 arrivalResource.addMethod('POST', new apigw.LambdaIntegration(ArrivalRekognition, {
   proxy: true,
 }));
-// OPTIONS method -> Lambda proxy (handles CORS)
- //   arrivalResource.addMethod('OPTIONS', new apigw.LambdaIntegration(ArrivalRekognition, { proxy: true }));
- // OPTIONS method -> MockIntegration for CORS preflight
+
+// connect POST to Lambda
+registerResource.addMethod('POST', new apigw.LambdaIntegration(PreRegisterCheck, {
+  proxy: true,
+}));
+
+// connect POST to Lambda
+extractPhotoResource.addMethod('POST', new apigw.LambdaIntegration(ExtractPhoto, {
+  proxy: true,
+}));
+
     arrivalResource.addMethod('OPTIONS', new apigw.MockIntegration({
       integrationResponses: [{
         statusCode: '200',
@@ -121,6 +221,55 @@ arrivalResource.addMethod('POST', new apigw.LambdaIntegration(ArrivalRekognition
       }],
     });
 
+
+    registerResource.addMethod('OPTIONS', new apigw.MockIntegration({
+      integrationResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+          'method.response.header.Access-Control-Allow-Origin': "'*'",
+          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+        },
+      }],
+      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+      requestTemplates: {
+        'application/json': '{"statusCode": 200}'
+      },
+    }), {
+      methodResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': true,
+          'method.response.header.Access-Control-Allow-Methods': true,
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      }],
+    });
+
+
+    extractPhotoResource.addMethod('OPTIONS', new apigw.MockIntegration({
+      integrationResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+          'method.response.header.Access-Control-Allow-Origin': "'*'",
+          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+        },
+      }],
+      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+      requestTemplates: {
+        'application/json': '{"statusCode": 200}'
+      },
+    }), {
+      methodResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': true,
+          'method.response.header.Access-Control-Allow-Methods': true,
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      }],
+    });
 
     
   }

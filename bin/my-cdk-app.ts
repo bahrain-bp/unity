@@ -6,6 +6,7 @@ import { OpenSearchStack } from '../lib/opensearch_stack';
 import { BedrockStack } from '../lib/bedrock_stack';
 import { IndexStack } from '../lib/index_stack';
 import { FacialRecognitionStack } from "../lib/FacialRecognitionStack";
+import { VisitorFeedbackStack } from "../lib/VisitorFeedbackStack";
  
 const app = new cdk.App();
  
@@ -54,13 +55,21 @@ new APIStack(app, "Unity-APIStack", {
   }
 });
 
-// Create the FacialRecognitionStack
-const FRecognitionStack = new FacialRecognitionStack(app, "FRStack", {
+
+const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || "us-east-1"
-  }
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+  },
 });
+
+
+new VisitorFeedbackStack(app, 'VisitorFeedbackStack', {
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION || 'us-east-1' },
+  userTable: FRStack.userTable, 
+});
+
+
 
  
 new FrontendDeploymentStack(app, "Unity-FrontendDeploymentStack");
