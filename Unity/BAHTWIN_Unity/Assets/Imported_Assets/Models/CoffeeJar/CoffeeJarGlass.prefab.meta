@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c3846a176500a2842affb0fd30a6fd4a
+timeCreated: 1462030935
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 63401
+  packageName: Super Coffee Pack!
+  packageVersion: 1.0
+  assetPath: Assets/Models/CoffeeJar/CoffeeJarGlass.prefab
+  uploadId: 221738
