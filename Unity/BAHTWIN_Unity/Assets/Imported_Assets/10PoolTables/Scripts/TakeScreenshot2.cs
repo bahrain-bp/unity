@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-public class TakeScreenshot : MonoBehaviour
+public class TakeScreenshot2 : MonoBehaviour
 {
     private int screenshotCount = 0;
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraController : MonoBehaviour
+public class CameraController2 : MonoBehaviour
 {
     public float turnSpeed = 4f;
     public float moveSpeed = 8f;
