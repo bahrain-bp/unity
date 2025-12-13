@@ -15,4 +15,10 @@ public class VolumeSilder : MonoBehaviour
         });
     }
     
+
+    public float GetVoulme(float slider)
+    {
+        return slider;
+    }
+    
 }
