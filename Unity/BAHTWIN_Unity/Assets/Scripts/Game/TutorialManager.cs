@@ -43,6 +43,7 @@ public class TutorialManager : MonoBehaviour
         controlsImage.gameObject.SetActive(false);
 
         instructionText.text = "Press ENTER to continue";
+        floorListTarget.gameObject.GetComponent<Outline>().enabled = false;
     }
 
     private void Update()
