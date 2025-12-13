@@ -65,6 +65,8 @@ public class PauseMenu : MonoBehaviour
         playerInput.enabled = true;
         fpsController.enabled = true;
         isPaused = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     public void PauseGame()
@@ -76,5 +78,7 @@ public class PauseMenu : MonoBehaviour
         playerInput.enabled = false;
         fpsController.enabled = false;
         isPaused = true;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }
