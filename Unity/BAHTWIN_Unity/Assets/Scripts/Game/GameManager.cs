@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameFlow initialFlow = GameFlow.Tutorial;
     [SerializeField] private bool logTransitions = true;
 
-    private GameFlow currentFlow;
+    public GameFlow currentFlow;
     public GameFlow CurrentFlow => currentFlow;
 
     private void Awake()

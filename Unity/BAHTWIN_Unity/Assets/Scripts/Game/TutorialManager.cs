@@ -19,9 +19,6 @@ public class TutorialManager : MonoBehaviour
         Completed
     }
 
-    [Header("Canvases")]
-    public Canvas tutorialCanvas;
-    public Canvas normalSceneCanvas;
 
     [Header("UI")]
     public GameObject welcomePanel;
@@ -41,13 +38,11 @@ public class TutorialManager : MonoBehaviour
 
     private void Start()
     {
-        tutorialCanvas.enabled = true;
-        normalSceneCanvas.enabled = false;
 
         welcomePanel.SetActive(true);
         controlsImage.gameObject.SetActive(false);
 
-        instructionText.text = "Press ENTER to continue or skip tutorial";
+        instructionText.text = "Press ENTER to continue";
     }
 
     private void Update()
@@ -215,8 +210,8 @@ public class TutorialManager : MonoBehaviour
 
     void CompleteTutorial()
     {
-        tutorialCanvas.enabled = false;
-        normalSceneCanvas.enabled = true;
         current = Step.Completed;
+
+        GameManager.Instance.SetGameFlow(GameManager.GameFlow.Normal);
     }
 }
