@@ -75,11 +75,13 @@ function setupWebSocket(unityInstance) {
     wsDebug("Connected ✔");
 
     try {
-      ws.send(JSON.stringify({
-        type: "hello",
-        client: "unity",
-        ts: Math.floor(Date.now() / 1000)
-      }));
+      ws.send(
+        JSON.stringify({
+          type: "hello",
+          client: "unity",
+          ts: Math.floor(Date.now() / 1000),
+        })
+      );
     } catch {}
   };
 
@@ -99,7 +101,7 @@ function setupWebSocket(unityInstance) {
 
   ws.onerror = (err) => {
     console.warn("[WS] error:", err);
-    wsDebug("Error: " + err.message);
+    wsDebug("Error: " + (err?.message || "unknown"));
   };
 
   ws.onmessage = (event) => {
@@ -117,16 +119,36 @@ function setupWebSocket(unityInstance) {
       return;
     }
 
-    if (msg.type === "plug_update") {
-      const payload = msg.payload;
-      const targetObj = `SmartPlug_${payload.id}`;
+    // ✅ IMPORTANT: backend is sending plug_action (from your logs)
+    // Also keep plug_update for compatibility
+    if (msg.type === "plug_action" || msg.type === "plug_update") {
+      const p = msg.payload || {};
+      const id = p.id || p.plugId; // ✅ support both keys
 
-      console.log("[WS] Plug update → Unity:", payload);
+      if (!id) {
+        console.warn("[WS] plug message missing id/plugId:", msg);
+        return;
+      }
+
+      // Normalize payload to match Unity PlugStatePayload fields
+      const normalized = {
+        id,
+        type: "plug",
+        state: p.state, // "on"/"off"
+        updated_at: msg.ts || Math.floor(Date.now() / 1000),
+        status: p.status ?? 200,
+        message: p.message || "",
+        retryAfter: (p.cooldown && p.cooldown.retryAfter) || p.retryAfter || 0,
+      };
+
+      const targetObj = `SmartPlug_${id}`;
+
+      console.log("[WS] Plug event → Unity:", normalized);
 
       wsUnityInstance?.SendMessage(
         targetObj,
         "OnDeviceStateJson",
-        JSON.stringify(payload)
+        JSON.stringify(normalized)
       );
     }
   };
@@ -150,9 +172,10 @@ window.initSmartPlugBridge = function (unityInstance) {
         id: deviceId,
         type: "plug",
         state,
-        updated_at: Date.now() / 1000,
+        updated_at: Math.floor(Date.now() / 1000),
         status: 401,
         message: "Not authenticated",
+        retryAfter: 0,
       };
 
       unityInstance.SendMessage(
@@ -186,6 +209,8 @@ window.initSmartPlugBridge = function (unityInstance) {
       res = { status: 0 };
     }
 
+    // Keep your current behavior here (HTTP also updates Unity)
+    // You said you might later want WS-only state; for now we keep it as-is.
     const payload = {
       id: deviceId,
       type: "plug",
@@ -193,7 +218,7 @@ window.initSmartPlugBridge = function (unityInstance) {
       updated_at: Math.floor(Date.now() / 1000),
       status: res.status,
       message: body.message || "",
-      retryAfter: body.retryAfter || 0,
+      retryAfter: body.retryAfter || body.cooldown?.retryAfter || 0,
     };
 
     unityInstance.SendMessage(

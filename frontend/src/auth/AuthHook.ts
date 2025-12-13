@@ -11,7 +11,7 @@ import {
 import { AwsConfigAuth } from "../config/auth";
 import { authContext } from "./AuthContext";
 
-//Amplify.configure(AwsConfigAuth);
+Amplify.configure(AwsConfigAuth);
 
 export interface UseAuth {
   isLoading: boolean;
