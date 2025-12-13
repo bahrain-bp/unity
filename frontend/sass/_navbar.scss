@@ -8,7 +8,7 @@
   transform: translateX(-50%);
   display: grid;
   width: 120rem;
-  grid-template-columns: min-content 1fr min-content;
+  grid-template-columns: min-content 1fr max-content;
   align-items: center;
   text-align: center;
   margin: auto;
@@ -102,6 +102,8 @@
         aspect-ratio: 1 / 1;
         fill: $color-font;
         stroke: none;
+        border-radius: 10rem;
+        border: 1px solid $color-font;
       }
     }
 

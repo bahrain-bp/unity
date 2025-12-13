@@ -1,7 +1,7 @@
 [
   {
     "name": "The Avenues",
-    "distance" : "270 M",
+    "distance" : "870 M",
     "type" : "shop",
     "link": "!1m14!1m8!1m3!1d9341.910504693387!2d50.58075866836973!3d26.249268765360487!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e49a5f064f0a013%3A0xe0aae9ebaaec9a58!2sThe%20Avenues!5e0!3m2!1sen!2sbh!4v1763460869814!5m2!1sen!2sbh"
   },
@@ -13,25 +13,25 @@
   },
   {
     "name": "Biba Caffe",
-    "distance" : "270 M",
+    "distance" : "410 M",
     "type" : "restaurant",
     "link": "!1m14!1m8!1m3!1d4620.8697192857335!2d50.580596578967786!3d26.247327228257863!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e49a5fa6077e7cd%3A0x306bc4b2fd567102!2sBiba!5e0!3m2!1sen!2sbh!4v1763460651473!5m2!1sen!2sbh"
   },
   {
     "name": "Four Seasons Hotel Bahrain Bay",
-    "distance" : "270 M",
+    "distance" : "420 M",
     "type" : "hotel",
     "link": "!1m14!1m8!1m3!1d4839.976653940183!2d50.58380915381541!3d26.250382495211454!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e49a5ee04432f29%3A0xfe1fc4a2a6a601cc!2sFour%20Seasons%20Hotel%20Bahrain%20Bay!5e0!3m2!1sen!2sbh!4v1763548379513!5m2!1sen!2sbh"
   },
   {
     "name": "Fish Market Restaurant",
-    "distance" : "270 M",
+    "distance" : "550 M",
     "type" : "restaurant",
     "link": "!1m14!1m8!1m3!1d2107.2824295659393!2d50.57949195306635!3d26.24708711234231!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e49a5439622b3f9%3A0xfc08dc80d704e022!2sFish%20Market%20Restaurant!5e0!3m2!1sen!2sbh!4v1763548551057!5m2!1sen!2sbh"
   },
   {
     "name": "City Centre Bahrain",
-    "distance" : "270 M",
+    "distance" : "4.5 KM",
     "type" : "shop",
     "link": "!1m14!1m8!1m3!1d25117.455458952198!2d50.565816404912184!3d26.243573715872103!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e49a5788e4fa6d3%3A0x59a12e7b22b7b68c!2sCity%20Centre%20Bahrain!5e0!3m2!1sen!2sbh!4v1763548696205!5m2!1sen!2sbh"
   }

@@ -162,6 +162,7 @@ function Info() {
                             : ""
                         }`}
                         name={location.name}
+                        distance={location.distance}
                         icon={setCardIcon(location.type)}
                         content={location.name}
                         onClick={() => setActiveLocation(location.name)}

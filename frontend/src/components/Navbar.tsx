@@ -1,20 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthHook";
 import peccy from "../assets/peccy.png";
 import logo from "../assets/logo.svg";
 import Drawer from "@mui/material/Drawer";
 import { MENU } from "../assets/icons";
+import { ImageClient } from "../services/api";
 
 function Navbar() {
-  const { email, isAuthenticated, signOut } = useAuth();
+  const { email, isAuthenticated, signOut, userId } = useAuth();
   const username = localStorage.getItem("username");
 
   const [open, setOpen] = useState(false);
+  const [userImg, setUserImg] = useState<string | null>(null);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
   };
+
+  const getUserImg = async () => {
+    try {
+      const result = await ImageClient.get(
+        `/visitor/get-image-url?userId=${userId}`
+      );
+
+      if (result.status === 200) {
+        setUserImg(result.data.imageUrl);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      getUserImg();
+    }
+  }, [userId]);
 
   return (
     <>
@@ -30,7 +52,7 @@ function Navbar() {
           {isAuthenticated ? (
             <div className="navbar__user">
               <label htmlFor="user-btn">
-                <img src={peccy} alt="profile picture" />
+                <img src={userImg ?? peccy} alt="profile picture" />
                 {username ? username : email.replace(/@.*/, "")}
               </label>
               <input id="user-btn" type="checkbox" />
@@ -62,7 +84,7 @@ function Navbar() {
           {isAuthenticated ? (
             <div className="navbar__user">
               <label htmlFor="user-btn2">
-                <img src={peccy} alt="profile picture" />
+                <img src={userImg ?? peccy} alt="profile picture" />
                 {username ? username : email.replace(/@.*/, "")}
               </label>
               <input id="user-btn2" type="checkbox" />

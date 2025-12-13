@@ -17,6 +17,7 @@ export interface UseAuth {
   isLoading: boolean;
   isAuthenticated: boolean;
   email: string;
+  userId: string;
   signIn: (email: string, password: string) => Promise<Result>;
   signUp: (email: string, password: string) => Promise<SignUpResult>;
   confirmSignUp: (email: string, code: string) => Promise<Result>;
@@ -40,6 +41,7 @@ export const useProvideAuth = (): UseAuth => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     checkAuthState();
@@ -64,13 +66,13 @@ export const useProvideAuth = (): UseAuth => {
       const session = await fetchAuthSession();
 
       if (session.tokens) {
-        // 🔹 Save token so Unity bridge can read it
         const idToken = session.tokens.idToken?.toString();
         if (idToken) {
           localStorage.setItem("idToken", idToken);
         }
 
         setEmail(user.signInDetails?.loginId || "");
+        setUserId(user.userId);
         setIsAuthenticated(true);
       } else {
         clearIdToken();
@@ -78,6 +80,7 @@ export const useProvideAuth = (): UseAuth => {
     } catch (error) {
       clearIdToken();
       setEmail("");
+      setUserId("");
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -93,6 +96,8 @@ export const useProvideAuth = (): UseAuth => {
 
       if (result.isSignedIn) {
         setEmail(email);
+        const user = await getCurrentUser();
+        setUserId(user.userId);
         setIsAuthenticated(true);
 
         await saveIdToken();
@@ -169,6 +174,7 @@ export const useProvideAuth = (): UseAuth => {
     try {
       await amplifySignOut();
       setEmail("");
+      setUserId("");
       setIsAuthenticated(false);
       clearIdToken();
       return { success: true, message: "Signed out successfully" };
@@ -184,6 +190,7 @@ export const useProvideAuth = (): UseAuth => {
     isLoading,
     isAuthenticated,
     email,
+    userId,
     signIn,
     signUp,
     confirmSignUp,
