@@ -21,7 +21,6 @@ function Authentication() {
   const [showPass1, setShowPass1] = useState<boolean>(false);
   const [showPass2, setShowPass2] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<boolean>(true);
-  // const [isSignedUp, setIsSignedUp] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -152,9 +151,10 @@ function Authentication() {
 
     if (result.success) {
       // setMessage(result.message);
-      // console.log(result.userId)
       setUserId(result.userId ?? null);
-      handleImageUpload();
+      if (result.userId) {
+        handleImageUpload(result.userId);
+      }
       setError("");
       localStorage.setItem("username", username);
       //setShowVerification(true);
@@ -165,7 +165,7 @@ function Authentication() {
     // setLoading(false);
   };
 
-  const handleImageUpload = async () => {
+  const handleImageUpload = async (userId: string) => {    
     setLoading(true);
     try {
       await ImageClient.post("/visitor/register", {
@@ -219,15 +219,6 @@ function Authentication() {
               length={6}
               onChange={(value) => setVerificationCode(value)}
             />
-            {/* <input
-              type="email"
-              className="auth__form--input"
-              placeholder="Enter your email"
-              id="email"
-              name="email"
-              onChange={handleChange}
-            /> */}
-
             {error && <Message type="error" icon={ERROR()} message={error} />}
             {message && (
               <Message type="success" icon={SUCCESS()} message={message} />

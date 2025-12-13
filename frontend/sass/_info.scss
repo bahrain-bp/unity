@@ -1,11 +1,9 @@
 @use "var" as *;
 
 .info {
+  @include flexCenter;
   min-height: 100vh;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   position: relative;
   overflow: hidden;
 
@@ -44,21 +42,6 @@
     @media only screen and (max-width: $bp-6) {
       row-gap: 2rem;
     }
-
-    // & h1 {
-    //   font-size: 5rem;
-    //   font-family: $font-display;
-    //   font-weight: 500;
-    //   @media only screen and (max-width: $bp-10) {
-    //     font-size: 4.5rem;
-    //   }
-    //   @media only screen and (max-width: $bp-8) {
-    //     font-size: 4rem;
-    //   }
-    //   @media only screen and (max-width: $bp-6) {
-    //     font-size: 3.4rem;
-    //   }
-    // }
 
     & p {
       font-size: 2rem;
@@ -276,14 +259,8 @@
 }
 
 .MuiBox-root {
-  // background-image: linear-gradient(
-  //   to right bottom,
-  //   rgba(254, 254, 254, 0.8),
-  //   rgba(172, 172, 172, 0.8)
-  // );
   background-color: $color-white;
   backdrop-filter: blur(1rem);
-  // box-shadow: 3px 3px 0px $color-font !important;
   border: 2px solid $color-font !important;
 
   @media only screen and (max-width: $bp-6) {

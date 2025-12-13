@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ChatMessage from "./ChatMessage";
 import { Client } from "../services/api";
 import peccy from "../assets/peccy.png";
@@ -11,13 +11,17 @@ interface Message {
 
 const Chatbot = () => {
   const [msgs, setMsgs] = useState<Message[]>(() => {
-    const storedChat = localStorage.getItem("chatHistory");
+    const storedData = sessionStorage.getItem("chatData");
 
-    return storedChat
-      ? JSON.parse(storedChat)
+    return storedData
+      ? JSON.parse(storedData).messages
       : [{ text: "Hello! How can I help you?", sender: "bot" }];
   });
 
+  const [sessionId, setSessionId] = useState<string | null>(() => {
+    const storedData = sessionStorage.getItem("chatData");
+    return storedData ? JSON.parse(storedData).sessionId : null;
+  });
   const [showQuestions, setShowQuestions] = useState(true);
   const [inputText, setInputText] = useState("");
   const chatBottomRef = useRef<HTMLDivElement>(null);
@@ -30,16 +34,24 @@ const Chatbot = () => {
   }, [msgs]);
 
   useEffect(() => {
-    localStorage.setItem("chatHistory", JSON.stringify(msgs));
-  }, [msgs]);
+    // localStorage.setItem("chatHistory", JSON.stringify(msgs))
+    sessionStorage.setItem(
+      "chatData",
+      JSON.stringify({ messages: msgs, sessionId: sessionId })
+    );
+  }, [msgs, sessionId]);
 
   const getRes = async (question: string) => {
     try {
-      const res = await Client.post("/assistant", { question });
-      return res.data.answer;
+      const req = sessionId ? { question, sessionId } : { question };
+      const res = await Client.post("/assistant", req);
+      return { answer: res.data.answer, sessionId: res.data.sessionId };
     } catch (error) {
       console.error(error);
-      return "Sorry, something went wrong while fetching the response.";
+      return {
+        answer: "Sorry, something went wrong while fetching the response.",
+        sessionId: null,
+      };
     }
   };
 
@@ -49,8 +61,12 @@ const Chatbot = () => {
 
     setShowQuestions(false);
 
-    const botRes = await getRes(questionText);
-    const botMsg: Message = { text: botRes, sender: "bot" };
+    const res = await getRes(questionText);
+    if (res.sessionId) {
+      setSessionId(res.sessionId);
+    }
+
+    const botMsg: Message = { text: res.answer, sender: "bot" };
     setMsgs((prev) => [...prev, botMsg]);
   };
 
@@ -58,6 +74,12 @@ const Chatbot = () => {
     setInputText(e.target.value);
   };
 
+  const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && inputText.trim()) {
+      handleQuestion(inputText);
+      setInputText("");
+    }
+  };
   const handleSend = () => {
     if (inputText.trim()) {
       handleQuestion(inputText);
@@ -125,6 +147,7 @@ const Chatbot = () => {
               placeholder="Type a question..."
               value={inputText}
               onChange={handleChange}
+              onKeyDown={handleEnter}
             />
             <button onClick={handleSend} disabled={!inputText.trim()}>
               Send
