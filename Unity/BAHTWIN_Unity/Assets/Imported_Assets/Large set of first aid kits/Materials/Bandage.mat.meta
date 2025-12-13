@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 12f2992e65dc61e4fb5ac59381f4b99b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 261375
+  packageName: Large set of first aid kits
+  packageVersion: 1.0
+  assetPath: Assets/Large set of first aid kits/Materials/Bandage.mat
+  uploadId: 748883
