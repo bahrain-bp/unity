@@ -3,7 +3,6 @@ import boto3
 import base64
 import uuid
 import json
-import threading
 from datetime import datetime
 
 s3 = boto3.client('s3')
@@ -52,47 +51,37 @@ def PreRegisterCheck(event, context):
         )
 
 
-        # Respond immediately after upload
-        response_body = {
-            "message": "Registration was successfull.",
-        }
-        threading.Thread(target=background_index_face, args=(image_bytes, key, name, email, userId)).start()
-
-        return response(200, response_body)
-
-    except Exception as e:
-        print("ERROR:", str(e))
-        return response(500, {"error": "Internal server error"})
-
-# Background processing function
-def background_index_face(image_bytes, key, name, email, userId):
-    try:
-        # Index face in Rekognition collection
+        # Index face in Rekognition (synchronous so Lambda doesn't freeze background work)
         index_response = rekog.index_faces(
             CollectionId=COLLECTION,
             Image={'Bytes': image_bytes},
             DetectionAttributes=[]
         )
         face_records = index_response.get("FaceRecords", [])
-        if face_records:
-            faceId = face_records[0]["Face"]["FaceId"]
-            
-            # Store visitor info in DynamoDB
-            USER_TABLE.put_item(
-                Item={
-                    "userId": userId,
-                    "s3Key": key,
-                    "registeredAt":datetime.utcnow().isoformat(),
-                    "name": name,
-                    "email": email,
-                    "faceId": faceId,
-                }
-            )
-        else:
-            print(f"Face could not be indexed for S3 key: {key}")
+        if not face_records:
+            return response(400, {"error": "Face could not be indexed. Please upload another image."})
+
+        faceId = face_records[0]["Face"]["FaceId"]
+
+        # Store visitor info in DynamoDB
+        USER_TABLE.put_item(
+            Item={
+                "userId": userId,
+                "s3Key": key,
+                "registeredAt": datetime.utcnow().isoformat(),
+                "name": name,
+                "email": email,
+                "faceId": faceId,
+                "passedRegistration": False
+            }
+        )
+
+        # Respond after Dynamo write to ensure GET can find the record
+        return response(200, {"message": "Registration was successfull."})
 
     except Exception as e:
-        print("Error in background indexing:", str(e))
+        print("ERROR:", str(e))
+        return response(500, {"error": "Internal server error"})
 
 def response(status, body):
     return {

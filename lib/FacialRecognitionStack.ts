@@ -8,6 +8,7 @@ import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as path from 'path';
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 
 export class FacialRecognitionStack extends cdk.Stack {
   public readonly userTable: dynamodb.Table;
@@ -46,13 +47,12 @@ export class FacialRecognitionStack extends cdk.Stack {
         });
 
 
-
     //create S3 Bucked
-    const bucket = new s3.Bucket(this, 'BahtwinTestBucket',{
-      bucketName: 'bahtwin-testing',
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects:true,
-    });
+   const bucket = new s3.Bucket(this, 'BahtwinTestBucket',{
+  removalPolicy: cdk.RemovalPolicy.DESTROY,
+  autoDeleteObjects: true,
+});
+
 
     // Create an Amazon Rekognition Collection
     const collection= new rekognition.CfnCollection(this, 'bahtwin-testing-collection', {
@@ -105,31 +105,32 @@ export class FacialRecognitionStack extends cdk.Stack {
     });
 
         //create lambda to send feedback
-const sendFeedbackLambda = new lambda.Function(this, 'SendFeedbackLambda', {
-  runtime: lambda.Runtime.PYTHON_3_11,
-  handler: 'sendFeedbackLambda.handler',
-  code: lambda.Code.fromAsset(path.join(__dirname, '../lambda'), {
-    bundling: {
-      image: lambda.Runtime.PYTHON_3_11.bundlingImage,
-      command: [
-        "bash", "-c",
-        `
-        pip install -r requirements.txt -t /asset-output &&
-        cp -r . /asset-output
-        `
-      ],
-    },
-  }),
-  environment: {
-    JWT_SECRET: 'secret',  // same as before
-    FRONTEND_URL: 'https://localhost:5173/visitorfeedback',  // your frontend link
-    GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending
-    GMAIL_PASS: 'thun ojje rdpt ocjg',        // Gmail app password
-  },
-  timeout: cdk.Duration.seconds(30),
-  functionName: 'SendFeedbackLambda',
-  logRetention: logs.RetentionDays.ONE_DAY
-});
+// const sendFeedbackLambda = new lambda.Function(this, 'SendFeedbackLambda', {
+//   runtime: lambda.Runtime.PYTHON_3_11,
+//   handler: 'sendFeedbackLambda.handler',
+//   code: lambda.Code.fromAsset(path.join(__dirname, '../lambda'), {
+//     bundling: {
+//       image: lambda.Runtime.PYTHON_3_11.bundlingImage,
+//       command: [
+//         "bash", "-c",
+//         `
+//         pip install -r requirements.txt -t /asset-output &&
+//         cp -r . /asset-output
+//         `
+//       ],
+//     },
+//   }),
+//   environment: {
+//     JWT_SECRET: 'secret',
+//     FRONTEND_URL: 'https://localhost:5173/visitorfeedback',
+//     GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',
+//     GMAIL_PASS: 'thun ojje rdpt ocjg',
+//   },
+//   timeout: cdk.Duration.seconds(30),
+//   functionName: 'SendFeedbackLambda',
+//   logRetention: logs.RetentionDays.ONE_DAY
+// });
+
 
 
     // Permissions
@@ -138,7 +139,7 @@ const sendFeedbackLambda = new lambda.Function(this, 'SendFeedbackLambda', {
     this.userTable.grantReadWriteData(PreRegisterCheck);
     this.userTable.grantReadWriteData(ArrivalRekognition);
     const arrivalRole = ArrivalRekognition.role!;
-    sendFeedbackLambda.grantInvoke(arrivalRole);
+    //sendFeedbackLambda.grantInvoke(arrivalRole);
     bucket.grantRead(ExtractPhoto);
     this.userTable.grantReadData(ExtractPhoto);
 
@@ -270,6 +271,52 @@ extractPhotoResource.addMethod('POST', new apigw.LambdaIntegration(ExtractPhoto,
       }],
     });
 
-    
+
+
+
+
+
+
+
+
+
+
+    // ────────────────────────────────
+// GET IMAGE URL (presigned GET URL)
+// ────────────────────────────────
+const getImageUrlFn = new NodejsFunction(
+  this,
+  "GeneratePresignedImageUrlHandler",
+  {
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: path.join(__dirname, "../lambda/generatePresignedDownloadUrl.ts"),
+    handler: "handler",
+    environment: {
+      BUCKET_NAME: bucket.bucketName,
+      USER_TABLE: this.userTable.tableName, 
+    },
+    timeout: cdk.Duration.seconds(30),
+  }
+);
+
+// Permissions
+bucket.grantRead(getImageUrlFn);                 
+this.userTable.grantReadData(getImageUrlFn);    
+
+// API Gateway: /visitor/get-image-url
+const getImageUrlResource = visitorResource.addResource("get-image-url");
+
+getImageUrlResource.addCorsPreflight({
+  allowOrigins: ["*"],
+  allowMethods: ["GET"],
+});
+
+getImageUrlResource.addMethod(
+  "GET",
+  new apigw.LambdaIntegration(getImageUrlFn, { proxy: true }),
+  { authorizationType: apigw.AuthorizationType.NONE }
+);
+
+
   }
 }
