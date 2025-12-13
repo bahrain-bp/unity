@@ -1,0 +1,28 @@
+fileFormatVersion: 2
+guid: 0e0896cf8864be04c8524bf4c1a97e7f
+timeCreated: 1501848735
+licenseType: Store
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Digital dream Fat Narrow
+  fontNames:
+  - Digital dream Fat Narrow
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Textures/Elevator/digital-dream.fat-narrow.ttf
+  uploadId: 671330

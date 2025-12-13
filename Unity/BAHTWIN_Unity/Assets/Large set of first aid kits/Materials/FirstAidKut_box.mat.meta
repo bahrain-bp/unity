@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ce94b2def1cf8c04da6556d32650f129
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 261375
+  packageName: Large set of first aid kits
+  packageVersion: 1.0
+  assetPath: Assets/Large set of first aid kits/Materials/FirstAidKut_box.mat
+  uploadId: 748883

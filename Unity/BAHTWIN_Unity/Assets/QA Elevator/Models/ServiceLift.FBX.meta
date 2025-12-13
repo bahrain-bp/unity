@@ -1,0 +1,233 @@
+fileFormatVersion: 2
+guid: 85660f06b5148d149829e0b7452f2cce
+ModelImporter:
+  serializedVersion: 23
+  fileIDToRecycleName:
+    100000: Button_0
+    100002: Button_1
+    100004: Button_2
+    100006: Button_3
+    100008: Button_4
+    100010: Button_5
+    100012: Button_6
+    100014: Button_7
+    100016: Button_8
+    100018: Button_9
+    100020: Button__1FLOOR
+    100022: Button_ALLARM
+    100024: Button_CLOSE
+    100026: Button_GO
+    100028: Button_LOCK
+    100030: Button_OPEN
+    100032: Button_STOP
+    100034: DoorInside_L1
+    100036: DoorInside_L2
+    100038: DoorInside_R1
+    100040: DoorInside_R2
+    100042: //RootNode
+    100044: Lamp
+    100046: ServiceLift
+    100048: Button
+    100050: Scoreboard
+    400000: Button_0
+    400002: Button_1
+    400004: Button_2
+    400006: Button_3
+    400008: Button_4
+    400010: Button_5
+    400012: Button_6
+    400014: Button_7
+    400016: Button_8
+    400018: Button_9
+    400020: Button__1FLOOR
+    400022: Button_ALLARM
+    400024: Button_CLOSE
+    400026: Button_GO
+    400028: Button_LOCK
+    400030: Button_OPEN
+    400032: Button_STOP
+    400034: DoorInside_L1
+    400036: DoorInside_L2
+    400038: DoorInside_R1
+    400040: DoorInside_R2
+    400042: //RootNode
+    400044: Lamp
+    400046: ServiceLift
+    400048: Button
+    400050: Scoreboard
+    2100000: ServiceLift_mtl
+    2300000: Button_0
+    2300002: Button_1
+    2300004: Button_2
+    2300006: Button_3
+    2300008: Button_4
+    2300010: Button_5
+    2300012: Button_6
+    2300014: Button_7
+    2300016: Button_8
+    2300018: Button_9
+    2300020: Button__1FLOOR
+    2300022: Button_ALLARM
+    2300024: Button_CLOSE
+    2300026: Button_GO
+    2300028: Button_LOCK
+    2300030: Button_OPEN
+    2300032: Button_STOP
+    2300034: DoorInside_L1
+    2300036: DoorInside_L2
+    2300038: DoorInside_R1
+    2300040: DoorInside_R2
+    2300042: //RootNode
+    2300044: Lamp
+    2300046: ServiceLift
+    2300048: Button
+    2300050: Scoreboard
+    3300000: Button_0
+    3300002: Button_1
+    3300004: Button_2
+    3300006: Button_3
+    3300008: Button_4
+    3300010: Button_5
+    3300012: Button_6
+    3300014: Button_7
+    3300016: Button_8
+    3300018: Button_9
+    3300020: Button__1FLOOR
+    3300022: Button_ALLARM
+    3300024: Button_CLOSE
+    3300026: Button_GO
+    3300028: Button_LOCK
+    3300030: Button_OPEN
+    3300032: Button_STOP
+    3300034: DoorInside_L1
+    3300036: DoorInside_L2
+    3300038: DoorInside_R1
+    3300040: DoorInside_R2
+    3300042: //RootNode
+    3300044: Lamp
+    3300046: ServiceLift
+    3300048: Button
+    3300050: Scoreboard
+    4300000: ServiceLift
+    4300002: DoorInside_L1
+    4300004: DoorInside_L2
+    4300006: DoorInside_R2
+    4300008: DoorInside_R1
+    4300010: Button_7
+    4300012: Button_5
+    4300014: Button_4
+    4300016: Button_6
+    4300018: Button_8
+    4300020: Button_3
+    4300022: Button_2
+    4300024: Button_9
+    4300026: Button_0
+    4300028: Button_1
+    4300030: Button_OPEN
+    4300032: Button_CLOSE
+    4300034: Button__1FLOOR
+    4300036: Button_STOP
+    4300038: Button_GO
+    4300040: Button_ALLARM
+    4300042: Button_LOCK
+    4300044: Lamp
+    4300046: Button
+    4300048: Scoreboard
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ServiceLift_mtl
+    second: {fileID: 2100000, guid: d2cf3eb0b634a4841b65391300f43f5b, type: 2}
+  materials:
+    importMaterials: 1
+    materialName: 1
+    materialSearch: 1
+    materialLocation: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 1
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  importAnimation: 0
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/ServiceLift.FBX
+  uploadId: 671330

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: e69aef4e666c7de46b2b2cd472c7e3f0
+timeCreated: 1504097598
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Materials/Walls_mtl.mat
+  uploadId: 671330
