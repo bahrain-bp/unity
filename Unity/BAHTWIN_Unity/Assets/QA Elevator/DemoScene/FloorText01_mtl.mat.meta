@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: f66c7eeeb4e5fd84ca9d81c45791ef74
+timeCreated: 1504255379
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/DemoScene/FloorText01_mtl.mat
+  uploadId: 671330

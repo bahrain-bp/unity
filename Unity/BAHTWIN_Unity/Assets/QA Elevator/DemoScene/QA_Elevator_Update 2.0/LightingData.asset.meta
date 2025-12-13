@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2c467075cd057f04b81e482f0460eda2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/DemoScene/QA_Elevator_Update 2.0/LightingData.asset
+  uploadId: 671330

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c0a976e4f0163ba4d907ff7fb17ba7ae
+timeCreated: 1504435425
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/DemoScene/ContentOverview.unity
+  uploadId: 671330

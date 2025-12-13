@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 5c7c392c280ecec4a8efe5552bd47780
+timeCreated: 1504111506
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Prefabs/Modules/Floor_6m.prefab
+  uploadId: 671330

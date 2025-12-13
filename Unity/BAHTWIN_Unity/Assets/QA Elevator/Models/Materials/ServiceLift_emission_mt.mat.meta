@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6231a6c71d679fe4693960e95f35a96c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Materials/ServiceLift_emission_mt.mat
+  uploadId: 671330
