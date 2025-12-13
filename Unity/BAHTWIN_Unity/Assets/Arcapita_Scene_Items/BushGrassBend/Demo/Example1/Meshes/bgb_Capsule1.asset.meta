@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a38eb28bb7b05074e9a3baa03ab52ab1
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 210986
+  packageName: Bush or Grass bend as Detail Mesh
+  packageVersion: 0.0.1
+  assetPath: Assets/BushGrassBend/Demo/Example1/Meshes/bgb_Capsule1.asset
+  uploadId: 481076
