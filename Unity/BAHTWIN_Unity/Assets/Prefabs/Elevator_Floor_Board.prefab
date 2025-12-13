@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 90}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0}
-  m_SizeDelta: {x: 12, y: 16}
+  m_AnchoredPosition: {x: 0.0157, y: 0.0424}
+  m_SizeDelta: {x: 13.6946, y: 16.6282}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!23 &4265221379865295780
 MeshRenderer:
@@ -105,8 +105,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Floor\nB2\tUnderground Parking\nG\tArcapita Reception\n1\tSomething\n2
-    \tAWS Office\n3        Something\n4\tSomething\n5\tSomething"
+  m_text: "\t\tFloor List\n\nB2\tUnderground Parking\n\nG\tArcapita Reception\n\n1\tFood
+    Court\n\n2 \tAWS, Vitol Bahrain\n\n3        EDB BAHRAIN\n\n4\tMUMTALAKAT\n\n5\tSomething"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -208,7 +208,7 @@ Transform:
   m_GameObject: {fileID: 2636114733846191055}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0.141, y: 0.236, z: 0.013}
+  m_LocalPosition: {x: 0.039, y: 0.259, z: 0.013}
   m_LocalScale: {x: 0.07, y: 0.035, z: 0.00070000003}
   m_ConstrainProportionsScale: 1
   m_Children: []

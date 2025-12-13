@@ -2,240 +2,221 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
 using UnityEngine.UI;
+using System.Diagnostics;
 
 public class TutorialManager : MonoBehaviour
 {
     public enum Step
     {
-        LookAround,
-        MoveAround,
-        Jump,
-        ElevatorInteraction,
+        Welcome,
+        FindFloorList,
+        PressCorrectFloor,
         ExitElevator,
-        MinimapOpen,
-        MinimapSelectOffice,
-        MinimapSelectNavigate,
-        NavigationToWaypoint,
-        RegistrationInteraction,
+        OpenMinimap,
+        SelectRegistration,
+        PressNavigate,
+        WalkToRegistration,
         Completed
     }
 
-    [Header("UI")]
+    [Header("Canvases")]
     public Canvas tutorialCanvas;
-    public TMP_Text titleText;
-    public TMP_Text bodyText;
+    public Canvas normalSceneCanvas;
 
-    [Header("Movement UI")]
-    public GameObject wasdKeys;
-    public Image WImage;
-    public Image AImage;
-    public Image SImage;
-    public Image DImage;
-
-    public Color completedColor = Color.green;
-    public Color defaultColor = Color.white;
+    [Header("UI")]
+    public GameObject welcomePanel;
+    public Image controlsImage;
+    public TMP_Text instructionText;
 
     [Header("References")]
     public Transform playerCamera;
-    public Transform lookTarget;
+    public Transform floorListTarget;
     public GameObject elevatorButton;
-    public GameObject registrationTable;
+    public Collider registrationRoomTrigger;
 
-    private Step current = Step.LookAround;
+    [Header("Developer Control")]
+    public Step endTutorialAt = Step.Completed;
 
-    bool pressedW, pressedA, pressedS, pressedD;
-    bool jumped = false;
+    private Step current = Step.Welcome;
 
     private void Start()
     {
-        wasdKeys.SetActive(false);
-        ShowUI("Look Around", "Look at the highlighted object.");
+        tutorialCanvas.enabled = true;
+        normalSceneCanvas.enabled = false;
+
+        welcomePanel.SetActive(true);
+        controlsImage.gameObject.SetActive(false);
+
+        instructionText.text = "Press ENTER to continue or skip tutorial";
     }
 
     private void Update()
     {
-        if (current == Step.LookAround)
-            DetectLookDirection();
+        switch (current)
+        {
+            case Step.Welcome:
+                DetectWelcome();
+                break;
 
-        if (current == Step.MoveAround)
-            DetectKeyboardMovement();
+            case Step.FindFloorList:
+                DetectLookAtFloorList();
+                break;
 
-        if (current == Step.Jump)
-            DetectJumpFallback();
-
-        if (current == Step.ElevatorInteraction || current == Step.RegistrationInteraction)
-            DetectInteractFallback();
+            case Step.OpenMinimap:
+                DetectMinimapOpen();
+                break;
+        }
     }
 
-    public void OnJump(InputAction.CallbackContext ctx)
-    {
-        if (!ctx.performed) return;
-        if (current != Step.Jump) return;
-
-        jumped = true;
-        Advance(Step.ElevatorInteraction, "Elevator", "Look at the elevator button and press F.");
-    }
+    // --------------------------------------------------
+    // INPUT CALLBACKS
+    // --------------------------------------------------
 
     public void OnInteract(InputAction.CallbackContext ctx)
     {
-        if (!ctx.performed) return;
-        HandleInteract();
+        if (!ctx.started) return;
+
+        if (current == Step.PressCorrectFloor && IsLookingAt(elevatorButton.transform))
+            Advance(Step.ExitElevator);
     }
 
     public void OnOpenMinimap(InputAction.CallbackContext ctx)
     {
         if (!ctx.performed) return;
 
-        if (current == Step.MinimapOpen)
-            Advance(Step.MinimapSelectOffice, "Minimap", "Select the Registration Office.");
+        if (current == Step.OpenMinimap)
+            Advance(Step.SelectRegistration);
     }
 
-    public void OnOfficeSelected() =>
-        AdvanceIf(Step.MinimapSelectOffice, Step.MinimapSelectNavigate,
-            "Navigation", "Select Navigate or Teleport.");
-
-    public void OnNavigateChosen() =>
-        AdvanceIf(Step.MinimapSelectNavigate, Step.NavigationToWaypoint,
-            "Navigation", "Follow the waypoint marker.");
-
-    public void OnWaypointReached() =>
-        AdvanceIf(Step.NavigationToWaypoint, Step.RegistrationInteraction,
-            "Registration", "Look at the table and press F.");
-
-    void DetectLookDirection()
+    // Called by minimap UI (button OR list)
+    public void OnRegistrationSelected()
     {
-        Vector3 dir = (lookTarget.position - playerCamera.position).normalized;
-        float dot = Vector3.Dot(playerCamera.forward, dir);
-
-        if (dot > 0.97f)
-            Advance(Step.MoveAround, "Movement", "Press W, A, S, and D once each.");
+        if (current == Step.SelectRegistration)
+            Advance(Step.PressNavigate);
     }
 
-    void DetectKeyboardMovement()
+    // Called by minimap Navigate button
+    public void OnNavigatePressed()
     {
-        var kb = Keyboard.current;
-        if (kb == null) return;
-
-        if (!pressedW && kb.wKey.wasPressedThisFrame)
-        {
-            pressedW = true;
-            WImage.color = completedColor;
-        }
-
-        if (!pressedA && kb.aKey.wasPressedThisFrame)
-        {
-            pressedA = true;
-            AImage.color = completedColor;
-        }
-
-        if (!pressedS && kb.sKey.wasPressedThisFrame)
-        {
-            pressedS = true;
-            SImage.color = completedColor;
-        }
-
-        if (!pressedD && kb.dKey.wasPressedThisFrame)
-        {
-            pressedD = true;
-            DImage.color = completedColor;
-        }
-
-        if (pressedW && pressedA && pressedS && pressedD)
-            Advance(Step.Jump, "Jump", "Press SPACE to jump.");
+        if (current == Step.PressNavigate)
+            Advance(Step.WalkToRegistration);
     }
 
-    void DetectJumpFallback()
-    {
-        var kb = Keyboard.current;
-        if (kb == null) return;
+    // --------------------------------------------------
+    // STEP LOGIC
+    // --------------------------------------------------
 
-        if (!jumped && kb.spaceKey.wasPressedThisFrame)
-        {
-            jumped = true;
-            Advance(Step.ElevatorInteraction, "Elevator", "Look at the elevator button and press F.");
-        }
+    void DetectWelcome()
+    {
+        if (Keyboard.current.enterKey.wasPressedThisFrame)
+            Advance(Step.FindFloorList);
     }
 
-    void DetectInteractFallback()
+    void DetectLookAtFloorList()
     {
-        var kb = Keyboard.current;
-        if (kb == null) return;
-
-        if (kb.fKey.wasPressedThisFrame)
-            HandleInteract();
+        Vector3 dir = (floorListTarget.position - playerCamera.position).normalized;
+        if (Vector3.Dot(playerCamera.forward, dir) > 0.97f)
+            Advance(Step.PressCorrectFloor);
     }
 
-    void HandleInteract()
+    void DetectMinimapOpen()
     {
-        if (current == Step.ElevatorInteraction)
+        // handled by input callback
+    }
+
+    // --------------------------------------------------
+    // STEP TRANSITIONS
+    // --------------------------------------------------
+
+    void Advance(Step next)
+    {
+        current = next;
+
+        if (current == endTutorialAt)
         {
-            if (IsLookingAt(elevatorButton.transform))
-            {
-                Advance(Step.ExitElevator, "Exit Elevator", "Walk out of the elevator.");
-            }
+            CompleteTutorial();
             return;
         }
 
-        if (current == Step.RegistrationInteraction)
+        switch (current)
         {
-            if (IsLookingAt(registrationTable.transform))
-                CompleteTutorial();
+            case Step.FindFloorList:
+                welcomePanel.SetActive(false);
+                controlsImage.gameObject.SetActive(true);
+                instructionText.text = "Find the floor list inside the elevator.";
+                floorListTarget.gameObject.GetComponent<Outline>().enabled = true;
+                break;
+
+            case Step.PressCorrectFloor:
+                instructionText.text = "Press the correct floor (AWS – Floor 2).";
+                floorListTarget.gameObject.GetComponent<Outline>().enabled = false;
+                elevatorButton.GetComponent<Outline>().enabled = true;
+                break;
+
+            case Step.ExitElevator:
+                instructionText.text = "Exit the elevator.";
+                elevatorButton.GetComponent<Outline>().enabled = false;
+                break;
+
+            case Step.OpenMinimap:
+                instructionText.text = "Press M to open the minimap.";
+                break;
+
+            case Step.SelectRegistration:
+                instructionText.text = "Select the Registration Room on the minimap.";
+                break;
+
+            case Step.PressNavigate:
+                instructionText.text = "Press Navigate (or Teleport) to proceed.";
+                break;
+
+            case Step.WalkToRegistration:
+                instructionText.text = "Follow navigation to the Registration desk.";
+                break;
         }
+    }
+
+    // --------------------------------------------------
+    // TRIGGERS
+    // --------------------------------------------------
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (current == Step.WalkToRegistration && other == registrationRoomTrigger)
+            CompleteTutorial();
     }
 
     public void OnElevatorExitReached()
     {
-        if (current != Step.ExitElevator) return;
-        Advance(Step.MinimapOpen, "Minimap", "Press M to open the minimap.");
+        if (current != Step.ExitElevator)
+            return;
+
+        Advance(Step.OpenMinimap);
     }
 
-    void ResetWASDUI()
-    {
-        WImage.color = defaultColor;
-        AImage.color = defaultColor;
-        SImage.color = defaultColor;
-        DImage.color = defaultColor;
 
-        pressedW = pressedA = pressedS = pressedD = false;
-    }
-
-    void Advance(Step next, string title, string body)
-    {
-        current = next;
-        ShowUI(title, body);
-
-        wasdKeys.SetActive(next == Step.MoveAround);
-
-        if (next != Step.MoveAround)
-            ResetWASDUI();
-    }
-
-    void AdvanceIf(Step required, Step next, string title, string body)
-    {
-        if (current != required) return;
-        Advance(next, title, body);
-    }
-
-    void ShowUI(string title, string body)
-    {
-        tutorialCanvas.enabled = true;
-        titleText.text = title;
-        bodyText.text = body;
-    }
+    // --------------------------------------------------
+    // HELPERS
+    // --------------------------------------------------
 
     bool IsLookingAt(Transform target)
     {
         Ray ray = new Ray(playerCamera.position, playerCamera.forward);
+
         if (Physics.Raycast(ray, out RaycastHit hit, 5f))
-            return hit.transform == target.transform || hit.transform.IsChildOf(target.transform);
+        {
+            return hit.transform == target ||
+                hit.transform.IsChildOf(target);
+        }
 
         return false;
     }
 
+
     void CompleteTutorial()
     {
-        current = Step.Completed;
         tutorialCanvas.enabled = false;
-        GameManager.Instance.SetGameFlow(GameManager.GameFlow.Registration);
+        normalSceneCanvas.enabled = true;
+        current = Step.Completed;
     }
 }
