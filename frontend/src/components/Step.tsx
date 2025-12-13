@@ -12,10 +12,6 @@ function Step({ title, content, number }: StepProps) {
   gsap.registerPlugin(ScrollTrigger);
 
   useEffect(() => {
-    // const element = document.getElementById("step__line")!;
-    // const width = element.style.width;
-    // console.log(width);
-
     const TL = gsap.timeline({
       scrollTrigger: {
         trigger: ".landing__steps",

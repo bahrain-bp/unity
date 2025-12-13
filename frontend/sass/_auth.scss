@@ -1,25 +1,23 @@
 @use "var" as *;
 
 .auth-sec {
+  @include flexCenter;
   min-height: calc(100vh - 0rem);
   padding-bottom: 10rem;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .auth {
-  display: flex;
+  @include flexCenter;
+  @include boxshadow;
   flex-direction: column;
-  align-items: center;
   border-radius: 2rem;
   padding: 4rem 5rem;
   gap: 1rem;
   background-color: $color-white;
   border: 1px solid $color-grey;
-  @include boxshadow;
   margin-top: 10rem;
+
   @media only screen and (max-width: $bp-5) {
     padding: 2rem 2rem;
     width: 90vw;
@@ -148,11 +146,9 @@
       }
 
       & span {
+        @include flexCenter;
         background-color: $color-bg;
         border: 1px solid $color-font;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         width: 3rem;
         height: 3rem;
         border-radius: 5rem;
@@ -169,11 +165,9 @@
 
     &--upload {
       &Placeholder {
+        @include flexCenter;
         background-color: $color-bg;
-        display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
         border: 1px dashed $color-grey;
         border-radius: 1rem;
         padding: 1rem;
@@ -212,6 +206,42 @@
     &:active {
       transform: translate(2px, 2px);
       box-shadow: 1px 1px 0px $color-font !important;
+    }
+  }
+
+  &__verification {
+    & > p {
+      font-size: 1.6rem;
+      color: $color-dark-grey;
+      text-align: center;
+    }
+
+    & .success,
+    & .error {
+      margin-top: 1rem;
+    }
+  }
+
+  &__verification--inputs {
+    display: flex;
+    justify-content: space-between;
+    column-gap: 1rem;
+
+    @media only screen and (max-width: $bp-5) {
+      column-gap: 1vw;
+    }
+  }
+  &__verification--input {
+    width: 2rem;
+    font-size: 2rem;
+    font-weight: 600;
+    text-align: center;
+    aspect-ratio: 1 / 1.5;
+
+    @media only screen and (max-width: $bp-5) {
+      aspect-ratio: 1 / 2;
+      width: 2.5vw;
+      font-size: 4vw;
     }
   }
 }

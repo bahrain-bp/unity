@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
 import Chatbot from "./components/ChatBot";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   const year = new Date().getFullYear();
@@ -13,7 +14,6 @@ function App() {
   return (
     <>
       <Router>
-        {/* <img src={bg} className="bg" /> */}
         <Routes>
           <Route
             path="/"
@@ -48,6 +48,15 @@ function App() {
               <>
                 <Navbar />
                 <Environment />
+              </>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <>
+                <Navbar />
+                <Dashboard />
               </>
             }
           />
