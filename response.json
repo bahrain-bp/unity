@@ -1,0 +1,1 @@
+{"errorMessage": "'httpMethod'", "errorType": "KeyError", "requestId": "0ded6187-b2e7-4963-8c6a-abb7a8dadaab", "stackTrace": ["  File \"/var/task/PreRegisterCheck.py\", line 19, in PreRegisterCheck\n    if event[\"httpMethod\"] == \"OPTIONS\":\n"]}

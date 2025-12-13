@@ -8,7 +8,8 @@ export class DBStack extends Stack {
   public readonly table: dynamodb.Table;
   public readonly userManagementTable: dynamodb.Table;
   public readonly preRegBucket: s3.Bucket;
-    public readonly chatbotTable : dynamodb.TableV2;
+  public readonly chatbotTable : dynamodb.TableV2;
+  public readonly activeConnectionsTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -52,6 +53,25 @@ export class DBStack extends Stack {
             value: this.chatbotTable.tableName,
             exportName: 'UnityChatbotTable',
         });
+
+        //  Active WebSocket connections 
+      this.activeConnectionsTable = new dynamodb.Table(
+        this,
+        "ActiveConnectionsTable",
+        {
+          tableName: "ActiveConnections",
+          partitionKey: {
+            name: "connectionId",
+            type: dynamodb.AttributeType.STRING,
+          },
+          billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+          removalPolicy: RemovalPolicy.DESTROY, // dev only
+          timeToLiveAttribute: "ttl", // auto-cleanup
+        }
+      );
+
+
+
 
   }
 }
