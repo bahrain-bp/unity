@@ -318,5 +318,48 @@ getImageUrlResource.addMethod(
 );
 
 
+
+
+
+
+// ────────────────────────────────
+// GET USER BADGE INFO (Unity)
+// ────────────────────────────────
+const getUserBadgeInfoFn = new NodejsFunction(
+  this,
+  "GetUserBadgeInfoHandler",
+  {
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: path.join(__dirname, "../lambda/getUserBadgeInfo.ts"),
+    handler: "handler",
+    environment: {
+      USER_TABLE: this.userTable.tableName,
+      BUCKET_NAME: bucket.bucketName,
+    },
+    timeout: cdk.Duration.seconds(30),
+  }
+);
+
+// Permissions
+this.userTable.grantReadWriteData(getUserBadgeInfoFn);
+bucket.grantRead(getUserBadgeInfoFn);
+
+
+
+const badgeResource = visitorResource.addResource("badge");
+
+badgeResource.addMethod(
+  "POST",
+  new apigw.LambdaIntegration(getUserBadgeInfoFn),
+  { authorizationType: apigw.AuthorizationType.NONE }
+);
+
+badgeResource.addCorsPreflight({
+  allowOrigins: ["*"],
+  allowMethods: ["POST"],
+});
+
+
+
   }
 }
