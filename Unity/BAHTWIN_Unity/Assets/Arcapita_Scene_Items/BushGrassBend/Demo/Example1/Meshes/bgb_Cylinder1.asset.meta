@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 31e8be2e744671e42b98b97f3f3b5879
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 210986
+  packageName: Bush or Grass bend as Detail Mesh
+  packageVersion: 0.0.1
+  assetPath: Assets/BushGrassBend/Demo/Example1/Meshes/bgb_Cylinder1.asset
+  uploadId: 481076
