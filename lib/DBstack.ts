@@ -33,6 +33,15 @@ export class DBStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY, // change to RETAIN in prod
     });
 
+    // GSI to query last action per plug (for per-plug cooldown)
+    // Lets you query: plug_id = "plug1" ORDER BY ts DESC LIMIT 1
+    this.plugActionsTable.addGlobalSecondaryIndex({
+      indexName: "plug_id-ts-index",
+      partitionKey: { name: "plug_id", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     new CfnOutput(this, "PlugActionsTableNameOutput", {
       value: this.plugActionsTable.tableName,
       exportName: "PlugActionsTableName",

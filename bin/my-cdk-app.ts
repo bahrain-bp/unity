@@ -19,7 +19,10 @@ const env = {
 const dbStack = new DBStack(app, "Unity-DBStack", { env });
 
 // 2) WebSocket stack
-const wsStack = new UnityWebSocketStack(app, "UnityWebSocketStack", { env });
+const wsStack = new UnityWebSocketStack(app, "UnityWebSocketStack", {
+  env,
+  dbStack,
+});
 
 // 3) IoT stack (Things + policy + rule + ingest Lambda + WS broadcast)
 const iotStack = new IoTStack(app, "Unity-IoTStack", {

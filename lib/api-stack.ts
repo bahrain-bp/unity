@@ -1,5 +1,4 @@
 import * as cdk from "aws-cdk-lib";
-//import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import { DBStack } from "./DBstack";
 import { Construct } from "constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
