@@ -88,6 +88,8 @@ export class BedrockStack extends cdk.Stack {
     );
     chatbotTable.grantReadWriteData(this.lambdaFunction);
 
+    chatbotTable.grantReadWriteData(this.lambdaFunction);
+
     // Outputs
     new cdk.CfnOutput(this, "KnowledgeBaseId", {
       value: this.knowledgeBase.attrKnowledgeBaseId,
