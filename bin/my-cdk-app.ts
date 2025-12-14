@@ -39,7 +39,11 @@ const indexStack = new IndexStack(app, 'Unity-IndexStack', {
 const bedrockStack = new BedrockStack(app, 'Unity-BedrockStack', {
   openSearchStack,
   indexStack,
-  env,
+  dbStack,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
+  }
 });
 
 indexStack.addDependency(openSearchStack);
