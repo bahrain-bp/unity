@@ -116,70 +116,34 @@ a {
   color: inherit;
 }
 
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.02s;
-  cursor: pointer;
-  z-index: 0;
-  box-shadow: 0 0px 7px -5px rgba(0, 0, 0, 0.5);
-
-  & svg {
-    width: 3rem;
-    height: 3rem;
-    fill: $color-font;
-    margin-right: 2rem;
-  }
-}
-
-.button:hover {
-  background: rgba($color-blue, 0.5);
-  // color: #d2c5e7;
-}
-
-// .button:active {
-//   transform: scale(0.97);
-// }
-
-.hoverEffect {
-  position: absolute;
-  bottom: 0;
-  top: 0;
-  left: 0;
-  right: 0;
+.success,
+.error {
+  padding: 0.8rem 1rem;
+  font-size: 1.4rem;
+  border-radius: 1rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: -1;
-}
+  column-gap: 1rem;
+  border: 1px solid currentColor;
 
-.hoverEffect div {
-  background: rgb(222, 0, 75);
-  background: linear-gradient(90deg, #f16623 0%, #f16623 49%, #8323f1 100%);
-  border-radius: 40rem;
-  width: 27rem;
-  height: 27rem;
-  transition: 0.4s;
-  filter: blur(20px);
-  animation: effect infinite 3s linear;
-  opacity: 1;
-}
-
-.button:hover .hoverEffect div {
-  width: 8rem;
-  height: 8rem;
-}
-
-@keyframes effect {
-  0% {
-    transform: rotate(0deg);
+  & svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: inherit;
   }
 
-  100% {
-    transform: rotate(360deg);
+  & p {
+    color: $color-font;
+    font-weight: 500;
   }
+}
+
+.error {
+  color: $color-red;
+  background-color: rgba($color-red, 0.3);
+}
+
+.success {
+  color: $color-green;
+  background-color: rgba($color-green, 0.3);
 }

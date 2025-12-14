@@ -1,0 +1,188 @@
+@use "sass:color";
+
+/* Main Container */
+.arrival-container {
+  text-align: center;
+  padding: 25px;
+  margin: 40px auto;
+  max-width: 500px;
+
+  /* Professional card design */
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+
+  /* Smooth fade-in animation */
+  animation: fadeIn 0.35s ease-in-out;
+
+  display: flex;
+flex-direction: column;   /* or row */
+align-items: center;      /* horizontal alignment */
+justify-content: center;  /* vertical alignment */
+
+  
+}
+
+/* Page entrance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Title */
+.arrival-container h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+/* Small subtitle instructions */
+.instructions {
+  font-size: 14px;
+  margin-bottom: 20px;
+  color: #555;
+  line-height: 1.4;
+}
+
+/* Photo preview styling */
+.photo-section {
+  margin-bottom: 20px;
+}
+
+.photo-preview img {
+  width: 280px;
+  border-radius: 14px;
+  border: 3px solid #e6e6e6;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* --- BUTTON ROW --- */
+.button-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+
+  /* Prevent buttons from stretching on mobile */
+  overflow-x: auto;
+  padding: 10px 0;
+  white-space: nowrap;
+
+  /* Hide scrollbar */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* --- SHARED BUTTON STYLE (UNCHANGED) --- */
+.primary,
+.upload-btn,
+.secondary,
+.submit {
+  padding: 10px 16px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+  flex-shrink: 0; /* prevents stretching */
+}
+
+/* Primary color buttons */
+.primary,
+.upload-btn {
+  background: #ff8e3c;
+  color: #fff;
+
+  &:hover {
+    background: color.adjust(#ff8e3c, $lightness: -8%);
+    color: black;
+  }
+}
+
+.upload-wrapper label {
+  cursor: pointer;
+}
+
+
+/* Secondary capture button */
+.secondary {
+  background: #444;
+  color: #fff;
+
+  &:hover {
+    background: color.adjust(#444, $lightness: 7%)
+    
+  }
+}
+
+/* Submit button */
+.submit {
+  background: #0077cc;
+  color: white;
+
+  &:hover {
+    background: #005fa3;
+  }
+
+  &:disabled {
+    background: #9bbcd4;
+    cursor: not-allowed;
+  }
+}
+
+/* --- RESULT BOXES --- */
+.result-box {
+  margin-top: 25px;
+  padding: 18px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 16px;
+  animation: fadeIn 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column; // vertical stack
+  align-items: center;
+  justify-content: center;
+  gap: 6px; // space between icon, h2, p
+
+  .icon {
+    font-size: 42px;
+    margin-bottom: 8px;
+  }
+}
+
+.result-box.success {
+  background: #d4edda;
+  border-left: 6px solid #28a745;
+  color: #155724;
+
+  .icon {
+    font-size: 48px;
+    color: green;
+  }
+}
+
+.result-box.failure {
+  background: #f8d7da;
+  border-left: 6px solid #dc3545;
+  color: #842029;
+}
+
+.result-box.warning {
+  background: #fff3cd;
+  border-left: 6px solid #ffcc00;
+  color: #664d03;}

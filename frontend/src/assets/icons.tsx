@@ -89,8 +89,8 @@ export const HOME = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       stroke-width="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
@@ -185,8 +185,8 @@ export const FILTER = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       stroke-width="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
@@ -202,8 +202,8 @@ export const X = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       stroke-width="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
@@ -331,8 +331,8 @@ export const CAMERA = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       stroke-width="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
@@ -349,12 +349,57 @@ export const CHAT = () => {
       height="46"
       fill="currentColor"
       stroke="none"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+    </svg>
+  );
+};
+export const SUCCESS = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M12 2.25A9.75 9.75 0 1 0 21.75 12 9.769 9.769 0 0 0 12 2.25Zm4.64 8.044-5.493 5.25a.76.76 0 0 1-.525.206.722.722 0 0 1-.516-.206L7.36 12.919a.75.75 0 1 1 1.032-1.088l2.23 2.128 4.988-4.753a.75.75 0 0 1 1.032 1.088Z"></path>
+    </svg>
+  );
+};
+export const ERROR = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M21.31 7.519 16.48 2.69a1.51 1.51 0 0 0-1.06-.441H8.579a1.51 1.51 0 0 0-1.06.44L2.692 7.52a1.51 1.51 0 0 0-.441 1.06v6.843c.002.397.16.778.44 1.06L7.52 21.31c.281.281.662.44 1.06.441h6.843a1.51 1.51 0 0 0 1.06-.44l4.827-4.829a1.51 1.51 0 0 0 .441-1.06V8.579a1.51 1.51 0 0 0-.44-1.06ZM11.25 7.5a.75.75 0 1 1 1.5 0v5.25a.75.75 0 1 1-1.5 0V7.5Zm.75 9.75A1.125 1.125 0 1 1 12 15a1.125 1.125 0 0 1 0 2.25Z"></path>
+    </svg>
+  );
+};
+export const MENU = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M3 12h18"></path>
+      <path d="M3 6h18"></path>
+      <path d="M3 18h18"></path>
     </svg>
   );
 };

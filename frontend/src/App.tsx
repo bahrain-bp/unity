@@ -6,6 +6,13 @@ import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
 import Chatbot from "./components/ChatBot";
+import Dashboard from "./pages/Dashboard";
+import VisitorArrival from "./pages/visitorArrival"
+import InviteVisitor from "./pages/InviteVisitor";
+import VisitorFeedBack from "./pages/VisitorFeedback";
+import ErrorPage from "./pages/error";
+import ThankYouPage from "./pages/thank-you";
+
 
 function App() {
   const year = new Date().getFullYear();
@@ -48,6 +55,55 @@ function App() {
               <>
                 <Navbar />
                 <Environment />
+              </>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <>
+                <Navbar />
+                <Dashboard />
+              </>
+            }
+          />
+                    <Route
+            path="/visitor-arrival"
+            element={
+              <>
+                <VisitorArrival />
+              </>
+            }
+          />
+          <Route
+            path="/InviteVisitor"
+            element={
+              <>
+                <InviteVisitor />
+              </>
+            }
+          />
+          <Route
+            path="/VisitorFeedBack"
+            element={
+              <>
+                <VisitorFeedBack />
+              </>
+            }
+          />
+          <Route
+            path="/error"
+            element={
+              <>
+                <ErrorPage />
+              </>
+            }
+          />
+          <Route
+            path="/thank-you"
+            element={
+              <>
+                <ThankYouPage />
               </>
             }
           />

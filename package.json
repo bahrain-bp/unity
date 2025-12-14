@@ -15,7 +15,7 @@
     "@aws-sdk/lib-dynamodb": "^3.936.0",
     "@types/aws-lambda": "^8.10.159",
     "@types/jest": "^29.5.14",
-    "@types/node": "22.7.9",
+    "@types/node": "^22.7.9",
     "aws-cdk": "2.177.0",
     "esbuild": "^0.27.0",
     "jest": "^29.7.0",
@@ -24,15 +24,20 @@
     "typescript": "~5.6.3"
   },
   "dependencies": {
-    "@aws-cdk/aws-apigateway": "^1.38.0",
-    "@aws-cdk/aws-lambda": "^1.19.0",
-    "@aws-cdk/aws-s3": "^1.36.1",
+    "@aws-cdk/aws-apigateway": "^1.203.0",
+    "@aws-cdk/aws-dynamodb": "^1.203.0",
+    "@aws-cdk/aws-iam": "^1.203.0",
+    "@aws-cdk/aws-lambda": "^1.203.0",
+    "@aws-cdk/aws-logs": "^1.203.0",
+    "@aws-cdk/aws-s3": "^1.203.0",
     "@aws-cdk/aws-s3-deployment": "^1.78.0",
+    "@aws-cdk/aws-sns": "^1.203.0",
+    "@aws-cdk/aws-sns-subscriptions": "^1.203.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.940.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.940.0",
     "@aws-sdk/client-iot-data-plane": "^3.940.0",
-    "aws-cdk-lib": "^2.177.0",
+    "aws-cdk-lib": "^2.232.2",
     "axios": "^1.13.2",
-    "constructs": "^10.4.2"
+    "constructs": "^10.4.4"
   }
 }

@@ -51,13 +51,12 @@ def PreRegisterCheck(event, context):
             ContentType="image/jpeg"
         )
 
-
-        # Respond immediately after upload
+        # Respond  after upload
         response_body = {
             "message": "Registration was successfull.",
         }
-        threading.Thread(target=background_index_face, args=(image_bytes, key, name, email, userId)).start()
 
+        background_index_face(image_bytes, key, name, email, userId)
         return response(200, response_body)
 
     except Exception as e:
