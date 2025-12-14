@@ -66,12 +66,6 @@ const Chatbot = () => {
       setSessionId(res.sessionId);
     }
 
-    const res = await getRes(questionText)
-    if(res.sessionId) {
-      setSessionId(res.sessionId)
-
-    }
-
     const botMsg: Message = { text: res.answer, sender: "bot" }
     setMsgs(prev => [...prev, botMsg])
   }
