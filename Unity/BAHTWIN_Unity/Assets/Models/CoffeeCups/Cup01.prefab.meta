@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0862b31ca0f1d6a4c8131a54657f4b57
+timeCreated: 1462037376
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 63401
+  packageName: Super Coffee Pack!
+  packageVersion: 1.0
+  assetPath: Assets/Models/CoffeeCups/Cup01.prefab
+  uploadId: 221738

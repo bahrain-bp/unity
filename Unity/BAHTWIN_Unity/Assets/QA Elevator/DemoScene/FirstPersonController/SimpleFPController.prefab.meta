@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 0224c0ba607d4a645935c5590f5eac58
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/DemoScene/FirstPersonController/SimpleFPController.prefab
+  uploadId: 671330

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: d91dfb0f0f1395b4ca3e79cb15463b85
+timeCreated: 1499442353
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Materials/Elevator_mtl.mat
+  uploadId: 671330

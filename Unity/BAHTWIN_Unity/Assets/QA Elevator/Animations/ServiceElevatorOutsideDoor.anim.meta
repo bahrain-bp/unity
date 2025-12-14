@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 604693b002ec2b24189aa1da9b775754
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Animations/ServiceElevatorOutsideDoor.anim
+  uploadId: 671330

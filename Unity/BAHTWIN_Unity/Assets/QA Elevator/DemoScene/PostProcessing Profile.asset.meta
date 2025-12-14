@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a1d3543b18a06c143890c5d752eb85cc
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/DemoScene/PostProcessing Profile.asset
+  uploadId: 671330

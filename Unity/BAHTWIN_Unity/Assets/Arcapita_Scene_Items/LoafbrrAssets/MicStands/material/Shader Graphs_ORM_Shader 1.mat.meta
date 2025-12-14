@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d6281f9e03258904b9e1ad6a4aef8d89
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 341256
+  packageName: Microphone Stands
+  packageVersion: 1.0
+  assetPath: Assets/LoafbrrAssets/MicStands/material/Shader Graphs_ORM_Shader 1.mat
+  uploadId: 809278

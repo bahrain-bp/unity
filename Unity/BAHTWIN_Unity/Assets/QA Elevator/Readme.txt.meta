@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b4d8032704dbfa44696c3cccc851d28c
+timeCreated: 1504376896
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Readme.txt
+  uploadId: 671330

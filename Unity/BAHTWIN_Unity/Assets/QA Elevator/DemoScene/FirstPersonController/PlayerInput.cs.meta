@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 8f9400cf1396f044db2ac433d633bdd7
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/DemoScene/FirstPersonController/PlayerInput.cs
+  uploadId: 671330

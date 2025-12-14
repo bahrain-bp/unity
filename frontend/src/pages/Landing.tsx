@@ -25,9 +25,6 @@ function Landing() {
         </p>
         <Link to={"/info"} className="btn">
           Explore now!
-          {/* <div className="hoverEffect">
-            <div></div>
-          </div> */}
         </Link>
       </div>
       <section>
