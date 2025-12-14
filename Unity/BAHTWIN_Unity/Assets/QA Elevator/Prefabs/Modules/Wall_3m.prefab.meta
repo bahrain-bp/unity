@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: c5928b0e5af620c41a7c9de5da91cdda
+timeCreated: 1504112815
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Prefabs/Modules/Wall_3m.prefab
+  uploadId: 671330

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2c71722d9cc552e4db2e002b4eeb6661
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Materials/PlayerCapsule.mat
+  uploadId: 671330

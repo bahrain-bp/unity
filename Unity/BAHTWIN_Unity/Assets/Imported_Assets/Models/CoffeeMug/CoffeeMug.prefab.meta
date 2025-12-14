@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: abe9fc4ab64909b498026602c99a388c
+timeCreated: 1514869148
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 63401
+  packageName: Super Coffee Pack!
+  packageVersion: 1.0
+  assetPath: Assets/Models/CoffeeMug/CoffeeMug.prefab
+  uploadId: 221738

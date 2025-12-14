@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 041fa39168a3a904f84979e264d25a18
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 235285
+  packageName: Business Office
+  packageVersion: 1.1
+  assetPath: Assets/AK Studio Art/Business Office/Settings/URP/UniversalRenderPipelineGlobalSettings.asset
+  uploadId: 752278

@@ -66,9 +66,15 @@ const Chatbot = () => {
       setSessionId(res.sessionId);
     }
 
-    const botMsg: Message = { text: res.answer, sender: "bot" };
-    setMsgs((prev) => [...prev, botMsg]);
-  };
+    const res = await getRes(questionText)
+    if(res.sessionId) {
+      setSessionId(res.sessionId)
+
+    }
+
+    const botMsg: Message = { text: res.answer, sender: "bot" }
+    setMsgs(prev => [...prev, botMsg])
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value);

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cf60b1f9231b8354a8afc5177c181f77
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 261375
+  packageName: Large set of first aid kits
+  packageVersion: 1.0
+  assetPath: Assets/Large set of first aid kits/Materials/medicine_chest_wood_glass.mat
+  uploadId: 748883

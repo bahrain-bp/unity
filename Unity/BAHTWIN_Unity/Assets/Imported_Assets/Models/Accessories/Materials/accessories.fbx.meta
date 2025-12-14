@@ -1,0 +1,119 @@
+fileFormatVersion: 2
+guid: 01bf4a1fb8fde5143b85f2bb18efe566
+timeCreated: 1463244891
+licenseType: Store
+ModelImporter:
+  serializedVersion: 18
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: Milk
+    100004: Nippers
+    100006: Spoon
+    100008: Sugar
+    100010: Sugarbowl
+    100012: Sugarbowl_handle
+    100014: Sugarbowl_Metal
+    100016: Sugarbowl_top
+    100018: SugarPile
+    400000: //RootNode
+    400002: Milk
+    400004: Nippers
+    400006: Spoon
+    400008: Sugar
+    400010: Sugarbowl
+    400012: Sugarbowl_handle
+    400014: Sugarbowl_Metal
+    400016: Sugarbowl_top
+    400018: SugarPile
+    2300000: Milk
+    2300002: Nippers
+    2300004: Spoon
+    2300006: Sugar
+    2300008: Sugarbowl
+    2300010: Sugarbowl_handle
+    2300012: Sugarbowl_Metal
+    2300014: Sugarbowl_top
+    2300016: SugarPile
+    3300000: Milk
+    3300002: Nippers
+    3300004: Spoon
+    3300006: Sugar
+    3300008: Sugarbowl
+    3300010: Sugarbowl_handle
+    3300012: Sugarbowl_Metal
+    3300014: Sugarbowl_top
+    3300016: SugarPile
+    4300000: Nippers
+    4300002: Milk
+    4300004: Spoon
+    4300006: Sugarbowl_Metal
+    4300008: Sugarbowl_handle
+    4300010: Sugarbowl
+    4300012: Sugarbowl_top
+    4300014: Sugar
+    4300016: SugarPile
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 2
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 180
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 63401
+  packageName: Super Coffee Pack!
+  packageVersion: 1.0
+  assetPath: Assets/Models/Accessories/Materials/accessories.fbx
+  uploadId: 221738

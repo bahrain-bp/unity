@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 617baca658faee64180e7451934e05be
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Materials/ServiceLiftDirt_emission_mtl.mat
+  uploadId: 671330

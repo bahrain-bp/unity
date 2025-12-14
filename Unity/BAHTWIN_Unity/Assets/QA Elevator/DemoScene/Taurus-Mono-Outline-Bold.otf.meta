@@ -1,0 +1,28 @@
+fileFormatVersion: 2
+guid: 55d4a30896e6f7142989a2f725d7f69a
+timeCreated: 1504255855
+licenseType: Store
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Taurus Mono Outline
+  fontNames:
+  - Taurus Mono Outline
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/DemoScene/Taurus-Mono-Outline-Bold.otf
+  uploadId: 671330

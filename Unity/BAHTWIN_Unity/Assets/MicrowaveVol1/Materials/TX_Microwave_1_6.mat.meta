@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c97c7001fab346f47b7017506113f2bb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 332966
+  packageName: Microwave Vol. 1
+  packageVersion: 1.0.0
+  assetPath: Assets/MicrowaveVol1/Materials/TX_Microwave_1_6.mat
+  uploadId: 788202
