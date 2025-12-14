@@ -2,7 +2,6 @@ console.log("[JS] Unity Realtime Bridge Loaded");
 
 const API_BASE = "https://mixmh2ecul.execute-api.us-east-1.amazonaws.com/dev";
 const PLUGS_ENDPOINT = `${API_BASE}/plugs`;
-
 const WS_URL = "wss://x7zgvke8me.execute-api.us-east-1.amazonaws.com/dev";
 
 // --------------------
@@ -59,10 +58,143 @@ let wsReady = false;
 let wsUnityInstance = null;
 let wsRetryTimer = null;
 
+window.__SMART_PLUG_BRIDGE__ = window.__SMART_PLUG_BRIDGE__ || {
+  inited: false,
+  wsConnecting: false,
+};
+
+function safeNowSeconds() {
+  return Math.floor(Date.now() / 1000);
+}
+
+/**
+ * Unified sender: snapshot / plug_action / http all go through here.
+ */
+function sendPlugStateToUnity(raw, msgTs) {
+  const id = raw?.id || raw?.plugId;
+  if (!id) {
+    console.warn("[Bridge] Missing id/plugId:", raw);
+    return;
+  }
+
+  const normalized = {
+    id,
+    type: "plug",
+    state: raw.state ?? "unknown",
+    updated_at: msgTs || raw.updated_at || safeNowSeconds(),
+    status: raw.status ?? 200,
+    message: raw.message || "",
+    retryAfter: raw.retryAfter || raw.cooldown?.retryAfter || 0,
+  };
+
+  const targetObj = `SmartPlug_${id}`;
+  console.log("[Bridge] Plug → Unity:", normalized);
+
+  try {
+    wsUnityInstance?.SendMessage(
+      targetObj,
+      "OnDeviceStateJson",
+      JSON.stringify(normalized)
+    );
+  } catch (e) {
+    console.warn("[Bridge] SendMessage failed:", e);
+  }
+}
+
+function sendTelemetryToUnity(payload, msgTs) {
+  if (!payload) return;
+
+  // Only handle your DHT11 env sensor (optional filter)
+  if (payload.sensor_type !== "dht11") return;
+
+  const tempC = payload.metrics?.temp_c;
+  const humidity = payload.metrics?.humidity;
+
+  // If metrics are missing, don't spam Unity
+  if (tempC === undefined && humidity === undefined) return;
+
+  const normalized = {
+    device: payload.device || "unknown",
+    sensor_id: payload.sensor_id || "unknown",
+    sensor_type: payload.sensor_type || "unknown",
+    temp_c: typeof tempC === "number" ? tempC : 0,
+    humidity: typeof humidity === "number" ? humidity : 0,
+    ts: msgTs || payload.ts || safeNowSeconds(),
+    status: payload.status || "ok",
+  };
+
+  // ✅ IMPORTANT: this GameObject name must exist in Unity
+  // Create an empty GameObject called EXACTLY: EnvSensor_UI
+  const targetObj = "EnvSensor_UI";
+
+  console.log("[Bridge] Telemetry → Unity:", normalized);
+
+  try {
+    wsUnityInstance?.SendMessage(
+      targetObj,
+      "OnTelemetryJson",
+      JSON.stringify(normalized)
+    );
+  } catch (e) {
+    console.warn("[Bridge] Telemetry SendMessage failed:", e);
+  }
+}
+
+function sendDht11TelemetryToUnity(payload, msgTs) {
+  if (!payload) return;
+
+  // ✅ Only DHT11
+  if (payload.sensor_type !== "dht11") return;
+
+  const metrics = payload.metrics || {};
+  const tempC = metrics.temp_c;
+  const hum = metrics.humidity;
+
+  // ✅ Only send if BOTH exist (you can relax this if you want)
+  if (typeof tempC !== "number" || typeof hum !== "number") return;
+
+  // ✅ Flatten metrics for your C# TelemetryMsg class
+  const normalized = {
+    device: payload.device || "",
+    sensor_id: payload.sensor_id || "",
+    sensor_type: payload.sensor_type || "dht11",
+    temp_c: tempC,
+    humidity: hum,
+    ts: payload.ts || msgTs || safeNowSeconds(),
+    status: payload.status || "ok",
+  };
+
+  // ✅ Choose the Unity GameObject name that has EnvTelemetryText attached
+  // Change this to YOUR actual object name in Unity
+  const targetObj = "EnvSensor_UI";
+
+  console.log("[Bridge] DHT11 Telemetry → Unity:", normalized);
+
+  try {
+    wsUnityInstance?.SendMessage(
+      targetObj,
+      "OnTelemetryJson",
+      JSON.stringify(normalized)
+    );
+  } catch (e) {
+    console.warn("[Bridge] Telemetry SendMessage failed:", e);
+  }
+}
+
+
 function setupWebSocket(unityInstance) {
   wsUnityInstance = unityInstance;
 
-  if (ws && wsReady) return;
+  if (ws && wsReady) {
+    console.log("[WS] already connected");
+    return;
+  }
+
+  if (window.__SMART_PLUG_BRIDGE__.wsConnecting) {
+    console.log("[WS] connection already in progress");
+    return;
+  }
+  window.__SMART_PLUG_BRIDGE__.wsConnecting = true;
 
   console.log("[WS] Connecting:", WS_URL);
   wsDebug("Connecting...");
@@ -71,24 +203,33 @@ function setupWebSocket(unityInstance) {
 
   ws.onopen = () => {
     wsReady = true;
+    window.__SMART_PLUG_BRIDGE__.wsConnecting = false;
+
     console.log("[WS] connected");
     wsDebug("Connected ✔");
 
+    // Send BOTH action + type (covers all API Gateway routing configs)
+    const hello = {
+      action: "hello",          // for routeSelectionExpression "$request.body.action"
+      type: "hello",            
+      client: "unity",
+      requestSnapshot: true,    // tells ws-default to send plug_snapshot
+      ts: safeNowSeconds(),
+    };
+
     try {
-      ws.send(
-        JSON.stringify({
-          type: "hello",
-          client: "unity",
-          ts: Math.floor(Date.now() / 1000),
-        })
-      );
-    } catch {}
+      wsDebug("SEND: " + JSON.stringify(hello));
+      ws.send(JSON.stringify(hello));
+    } catch (e) {
+      console.warn("[WS] hello send failed:", e);
+    }
   };
 
   ws.onclose = (e) => {
     console.warn("[WS] closed:", e.code, e.reason);
     wsDebug("Closed ❌  Retrying...");
     wsReady = false;
+    window.__SMART_PLUG_BRIDGE__.wsConnecting = false;
     ws = null;
 
     if (!wsRetryTimer) {
@@ -116,40 +257,57 @@ function setupWebSocket(unityInstance) {
 
     if (msg.type === "telemetry") {
       console.log("[WS] Telemetry:", msg);
+
+      // forward telemetry to Unity UI
+      sendDht11TelemetryToUnity(msg.payload, msg.ts);
+
       return;
     }
 
-    // ✅ IMPORTANT: backend is sending plug_action (from your logs)
-    // Also keep plug_update for compatibility
-    if (msg.type === "plug_action" || msg.type === "plug_update") {
-      const p = msg.payload || {};
-      const id = p.id || p.plugId; // ✅ support both keys
 
-      if (!id) {
-        console.warn("[WS] plug message missing id/plugId:", msg);
-        return;
+    // Snapshot: { type:"plug_snapshot", payload:{ plugs:[...] } }
+    if (msg.type === "plug_snapshot") {
+      const plugs = Array.isArray(msg.payload?.plugs) ? msg.payload.plugs : [];
+      console.log("[WS] plug_snapshot:", plugs);
+
+      for (const p of plugs) {
+        sendPlugStateToUnity(p, msg.ts);
       }
+      return;
+    }
 
-      // Normalize payload to match Unity PlugStatePayload fields
-      const normalized = {
-        id,
-        type: "plug",
-        state: p.state, // "on"/"off"
-        updated_at: msg.ts || Math.floor(Date.now() / 1000),
-        status: p.status ?? 200,
-        message: p.message || "",
-        retryAfter: (p.cooldown && p.cooldown.retryAfter) || p.retryAfter || 0,
-      };
-
-      const targetObj = `SmartPlug_${id}`;
-
-      console.log("[WS] Plug event → Unity:", normalized);
-
-      wsUnityInstance?.SendMessage(
-        targetObj,
-        "OnDeviceStateJson",
-        JSON.stringify(normalized)
+    // Live updates: { type:"plug_action", payload:{ plugId, state, cooldown{...}, ... } }
+    if (msg.type === "plug_action") {
+      const p = msg.payload || {};
+      sendPlugStateToUnity(
+        {
+          plugId: p.plugId,
+          state: p.state,
+          status: p.status,
+          message: p.message,
+          cooldown: p.cooldown,
+          retryAfter: p.retryAfter,
+        },
+        msg.ts
       );
+      return;
+    }
+
+    // compatibility
+    if (msg.type === "plug_update") {
+      const p = msg.payload || {};
+      sendPlugStateToUnity(
+        {
+          id: p.id || p.plugId,
+          state: p.state,
+          status: p.status,
+          message: p.message,
+          cooldown: p.cooldown,
+          retryAfter: p.retryAfter,
+        },
+        msg.ts
+      );
+      return;
     }
   };
 }
@@ -158,6 +316,14 @@ function setupWebSocket(unityInstance) {
 // Unity → Backend HTTP (toggle plug)
 // ------------------------------------------------
 window.initSmartPlugBridge = function (unityInstance) {
+  if (window.__SMART_PLUG_BRIDGE__.inited) {
+    console.warn("[JS] initSmartPlugBridge already called — reusing existing bridge");
+    wsUnityInstance = unityInstance;
+    setupWebSocket(unityInstance);
+    return;
+  }
+  window.__SMART_PLUG_BRIDGE__.inited = true;
+
   console.log("[JS] Initializing Unity Realtime Bridge…");
   setupWebSocket(unityInstance);
 
@@ -165,23 +331,16 @@ window.initSmartPlugBridge = function (unityInstance) {
     console.log("[JS] ToggleSmartPlug:", { deviceId, state });
 
     const token = getIdToken();
-    const targetObject = `SmartPlug_${deviceId}`;
-
     if (!token) {
-      const errorPayload = {
-        id: deviceId,
-        type: "plug",
-        state,
-        updated_at: Math.floor(Date.now() / 1000),
-        status: 401,
-        message: "Not authenticated",
-        retryAfter: 0,
-      };
-
-      unityInstance.SendMessage(
-        targetObject,
-        "OnDeviceStateJson",
-        JSON.stringify(errorPayload)
+      sendPlugStateToUnity(
+        {
+          id: deviceId,
+          state,
+          status: 401,
+          message: "Not authenticated",
+          retryAfter: 0,
+        },
+        safeNowSeconds()
       );
       return;
     }
@@ -209,22 +368,15 @@ window.initSmartPlugBridge = function (unityInstance) {
       res = { status: 0 };
     }
 
-    // Keep your current behavior here (HTTP also updates Unity)
-    // You said you might later want WS-only state; for now we keep it as-is.
-    const payload = {
-      id: deviceId,
-      type: "plug",
-      state: body.state || state,
-      updated_at: Math.floor(Date.now() / 1000),
-      status: res.status,
-      message: body.message || "",
-      retryAfter: body.retryAfter || body.cooldown?.retryAfter || 0,
-    };
-
-    unityInstance.SendMessage(
-      targetObject,
-      "OnDeviceStateJson",
-      JSON.stringify(payload)
+    sendPlugStateToUnity(
+      {
+        id: deviceId,
+        state: body?.state || state,
+        status: res.status,
+        message: body?.message || "",
+        retryAfter: body?.retryAfter || body?.cooldown?.retryAfter || 0,
+      },
+      safeNowSeconds()
     );
   };
 
