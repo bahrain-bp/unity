@@ -2,6 +2,7 @@ import os
 import boto3
 import base64
 import json
+from datetime import datetime, timezone, timedelta
 
 dynamodb = boto3.resource('dynamodb')
 USER_TABLE = os.environ['USER_TABLE']
@@ -76,12 +77,23 @@ def ArrivalRekognition(event, context):
                 IndexName='EmailVisitDateIndex',  # the name of the GSI
                 KeyConditionExpression=boto3.dynamodb.conditions.Key('email').eq(visitor['email'])
                 )
+            
             items_v = db_response_email.get('Items', [])
-            print(items_v)
 
             if not items_v:
                 print("not invited")
-                return  response(200, {"error": "visitor is not invited"})
+                return  response(403, {"error": "visitor is not invited"})
+            
+            # Bahrain timezone
+            bahrain_tz = timezone(timedelta(hours=3))
+            today_bahrain = datetime.now(bahrain_tz).date()
+            # Check if any item matches today's date
+            duplicate_today = any(
+                datetime.strptime(item['visitDate'], "%Y-%m-%d").date() == today_bahrain
+                for item in items_v
+            )
+            if not duplicate_today:
+               return response(200, {"error": f"There is no visit scheduled for today for the visitor {visitor['name']}!"})
 
             SendSMS(visitor['name'])
 
@@ -105,7 +117,7 @@ def ArrivalRekognition(event, context):
 
 def SendSMS(visitor_name):
     
-    message = f"Hello Admin, you visitor {visitor_name} has arrived at office for his oppointment"
+    message = f"Hello Admin, the visitor {visitor_name} has arrived at facility."
     
     try:
         # Send SMS directly via SNS
