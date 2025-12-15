@@ -14,7 +14,7 @@ export class VisitorFeedbackStack extends cdk.Stack{
     userTable: dynamodb.Table;
     constructor(scope: Construct, id: string, props: VisitorFeedbackStackProps){
         super(scope,id,props);
-        this.userTable = props.userTable; // reference from the other stack
+        const userTable = props.userTable; // reference from the other stack
 
   
     // Visitor Feedback Table
@@ -69,7 +69,7 @@ const createPythonLambda = (id: string, handlerFile: string, functionName: strin
 
 const commonEnv = {
   FEEDBACK_TABLE: feedbackTable.tableName,
-  VISITOR_TABLE: this.userTable.tableName,
+  VISITOR_TABLE: userTable.tableName,
   FEEDBACK_SECRET: 'secret',
   used_tokens_table: usedTokensTable.tableName
 };
@@ -96,8 +96,8 @@ const getFeedbackLambda = createPythonLambda(
   commonEnv
 );
 
-    this.userTable.grantReadWriteData(getVisitorInfoLambda);
-    this.userTable.grantReadData(submitFeedbackLambda);
+    userTable.grantReadWriteData(getVisitorInfoLambda);
+    userTable.grantReadData(submitFeedbackLambda);
 
     feedbackTable.grantReadWriteData(submitFeedbackLambda);
     feedbackTable.grantReadData(getFeedbackLambda);

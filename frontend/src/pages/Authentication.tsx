@@ -21,6 +21,7 @@ function Authentication() {
   const [showPass1, setShowPass1] = useState<boolean>(false);
   const [showPass2, setShowPass2] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<boolean>(true);
+  // const [isSignedUp, setIsSignedUp] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -165,13 +166,16 @@ function Authentication() {
     // setLoading(false);
   };
 
-  const handleImageUpload = async (userId: string) => {    
+  const handleImageUpload = async (userId: string) => {
+    console.log(userId);
+    
     setLoading(true);
     try {
+      console.log(userId);
       await ImageClient.post("/visitor/register", {
-        username,
-        email: account.email,
         userId: userId,
+        name: username,
+        email: account.email,
         image_data: imageBase64,
       });
       setError("");
@@ -219,6 +223,15 @@ function Authentication() {
               length={6}
               onChange={(value) => setVerificationCode(value)}
             />
+            {/* <input
+              type="email"
+              className="auth__form--input"
+              placeholder="Enter your email"
+              id="email"
+              name="email"
+              onChange={handleChange}
+            /> */}
+
             {error && <Message type="error" icon={ERROR()} message={error} />}
             {message && (
               <Message type="success" icon={SUCCESS()} message={message} />
