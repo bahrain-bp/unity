@@ -93,7 +93,7 @@ def ArrivalRekognition(event, context):
                 for item in items_v
             )
             if not duplicate_today:
-               return response(200, {"error": f"There is no visit scheduled for today for the visitor {visitor['name']}!"})
+               return response(409, {"error": f"There is no visit scheduled for today for the visitor {visitor['name']}!"})
 
             SendSMS(visitor['name'])
 
@@ -109,7 +109,7 @@ def ArrivalRekognition(event, context):
                 "status": "match",
             })
         else:
-            return response(200, {"error": "Visitor is not registered"})
+            return response(404, {"error": "Visitor is not registered"})
 
     except Exception as e:
         print("ERROR:", str(e))

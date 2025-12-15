@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import axios from "axios";
 import { FaUpload } from "react-icons/fa";
 import "../../sass/_visitorInvite.scss";
+import { ImageClient } from "../services/api";
 
 function VisitorTestPage() {
   const [mode, setMode] = useState<"single" | "bulk">("single");
@@ -31,8 +32,8 @@ function VisitorTestPage() {
         setMessage("Sending invitation...");
         setMessageType("processing");
 
-        const response = await axios.post(
-          "https://vljyjl7oae.execute-api.us-east-1.amazonaws.com/prod/admin/registerVisitorIndividual",
+        const response = await ImageClient.post(
+          "admin/registerVisitorIndividual",
           {
             name,
             email,
