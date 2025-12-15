@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 2f523dc864c009744817fd7d934c5bce
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 260549
+  packageName: Office Assets
+  packageVersion: 1.0
+  assetPath: Assets/AK Studio Art/Office Assets/Settings/URP/Universal Render Pipeline
+    Asset_Renderer.asset
+  uploadId: 619118

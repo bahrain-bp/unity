@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0d13883a7f279664eb196593064c6596
+timeCreated: 1514868711
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 63401
+  packageName: Super Coffee Pack!
+  packageVersion: 1.0
+  assetPath: Assets/Models/CoffeeJar/Materials/CoffeeJar_alpha_mobile.mat
+  uploadId: 221738

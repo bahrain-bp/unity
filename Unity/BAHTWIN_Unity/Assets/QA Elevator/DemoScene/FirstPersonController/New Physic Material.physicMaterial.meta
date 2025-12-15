@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6c1d6cf717ba53f458a06812930ed70a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 13400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/DemoScene/FirstPersonController/New Physic Material.physicMaterial
+  uploadId: 671330

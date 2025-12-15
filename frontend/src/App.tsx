@@ -20,7 +20,6 @@ function App() {
   return (
     <>
       <Router>
-        {/* <img src={bg} className="bg" /> */}
         <Routes>
           <Route
             path="/"

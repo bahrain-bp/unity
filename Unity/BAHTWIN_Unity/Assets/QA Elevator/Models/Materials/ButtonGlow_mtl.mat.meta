@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: ca346f9cb9fc33741874e16145786db1
+timeCreated: 1501853709
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Materials/ButtonGlow_mtl.mat
+  uploadId: 671330

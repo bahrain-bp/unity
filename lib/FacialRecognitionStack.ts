@@ -12,7 +12,6 @@ import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import * as path from 'path';
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 
-
 export class FacialRecognitionStack extends cdk.Stack {
  public readonly userTable: dynamodb.Table;
 

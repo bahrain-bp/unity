@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4628e4feabb2be44d947e333a23e9273
+timeCreated: 1461430235
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 63401
+  packageName: Super Coffee Pack!
+  packageVersion: 1.0
+  assetPath: Assets/Models/CoffeePot/Materials/coffeePot_alpha.mat
+  uploadId: 221738

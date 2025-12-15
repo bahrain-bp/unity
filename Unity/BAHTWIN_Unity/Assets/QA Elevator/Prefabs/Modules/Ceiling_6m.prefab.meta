@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 22686bc15e987184ea5e2529e62cb0ec
+timeCreated: 1504113103
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Prefabs/Modules/Ceiling_6m.prefab
+  uploadId: 671330

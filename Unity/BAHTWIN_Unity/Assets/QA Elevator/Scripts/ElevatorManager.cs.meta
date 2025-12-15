@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 0314802e6a2fd9b42bac4b8e44939f6a
+timeCreated: 1502962901
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Scripts/ElevatorManager.cs
+  uploadId: 671330

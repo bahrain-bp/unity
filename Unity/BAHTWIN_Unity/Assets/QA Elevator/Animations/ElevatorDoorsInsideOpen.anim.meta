@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b3b29a1136c4dd14c99123089cf69834
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Animations/ElevatorDoorsInsideOpen.anim
+  uploadId: 671330
