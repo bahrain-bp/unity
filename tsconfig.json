@@ -27,6 +27,11 @@
   },
   "exclude": [
     "node_modules",
-    "cdk.out"
+    "cdk.out",
+    "frontend",
+    //"bin",
+    "lib",
+    "test",
+    "Unity"
   ]
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../../sass/_feedback.scss";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { FeedbackClient } from "../services/api";
 
 const Feedback = () => {
   const [name, setName] = useState("");
@@ -34,8 +34,8 @@ const Feedback = () => {
     // Validate visitor
     const fetchVisitor = async () => {
       try {
-        const response = await axios.get(
-          "https://bc96hmnttg.execute-api.us-east-1.amazonaws.com/prod/getVisitorInfo",
+        const response = await FeedbackClient.get(
+          "/getVisitorInfo",
           { headers: { Authorization: `Bearer ${t}` } }
         );
         setName(response.data.name);
@@ -95,8 +95,8 @@ const Feedback = () => {
     };
 
     try {
-      await axios.post(
-        "https://bc96hmnttg.execute-api.us-east-1.amazonaws.com/prod/submitFeedback",
+      await FeedbackClient.post(
+        "/submitFeedback",
         payload,
         { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
