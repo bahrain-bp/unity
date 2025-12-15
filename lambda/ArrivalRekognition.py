@@ -1,6 +1,7 @@
 import os
 import boto3
 import base64
+import uuid
 import json
 
 dynamodb = boto3.resource('dynamodb')
@@ -11,24 +12,32 @@ s3 = boto3.client('s3')
 rekog = boto3.client('rekognition')
 BUCKET = os.environ['BUCKET_NAME']
 COLLECTION = os.environ['COLLECTION_ID']
-sns = boto3.client('sns')
-TOPIC_ARN = os.environ['TOPIC_ARN']
-InviteTable = os.environ['InviteTable']
-InviteTable = dynamodb.Table(InviteTable)
+
 
 def ArrivalRekognition(event, context):
     if event["httpMethod"] == "OPTIONS":
         print("CORS preflight")
         return response(200, {"message": "CORS preflight"})
     try:
+
         # Get body as string (API Gateway)
         body_str = event["body"]
         image_data= json.loads(body_str)["image_data"]
 
+        
         if not image_data:
             return response(400, {"error": "No image provided"})
-
+        # Generate S3 key
+        ##key = f"arrival/{uuid.uuid4()}.jpg"
         image = base64.b64decode(image_data)
+
+       ## # Upload image to S3
+       ## s3.put_object(
+         ##   Bucket=BUCKET,
+           ## Key=key,
+            ##Body=base64.b64decode(image_data),
+            ##ContentType="image/jpeg"
+       ## )
 
         # Detect face
         detect_response = rekog.detect_faces(
@@ -63,9 +72,11 @@ def ArrivalRekognition(event, context):
             items = db_response.get('Items', [])
             if items:
                 visitor = items[0]  # usually one match
-            else:
+
+            if not visitor:
                 return response(404, {"error": "Visitor not found in the system."})
             
+
             # Prepare payload for email Lambda
             payload = {
                 "visitorId": visitor['userId'],
@@ -73,54 +84,23 @@ def ArrivalRekognition(event, context):
                 "name": visitor['name']
             }
 
-            # if visitor not invited by administrator check-in not allowed
-            db_response_email = InviteTable.query(
-                IndexName='EmailVisitDateIndex',  # the name of the GSI
-                KeyConditionExpression=boto3.dynamodb.conditions.Key('email').eq(visitor['email'])
-                )
-            items_v = db_response_email.get('Items', [])
-            print(items_v)
-
-            if not items_v:
-                print("not invited")
-                return  response(200, {"error": "visitor is not invited"})
-
-            SendSMS(visitor['name'])
-
             lambda_client.invoke(
             FunctionName='SendFeedbackLambda',
             InvocationType='Event',  # async invocation
             Payload=json.dumps(payload)
         )
-           
 
             return response(200, {
                 "name": visitor['name'],
                 "status": "match",
             })
         else:
-            return response(200, {"error": "Visitor is not registered"})
+            return response(200, {"error": "unknown visitor"})
 
     except Exception as e:
         print("ERROR:", str(e))
         return response(500, {"error": "Internal server error"})
 
-def SendSMS(visitor_name):
-    
-    message = f"Hello Admin, you visitor {visitor_name} has arrived at office for his oppointment"
-    
-    try:
-        # Send SMS directly via SNS
-        sns.publish(
-            TopicArn = TOPIC_ARN,
-            Message=message
-        )
-        print("sms sent")
-        return {"statusCode": 200, "body": "SMS sent"}
-    
-    except Exception as e:
-        print("Error sending SMS:", e)
-        return {"statusCode": 500, "body": str(e)}
 
 def response(status, body):
     return {

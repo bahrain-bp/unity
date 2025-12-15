@@ -34,58 +34,58 @@ def handler(event, context):
         # Prepare email
         subject = "We value your feedback!"
         body_html = f"""
-        <html>
-        <head>
-        <style>
-          body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-          }}
-          .container {{
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-          }}
-          .btn {{
-            display: inline-block;
-            padding: 12px 20px;
-            margin-top: 20px;
-            font-size: 16px;
-            color: white;
-            background-color: #007BFF;
-            text-decoration: none;
-            border-radius: 5px;
-          }}
-          .footer {{
-            margin-top: 30px;
-            font-size: 12px;
-            color: #777;
-          }}
-        </style>
-        </head>
-        <body>
-        <div class="container">
-          <p>Hi {name},</p>
+<html>
+<head>
+<style>
+  body {{
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+  }}
+  .container {{
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }}
+  .btn {{
+    display: inline-block;
+    padding: 12px 20px;
+    margin-top: 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #007BFF;
+    text-decoration: none;
+    border-radius: 5px;
+  }}
+  .footer {{
+    margin-top: 30px;
+    font-size: 12px;
+    color: #777;
+  }}
+</style>
+</head>
+<body>
+<div class="container">
+  <p>Hi {name},</p>
 
-          <p>Thank you for visiting <strong>AWS Bahrain</strong>! We truly appreciate your time and would love to hear about your experience.</p>
+  <p>Thank you for visiting <strong>AWS Bahrain</strong>! We truly appreciate your time and would love to hear about your experience.</p>
 
-          <p>Your feedback helps us improve our services and ensures that future visitors have an even better experience.</p>
+  <p>Your feedback helps us improve our services and ensures that future visitors have an even better experience.</p>
 
-          <p>Please click the button below to provide your feedback. The link is valid for the next {JWT_EXP_DELTA_HOURS} hours:</p>
+  <p>Please click the button below to provide your feedback. The link is valid for the next {JWT_EXP_DELTA_HOURS} hours:</p>
 
-          <a href="{feedback_link}" class="btn">Leave Feedback</a>
+  <a href="{feedback_link}" class="btn">Leave Feedback</a>
 
-          <p class="footer">
-            If you did not visit <strong>AWS Bahrain</strong> or received this email by mistake, please ignore this message.
-          </p>
-        </div>
-        </body>
-        </html>
-        """
+  <p class="footer">
+    If you did not visit <strong>AWS Bahrain</strong> or received this email by mistake, please ignore this message.
+  </p>
+</div>
+</body>
+</html>
+"""
 
         # Create MIME message
         msg = MIMEText(body_html, 'html')
