@@ -30,7 +30,6 @@ def handler(event, context):
         if token_used:
             return resp(400, {"error": "Token already used"})
 
-
         visitor_id = payload.get("visitorId")
 
         if not visitor_id:
@@ -55,18 +54,18 @@ def handler(event, context):
             "email",
             "purpose",
             "checkInTime",
-            "systemRating",
             "faster",
             "digitalPref",
             "faceHelp",
             "overallRating",
-            "commentText"
+            "commentText",
         ]
 
         missing = [f for f in required_fields if f not in data]
         if missing:
+            print("missing field")
             return resp(400, {"error": f"Missing fields: {', '.join(missing)}"})
-
+            
         # --------------------------------------
         # 4. Prepare item for DynamoDB
         # --------------------------------------
@@ -80,7 +79,6 @@ def handler(event, context):
             "email": data["email"],
             "purpose": data["purpose"],
             "checkInTime": data["checkInTime"],
-            "systemRating": data["systemRating"],
             "faster": data["faster"],
             "digitalPref": data["digitalPref"],
             "faceHelp": data["faceHelp"],

@@ -13,6 +13,7 @@ FRONTEND_URL = os.environ['FRONTEND_URL']  # e.g., https://yourdomain.com/feedba
 GMAIL_USER = os.environ['GMAIL_USER']      # Your Gmail address
 GMAIL_PASS = os.environ['GMAIL_PASS']      # Gmail app password
 
+
 def handler(event, context):
     try:
         visitor_id = event['visitorId']
@@ -37,55 +38,88 @@ def handler(event, context):
         <html>
         <head>
         <style>
-          body {{
+        body {{
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
-          }}
-          .container {{
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{
             max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 40px auto;
+            padding: 25px;
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
             border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-          }}
-          .btn {{
+        }}
+        h2 {{
+            color: #333333;
+            text-align: center;
+        }}
+        .btn {{
             display: inline-block;
-            padding: 12px 20px;
+            padding: 14px 24px;
             margin-top: 20px;
             font-size: 16px;
-            color: white;
-            background-color: #007BFF;
+            color: #ffffff;
+            background-color: #ff7614; /* platform orange */
             text-decoration: none;
-            border-radius: 5px;
-          }}
-          .footer {{
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        p {{
+            margin-bottom: 16px;
+        }}
+        .footer {{
             margin-top: 30px;
             font-size: 12px;
-            color: #777;
-          }}
+            color: #777777;
+            text-align: center;
+        }}
         </style>
         </head>
+
         <body>
         <div class="container">
-          <p>Hi {name},</p>
 
-          <p>Thank you for visiting <strong>AWS Bahrain</strong>! We truly appreciate your time and would love to hear about your experience.</p>
+        <h2>Visitor Feedback</h2>
 
-          <p>Your feedback helps us improve our services and ensures that future visitors have an even better experience.</p>
+        <p>Dear {name},</p>
 
-          <p>Please click the button below to provide your feedback. The link is valid for the next {JWT_EXP_DELTA_HOURS} hours:</p>
+        <p>
+        Thank you for visiting <strong>AWS Bahrain</strong>. We truly appreciate your time and hope you had a pleasant experience.
+        </p>
 
-          <a href="{feedback_link}" class="btn">Leave Feedback</a>
+        <p>
+        Your feedback is valuable to us and helps improve our services and visitor experience.
+        </p>
 
-          <p class="footer">
-            If you did not visit <strong>AWS Bahrain</strong> or received this email by mistake, please ignore this message.
-          </p>
+        <p>
+        Please click the button below to share your feedback. The link will remain valid for the next <strong>{JWT_EXP_DELTA_HOURS} hours</strong>.
+        </p>
+
+        <p style="text-align:center;">
+        <a href="{feedback_link}" class="btn" style="color:#ffffff;">
+        Leave Feedback
+        </a>
+        </p>
+
+        <p class="footer">
+        If you did not visit AWS Bahrain or received this email in error, please disregard this message.
+        </p>
+
+        <p class="footer">
+        Thank you for your time.
+        </p>
+
         </div>
         </body>
         </html>
         """
+
 
         # Create MIME message
         msg = MIMEText(body_html, 'html')

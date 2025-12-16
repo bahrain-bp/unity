@@ -1,105 +1,170 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
 
-/* =============================
-   FEEDBACK PAGE ONLY
-============================= */
+/* Page background */
 .feedback-page {
-  font-family: "Inter", sans-serif;
-  width: 100%;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
-  color: #000;
+  align-items: center;
+  font-family: "Inter", sans-serif;
+  margin-bottom: 2.5rem;
+  background: radial-gradient(circle at top, rgba(255, 142, 60, 0.15), transparent 60%);
+  transition: background 0.5s ease;
+}
 
-  .container {
-    background-color: rgba(#ff8e3c, 0.55);
-    padding: 2rem;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 700px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  }
+/* Main card */
+.feedback-page .auth {
+  background: #ffffff;
+  width: 100%;
+  max-width: 600px;
+  padding: 2.5rem 3rem;
+  border-radius: 22px;
+  border: 2px solid #1a1a1a;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
 
-  h2 {
-    text-align: center;
-    margin-bottom: 1.75rem;
-    font-weight: 700;
-    color: #1a1a1a;
-  }
+.feedback-page .auth:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
 
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-  }
+.feedback-page .auth form {
+  width: 100%;
+}
 
-  input[type="text"],
-  input[type="email"],
-  select,
-  textarea {
-    width: 100%;
-    padding: 0.85rem;
-    border-radius: 10px;
-    border: none;
-    background-color: #fff4ec;
-    font-size: 1rem;
-    color: #1a1a1a;
-    outline: none;
-    box-shadow: inset 0 0 4px rgba(80, 80, 80, 0.25);
-    font-family: inherit;
+/* Header */
+.feedback-page .auth h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 0.25rem;
+  transition: color 0.3s ease;
+}
 
-    &:focus {
-      box-shadow: 0 0 0 2px rgba(255, 142, 60, 0.6);
-    }
-  }
+.feedback-page .auth h2:hover {
+  color: #ff8c42;
+}
 
-  textarea {
-    resize: vertical;
-    min-height: 110px;
-  }
+.feedback-page .subtitle {
+  text-align: center;
+  color: #555;
+  margin-bottom: 2rem;
+}
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+/* Layout helpers */
+.feedback-page .row {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
 
-    label {
-      font-weight: 600;
-      color: #1a1a1a;
-    }
-  }
+/* Inputs */
+.feedback-page input,
+.feedback-page select,
+.feedback-page textarea {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1.5px solid #ddd;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
 
-  .radio-group {
-    display: flex;
-    gap: 1.2rem;
-    flex-wrap: wrap;
+.feedback-page input:focus,
+.feedback-page select:focus,
+.feedback-page textarea:focus {
+  border-color: #ff8c42;
+  box-shadow: 0 0 8px rgba(255, 140, 66, 0.3);
+  outline: none;
+}
 
-    input[type="radio"] {
-      accent-color: #1a1a1a;
-    }
-  }
+.feedback-page textarea {
+  min-height: 120px;
+  resize: vertical;
+}
 
-  button {
-    padding: 0.85rem 1.4rem;
-    background-color: #ff8e3c;
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: 0.25s ease;
-    width: fit-content;
+/* Groups */
+.feedback-page .form-group {
+  margin-bottom: 1.4rem;
+  margin-top: 1.4rem;
+}
 
-    &:hover {
-      background-color: #ff7a14;
-      color: #000;
-    }
-  }
+.feedback-page label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.4rem;
+}
 
-  .error {
-    color: #ef4444;
-    letter-spacing: 1px;
-    font-weight: 500;
-    margin-top: 0.5rem;
-  }
+/* Stars */
+.feedback-page .stars {
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.feedback-page .stars span {
+  color: #ccc;
+  margin-right: 6px;
+  transition: 0.2s, transform 0.2s ease;
+}
+
+.feedback-page .stars span:hover {
+  transform: scale(1.3);
+}
+
+.feedback-page .stars span.active {
+  color: #ff8c42;
+}
+
+/* Pills */
+.feedback-page .pill-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.feedback-page .pill-group button {
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1.5px solid #1a1a1a;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.feedback-page .pill-group button:hover {
+  transform: scale(1.05);
+  background: #ffe6d6;
+}
+
+.feedback-page .pill-group button.active {
+  background: #ff8c42;
+  color: #fff;
+  border-color: #ff8c42;
+}
+
+/* Submit */
+.feedback-page .submit-btn {
+  display: block;
+  margin: 2rem auto 0;
+  padding: 0.75rem 2.5rem;
+  border-radius: 999px;
+  border: none;
+  background: #ff8c42;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.25s, transform 0.2s ease;
+}
+
+.feedback-page .submit-btn:hover {
+  background: #ff7a14;
+  transform: scale(1.05);
+}
+
+/* Error */
+.feedback-page .error {
+  text-align: center;
+  color: #e11d48;
+  margin-top: 1rem;
 }
