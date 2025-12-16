@@ -2,7 +2,7 @@ import os
 import boto3
 import json
 import jwt
-import datetime
+from datetime import datetime, timezone, timedelta
 
 FEEDBACK_TABLE = os.environ["FEEDBACK_TABLE"]
 FEEDBACK_SECRET = os.environ["FEEDBACK_SECRET"]
@@ -14,9 +14,7 @@ used_tokens_table = dynamodb.Table(used_tokens_table_name)
 
 def handler(event, context):
     try:
-        # --------------------------------------
         # 1. Extract and validate JWT
-        # --------------------------------------
         headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
         token = headers.get("authorization", "").replace("Bearer ", "").strip()
 
@@ -35,9 +33,7 @@ def handler(event, context):
         if not visitor_id:
             return resp(400, {"error": "Invalid token"})
 
-        # --------------------------------------
         # 2. Parse body JSON
-        # --------------------------------------
         if not event.get("body"):
             return resp(400, {"error": "Missing body"})
 
@@ -46,9 +42,7 @@ def handler(event, context):
         except:
             return resp(400, {"error": "Invalid JSON body"})
 
-        # --------------------------------------
         # 3. Required fields validation
-        # --------------------------------------
         required_fields = [
             "name",
             "email",
@@ -66,13 +60,13 @@ def handler(event, context):
             print("missing field")
             return resp(400, {"error": f"Missing fields: {', '.join(missing)}"})
             
-        # --------------------------------------
         # 4. Prepare item for DynamoDB
-        # --------------------------------------
+        # Define Bahrain timezone
+        bahrain_tz = timezone(timedelta(hours=3))
+        today_bahrain = datetime.now(bahrain_tz).date().isoformat()
         feedback_item = {
-            "id": f"{datetime.datetime.utcnow().timestamp()}_{visitor_id}",
             "visitorId": visitor_id,
-            "createdAt": datetime.datetime.utcnow().isoformat(),
+            "createdAt": today_bahrain,
 
             # Store all fields directly
             "name": data["name"],
@@ -88,7 +82,7 @@ def handler(event, context):
 
         # Save
         feedback_table.put_item(Item=feedback_item)
-        used_tokens_table.put_item(Item={'token': token, 'usedAt': datetime.datetime.utcnow().isoformat()})
+        used_tokens_table.put_item(Item={'token': token, 'usedAt': today_bahrain})
         print("Feedback saved successfully")
         return resp(200, {"message": "Feedback submitted successfully"})
         
@@ -101,9 +95,7 @@ def handler(event, context):
         return resp(500, {"error": str(e)})
 
 
-# --------------------------------------
 # Helper for consistent JSON + CORS
-# --------------------------------------
 def resp(status, body):
     return {
         "statusCode": status,
