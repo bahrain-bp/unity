@@ -5,10 +5,12 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { OpenSearchStack } from './opensearch_stack';
 import { IndexStack } from './index_stack';
+import { DBStack } from './DBstack';
 
 interface BedrockStackProps extends cdk.StackProps {
   openSearchStack: OpenSearchStack;
   indexStack: IndexStack;
+  dbStack: DBStack
 }
 
 export class BedrockStack extends cdk.Stack {
@@ -20,6 +22,7 @@ export class BedrockStack extends cdk.Stack {
 
     const { collection, bedrockRole, dataBucket } = props.openSearchStack;
     const { vectorIndex } = props.indexStack;
+    const { chatbotTable } = props.dbStack;
 
     // Knowledge Base
     this.knowledgeBase = new bedrock.CfnKnowledgeBase(this, 'KnowledgeBase', {
@@ -66,7 +69,8 @@ export class BedrockStack extends cdk.Stack {
       handler: 'virtualAssistant.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment: {
-        KNOWLEDGE_BASE_ID: this.knowledgeBase.attrKnowledgeBaseId
+        KNOWLEDGE_BASE_ID: this.knowledgeBase.attrKnowledgeBaseId,
+        TABLE_NAME : chatbotTable.tableName
       }
     });
 
@@ -79,6 +83,7 @@ export class BedrockStack extends cdk.Stack {
       ],
       resources: ['*']
     }));
+    chatbotTable.grantReadWriteData(this.lambdaFunction);
 
     // Outputs
     new cdk.CfnOutput(this, 'KnowledgeBaseId', {

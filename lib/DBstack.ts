@@ -1,9 +1,11 @@
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { Stack, StackProps, RemovalPolicy, CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
+import * as cdk from "aws-cdk-lib";
 
 export class DBStack extends Stack {
   public readonly table: dynamodb.Table;
+  public readonly chatbotTable : dynamodb.TableV2;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -21,5 +23,16 @@ export class DBStack extends Stack {
       value: this.table.tableName,
       exportName: "UnityBahtwinTableName", 
     });
+
+    
+    this.chatbotTable = new dynamodb.TableV2(this, 'chatbotTable', {
+            partitionKey: { name: 'sessionId', type: dynamodb.AttributeType.STRING },
+        });
+
+        new cdk.CfnOutput(this , 'tablenameoutput' , {
+            value: this.chatbotTable.tableName,
+            exportName: 'UnityChatbotTable',
+        });
+
   }
 }
