@@ -7,7 +7,8 @@ import { BedrockStack } from '../lib/bedrock_stack';
 import { IndexStack } from '../lib/index_stack';
 import { FacialRecognitionStack } from "../lib/FacialRecognitionStack";
 import { VisitorFeedbackStack } from "../lib/VisitorFeedbackStack";
- 
+import { WebSocketStack } from "../lib/websocket-stack";
+
 const app = new cdk.App();
  
 // Create the DBStack
@@ -55,6 +56,15 @@ new APIStack(app, "Unity-APIStack", {
     region: process.env.CDK_DEFAULT_REGION || 'us-east-1'
   }
 });
+
+new WebSocketStack(app, "Unity-WebSocketStack", {
+  dbStack,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || "us-east-1",
+  },
+});
+
 
 
 const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
