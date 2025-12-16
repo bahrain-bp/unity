@@ -40,3 +40,8 @@ $font-display: "Lora", serif;
   background-color: rgba($color, 0.2);
   box-shadow: 0px 0px $spread rgba($color, 0.3);
 }
+@mixin flexCenter() {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

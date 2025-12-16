@@ -8,12 +8,11 @@
   transform: translateX(-50%);
   display: grid;
   width: 120rem;
-  grid-template-columns: repeat(3, 20rem);
-  justify-content: space-around;
+  grid-template-columns: min-content 1fr max-content;
   align-items: center;
   text-align: center;
   margin: auto;
-  padding: 0.4rem 0;
+  padding: 0.5rem 1rem;
   background-color: $color-white;
   border-radius: 10rem;
   @include boxshadow();
@@ -22,19 +21,194 @@
     width: 95vw;
   }
   @media only screen and (max-width: $bp-7) {
-    grid-template-columns: repeat(3, 1fr);
     width: 90vw;
   }
+  @media only screen and (max-width: $bp-6) {
+    display: flex;
+    justify-content: space-between;
+  }
 
-  & a {
-    font-size: 1.8rem;
-    padding: 1rem 0;
-    font-weight: 500;
+  &__logo {
+    width: 4rem;
+  }
+
+  &__menu {
+    display: flex;
+    column-gap: 15rem;
+    justify-content: center;
     @media only screen and (max-width: $bp-8) {
-      font-size: 1.6rem;
+      column-gap: 10vw;
     }
     @media only screen and (max-width: $bp-6) {
-      font-size: 1.5rem;
+      display: none;
+    }
+
+    & a {
+      font-size: 1.8rem;
+      padding: 1rem 0;
+      font-weight: 500;
+      @media only screen and (max-width: $bp-8) {
+        font-size: 1.6rem;
+      }
+      @media only screen and (max-width: $bp-6) {
+        font-size: 1.5rem;
+      }
+    }
+  }
+
+  &__auth {
+    & a {
+      background-color: $color-orange;
+      border-radius: 10rem;
+      padding: 1rem 2rem;
+      font-size: 1.6rem;
+      border: 1px solid $color-font;
+      transition: all 0.3s;
+      @media only screen and (max-width: $bp-6) {
+        display: none;
+      }
+
+      &:hover {
+        background-color: $color-orange-2;
+      }
+    }
+  }
+
+  &__user {
+    width: fit-content;
+    // border: 1px solid $color-font;
+    padding: 0.6rem 1rem;
+    border-radius: 10rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+    @media only screen and (max-width: $bp-6) {
+      display: none;
+    }
+    &:hover {
+      background-color: $color-light-grey;
+    }
+
+    & label {
+      cursor: pointer;
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      column-gap: 1rem;
+
+      & img {
+        width: auto;
+        height: 3rem;
+        aspect-ratio: 1 / 1;
+        fill: $color-font;
+        stroke: none;
+        border-radius: 10rem;
+        border: 1px solid $color-font;
+      }
+    }
+
+    & input {
+      display: none;
+    }
+
+    &--container {
+      visibility: hidden;
+      position: absolute;
+      border: 1px solid $color-font;
+      width: 100%;
+      bottom: 0;
+      left: 0;
+      transform: translateY(100%);
+      font-size: 1.4rem;
+      font-weight: 600;
+      padding: 0.5rem;
+      border-radius: 10rem;
+      background-color: $color-bg;
+
+      & p {
+        padding: 1rem;
+        border-radius: 10rem;
+        transition: background 0.3s;
+
+        &:hover {
+          background-color: rgba($color-red, 0.3);
+        }
+      }
+    }
+  }
+}
+
+.navbar__user input:checked + .navbar__user--container {
+  visibility: visible;
+}
+.navbar__drawer
+  .navbar__user
+  input:checked
+  + .navbar__drawer
+  .navbar__user--container {
+  visibility: visible;
+}
+
+.navbar__drawer {
+  @media only screen and (min-width: $bp-6) {
+    display: none;
+  }
+
+  &--toggle {
+    cursor: pointer;
+    display: none;
+    width: 4rem;
+    height: 4rem;
+    @media only screen and (max-width: $bp-6) {
+      @include flexCenter;
+    }
+  }
+
+  &--menu {
+    display: flex;
+    flex-direction: column;
+    min-width: 50vw;
+
+    & a {
+      padding: 1.5rem;
+      font-size: 1.6rem;
+      transition: all 0.3s;
+
+      &:hover {
+        background-color: $color-bg;
+      }
+
+      &:last-child {
+        background-color: $color-orange;
+        margin-top: 2rem;
+
+        &:hover {
+          background-color: $color-orange-2;
+        }
+      }
+
+      & > img {
+        width: 7rem;
+      }
+    }
+  }
+
+  & .navbar__user {
+    display: block;
+    margin-top: 2rem;
+    width: 100%;
+    border-radius: 0;
+    padding: 1rem;
+
+    &--container {
+      border-radius: 0;
+      border: none;
+      padding: 0;
+
+      & p {
+        border-radius: 0;
+        padding: 1rem;
+      }
     }
   }
 

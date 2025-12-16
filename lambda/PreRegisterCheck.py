@@ -50,8 +50,22 @@ def PreRegisterCheck(event, context):
             ContentType="image/jpeg"
         )
 
+        # Respond  after upload
+        response_body = {
+            "message": "Registration was successfull.",
+        }
 
-        # Index face in Rekognition (synchronous so Lambda doesn't freeze background work)
+        background_index_face(image_bytes, key, name, email, userId)
+        return response(200, response_body)
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return response(500, {"error": "Internal server error"})
+
+# Background processing function
+def background_index_face(image_bytes, key, name, email, userId):
+    try:
+        # Index face in Rekognition collection
         index_response = rekog.index_faces(
             CollectionId=COLLECTION,
             Image={'Bytes': image_bytes},

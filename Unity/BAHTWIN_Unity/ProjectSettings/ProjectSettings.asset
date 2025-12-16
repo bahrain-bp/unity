@@ -831,7 +831,10 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    WebGL: 
+    Android: CROSS_PLATFORM_INPUT
+    Standalone: CROSS_PLATFORM_INPUT
+    WebGL: CROSS_PLATFORM_INPUT
+    iPhone: CROSS_PLATFORM_INPUT
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

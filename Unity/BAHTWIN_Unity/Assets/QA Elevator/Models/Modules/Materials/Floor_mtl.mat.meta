@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a769d2cddf15e5d43b50abbd8cea6a7e
+timeCreated: 1504111304
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Modules/Materials/Floor_mtl.mat
+  uploadId: 671330

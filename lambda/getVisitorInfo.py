@@ -20,6 +20,7 @@ def handler(event, context):
         # Extract token from headers (API Gateway GET request)
         headers = event.get("headers", {}) or {}  # Ensure it's a dict
         token = headers.get("Authorization", "").replace("Bearer ", "").strip()
+        print(f"Token: {token}")
         
         if not token:
             return response(401, {"error": "No token provided"})
@@ -38,7 +39,7 @@ def handler(event, context):
             return response(403, {"error": "Invalid token"})
 
         # Fetch visitor info from DynamoDB
-        response_db = visitor_table.get_item(Key={"visitorId": visitor_id})
+        response_db = visitor_table.get_item(Key={"userId": visitor_id})
         visitor = response_db.get("Item")
         print(f"Visitor info: {visitor}")
 
@@ -47,7 +48,7 @@ def handler(event, context):
 
         # Return visitor info
         return response(200, {
-            "visitorId": visitor["visitorId"],
+            "visitorId": visitor["userId"],
             "name": visitor.get("name", ""),
             "email": visitor.get("email", "")
         })

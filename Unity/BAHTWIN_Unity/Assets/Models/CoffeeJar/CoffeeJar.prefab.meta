@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d6617102d4c3b94429945558a6ccb9a8
+timeCreated: 1462030843
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 63401
+  packageName: Super Coffee Pack!
+  packageVersion: 1.0
+  assetPath: Assets/Models/CoffeeJar/CoffeeJar.prefab
+  uploadId: 221738

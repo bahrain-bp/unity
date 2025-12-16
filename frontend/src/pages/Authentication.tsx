@@ -8,25 +8,32 @@ import {
   CAMERA,
   SUCCESS,
   ERROR,
+  USER,
 } from "../assets/icons";
 import imagePlaceholder from "../assets/image.svg";
 import { useAuth } from "../auth/AuthHook";
 import { useNavigate } from "react-router-dom";
 import CodeInputs from "../components/CodeInputs";
 import Message from "../components/Message";
+import { ImageClient } from "../services/api";
 
 function Authentication() {
   const [showPass1, setShowPass1] = useState<boolean>(false);
   const [showPass2, setShowPass2] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<boolean>(true);
-  const navigate = useNavigate();
-  const { signUp, confirmSignUp, signIn } = useAuth();
+  // const [isSignedUp, setIsSignedUp] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [showVerification, setShowVerification] = useState(false);
+
+  const navigate = useNavigate();
+  const { signUp, confirmSignUp, signIn } = useAuth();
 
   const [account, setAccount] = useState({
     email: "",
@@ -57,7 +64,22 @@ function Authentication() {
 
   const fileChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) return;
+    const file = event.target.files?.[0];
     setFile(event.target.files[0]);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = (reader.result as string).split(",")[1];
+      setImageBase64(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const changeAuthMode = (mode: boolean) => {
+    setError("");
+    setMessage("");
+    setShowPass1(false);
+    setShowPass2(false);
+    setAuthMode(mode);
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +96,11 @@ function Authentication() {
   const handleSubmit = async (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (authMode) {
-      handleSignup();
+      if (!userId) {
+        handleSignup();
+      } else {
+        handleImageUpload();
+      }
     } else {
       handleSignIn();
     }
@@ -110,18 +136,56 @@ function Authentication() {
       return;
     }
 
+    if (username.length < 1) {
+      setError("Please enter a username");
+      return;
+    }
+
+    if (!file) {
+      setError("Please upload an image");
+      return;
+    }
+
     setLoading(true);
     const result = await signUp(account.email, account.password);
     console.log(result);
 
     if (result.success) {
-      setMessage(result.message);
-      setShowVerification(true);
+      // setMessage(result.message);
+      setUserId(result.userId ?? null);
+      if (result.userId) {
+        handleImageUpload(result.userId);
+      }
+      setError("");
+      localStorage.setItem("username", username);
+      //setShowVerification(true);
     } else {
       setError(result.message);
     }
 
+    // setLoading(false);
+  };
+
+  const handleImageUpload = async (userId: string) => {
+    console.log(userId);
+    
+    setLoading(true);
+    try {
+      console.log(userId);
+      await ImageClient.post("/visitor/register", {
+        userId: userId,
+        name: username,
+        email: account.email,
+        image_data: imageBase64,
+      });
+      setError("");
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Something went wrong. Please try to upload another image");
+      setLoading(false);
+      return;
+    }
     setLoading(false);
+    setShowVerification(true);
   };
 
   const handleVerify = async (e: React.FormEvent) => {
@@ -137,6 +201,8 @@ function Authentication() {
       setTimeout(() => {
         setShowVerification(false);
         setAuthMode(false);
+        setError("");
+        setMessage("");
         navigate("/auth");
       }, 2000);
     } else {
@@ -196,13 +262,13 @@ function Authentication() {
             className="auth__mode--shade"
           />
           <p
-            onClick={() => setAuthMode(false)}
+            onClick={() => changeAuthMode(false)}
             className={!authMode ? "active" : ""}
           >
             Login
           </p>
           <p
-            onClick={() => setAuthMode(true)}
+            onClick={() => changeAuthMode(true)}
             className={authMode ? "active" : ""}
           >
             Sign Up
@@ -249,6 +315,24 @@ function Authentication() {
                     <p>Upload your image here!</p>
                   </span>
                 )}
+              </div>
+            </>
+          )}
+          {authMode && (
+            <>
+              <label htmlFor="username" className="auth__form--label">
+                Username
+              </label>
+              <div className="auth__form--input">
+                {USER()}
+                <input
+                  type="text"
+                  className="auth__form--input"
+                  placeholder="Enter your username"
+                  id="username"
+                  name="username"
+                  onChange={(e) => setUsername(e.target.value)}
+                />
               </div>
             </>
           )}

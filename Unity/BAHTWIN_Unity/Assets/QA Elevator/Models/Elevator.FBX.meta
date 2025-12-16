@@ -1,0 +1,166 @@
+fileFormatVersion: 2
+guid: ca9174a5ba5178f4681e23fe49c7a134
+timeCreated: 1499440541
+licenseType: Store
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: DoorElevatorA
+    100002: DoorElevatorB
+    100004: DoorElevatorC
+    100006: DoorElevatorD
+    100008: //RootNode
+    100010: Elevator
+    100012: FaceGroopDoor
+    100014: DoorElevatorE
+    100016: DoorElevatorF
+    100018: DoorElevatorG
+    100020: DoorElevatorH
+    100022: Door_L_01
+    100024: Door_L_02
+    100026: Door_R_01
+    100028: Door_R_02
+    100030: Elevator_doors
+    100032: Elevator_doors_mesh
+    100034: OpenBtn01
+    100036: OpenBtn02
+    100038: Door_L_1
+    400000: DoorElevatorA
+    400002: DoorElevatorB
+    400004: DoorElevatorC
+    400006: DoorElevatorD
+    400008: //RootNode
+    400010: Elevator
+    400012: FaceGroopDoor
+    400014: DoorElevatorE
+    400016: DoorElevatorF
+    400018: DoorElevatorG
+    400020: DoorElevatorH
+    400022: Door_L_01
+    400024: Door_L_02
+    400026: Door_R_01
+    400028: Door_R_02
+    400030: Elevator_doors
+    400032: Elevator_doors_mesh
+    400034: OpenBtn01
+    400036: OpenBtn02
+    400038: Door_L_1
+    2300000: DoorElevatorA
+    2300002: DoorElevatorB
+    2300004: DoorElevatorC
+    2300006: DoorElevatorD
+    2300008: Elevator
+    2300010: FaceGroopDoor
+    2300012: DoorElevatorE
+    2300014: DoorElevatorF
+    2300016: DoorElevatorG
+    2300018: DoorElevatorH
+    2300020: Elevator_doors_mesh
+    2300022: OpenBtn01
+    2300024: OpenBtn02
+    3300000: DoorElevatorA
+    3300002: DoorElevatorB
+    3300004: DoorElevatorC
+    3300006: DoorElevatorD
+    3300008: Elevator
+    3300010: FaceGroopDoor
+    3300012: DoorElevatorE
+    3300014: DoorElevatorF
+    3300016: DoorElevatorG
+    3300018: DoorElevatorH
+    3300020: Elevator_doors_mesh
+    3300022: OpenBtn01
+    3300024: OpenBtn02
+    4300000: DoorElevatorC
+    4300002: DoorElevatorD
+    4300004: DoorElevatorA
+    4300006: DoorElevatorB
+    4300008: FaceGroopDoor
+    4300010: Elevator
+    4300012: DoorElevatorH
+    4300014: DoorElevatorG
+    4300016: DoorElevatorF
+    4300018: DoorElevatorE
+    4300020: Elevator_doors_mesh
+    4300022: OpenBtn01
+    4300024: OpenBtn02
+    7400000: Take 001
+    11100000: //RootNode
+    13700000: Elevator_doors_mesh
+  materials:
+    importMaterials: 1
+    materialName: 1
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 0
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 1
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 1
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Elevator.FBX
+  uploadId: 671330

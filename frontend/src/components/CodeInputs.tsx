@@ -14,7 +14,10 @@ export default function CodeInputs({ length = 6, onChange }: Props) {
     if (onChange) onChange(code);
   };
 
-  const handleInput = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInput = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
 
     if (isNaN(Number(value))) {
@@ -32,7 +35,10 @@ export default function CodeInputs({ length = 6, onChange }: Props) {
     }
   };
 
-  const handleKeyUp = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyUp = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     const key = e.key.toLowerCase();
 
     if (key === "backspace" || key === "delete") {
@@ -55,11 +61,12 @@ export default function CodeInputs({ length = 6, onChange }: Props) {
           key={i}
           maxLength={1}
           type="text"
-          ref={(el) => (inputsRef.current[i] = el)}
+          ref={(el) => {
+            inputsRef.current[i] = el;
+          }}
           value={values[i]}
-          onInput={(e) => handleInput(i, e)}
-          onKeyUp={(e) => handleKeyUp(i, e)}
-
+          onInput={(e: React.ChangeEvent<HTMLInputElement>) => handleInput(i, e)}
+          onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) => handleKeyUp(i, e)}
         />
       ))}
     </div>
