@@ -9,7 +9,7 @@ import secrets
 JWT_SECRET = os.environ['JWT_SECRET']
 JWT_ALGORITHM = 'HS256'
 JWT_EXP_DELTA_HOURS = 24
-FRONTEND_URL = os.environ['FRONTEND_URL']  
+FRONTEND_URL = os.environ['FRONTEND_URL']  # e.g., https://yourdomain.com/feedback
 GMAIL_USER = os.environ['GMAIL_USER']      # Your Gmail address
 GMAIL_PASS = os.environ['GMAIL_PASS']      # Gmail app password
 

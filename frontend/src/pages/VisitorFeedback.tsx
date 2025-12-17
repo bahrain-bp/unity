@@ -25,36 +25,39 @@ const Feedback = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const t = params.get("token");
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const t = params.get("token");
 
-    if (!t) {
-      navigate("/error", { state: { message: "invalid-link" } });
-      return;
+  if (!t) {
+    navigate("/error", { state: { message: "invalid-link" } });
+    return;
+  }
+
+  setToken(t);
+
+  const fetchVisitor = async () => {
+    try {
+      const res = await FeedbackClient.get("/getVisitorInfo", {
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      setName(res.data.name);
+      setEmail(res.data.email);
+      setVisitorValid(true);
+    } catch (err) {
+      console.error(err);
+
+      // Pass the server error message directly if available
+      const serverMessage = err.response?.data?.error || "Server error occurred";
+      navigate("/error", { state: { message: serverMessage } });
+    } finally {
+      // Stop loading in both success and error cases
+      setLoading(false);
     }
+  };
 
-    setToken(t);
-
-    const fetchVisitor = async () => {
-      try {
-        const res = await FeedbackClient.get("/getVisitorInfo", {
-          headers: { Authorization: `Bearer ${t}` },
-        });
-        setName(res.data.name);
-        setEmail(res.data.email);
-        setVisitorValid(true);
-      } catch (err) {
-  console.error(err);
-
-  // Pass the server error message directly if available
-  const serverMessage = err.response?.data?.error || "Server error occurred";
-  navigate("/error", { state: { message: serverMessage } });
-}
-    };
-
-    fetchVisitor();
-  }, [navigate]);
+  fetchVisitor();
+}, [navigate]);
 
   if (loading) return <div className="feedback-loading">Validating your link…</div>;
   if (!visitorValid) return null;

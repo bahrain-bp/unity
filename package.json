@@ -39,13 +39,14 @@
     "@aws-sdk/client-bedrock-agent-runtime": "^3.940.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.940.0",
     "@aws-sdk/client-iot-data-plane": "^3.940.0",
-    "@aws-sdk/client-s3": "^3.948.0",
     "@aws-sdk/client-rekognition": "^3.948.0",
-     "@aws-sdk/s3-presigned-post": "^3.946.0",
+    "@aws-sdk/client-s3": "^3.948.0",
+    "@aws-sdk/s3-presigned-post": "^3.946.0",
     "@aws-sdk/s3-request-presigner": "^3.948.0",
     "aws-cdk-lib": "^2.232.2",
     "axios": "^1.13.2",
     "constructs": "^10.4.4",
+    "lucide-react": "^0.561.0",
     "uuid": "^13.0.0"
   }
 }

@@ -1,7 +1,6 @@
 import os
 import boto3
 import base64
-import uuid
 import json
 from datetime import datetime
 
@@ -13,6 +12,8 @@ BUCKET = os.environ['BUCKET_NAME']
 COLLECTION = os.environ['COLLECTION_ID']
 USER_TABLE = os.environ['USER_TABLE']
 USER_TABLE = dynamodb.Table(USER_TABLE)
+lambda_client = boto3.client('lambda')
+BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 
 def PreRegisterCheck(event, context):
     if event["httpMethod"] == "OPTIONS":
@@ -24,7 +25,6 @@ def PreRegisterCheck(event, context):
         userId = body.get("userId")
         name = body.get("name")
         email = body.get("email")
-
 
         if not image_data:
             return response(400, {"error": "No image provided"})
@@ -72,30 +72,42 @@ def background_index_face(image_bytes, key, name, email, userId):
             DetectionAttributes=[]
         )
         face_records = index_response.get("FaceRecords", [])
-        if not face_records:
-            return response(400, {"error": "Face could not be indexed. Please upload another image."})
-
-        faceId = face_records[0]["Face"]["FaceId"]
-
-        # Store visitor info in DynamoDB
-        USER_TABLE.put_item(
-            Item={
-                "userId": userId,
-                "s3Key": key,
-                "registeredAt": datetime.utcnow().isoformat(),
-                "name": name,
-                "email": email,
-                "faceId": faceId,
-                "passedRegistration": False
+        if face_records:
+            faceId = face_records[0]["Face"]["FaceId"]
+            
+            # Store visitor info in DynamoDB
+            USER_TABLE.put_item(
+                Item={
+                    "userId": userId,
+                    "s3Key": key,
+                    "registeredAt":datetime.utcnow().isoformat(),
+                    "name": name,
+                    "email": email,
+                    "faceId": faceId,
+                    "role":"Visitor"
+                }
+            )
+            #update total visitors number for the dashboard
+            response = USER_TABLE.scan(Select="COUNT")
+            total_visitors = response["Count"]
+            
+            to_dashboard1 = {
+                "card": "total_bahtwin_visitors",
+                "data": {
+                    "total_visitors": total_visitors
+                }
             }
-        )
-
-        # Respond after Dynamo write to ensure GET can find the record
-        return response(200, {"message": "Registration was successfull."})
+            # Invoke the broadcast Lambda asynchronously
+            lambda_client.invoke(
+                FunctionName=BROADCAST_LAMBDA,
+                InvocationType="Event",  # async
+                Payload=json.dumps(to_dashboard1)
+            )
+        else:
+            print(f"Face could not be indexed for S3 key: {key}")
 
     except Exception as e:
-        print("ERROR:", str(e))
-        return response(500, {"error": "Internal server error"})
+        print("Error in background indexing:", str(e))
 
 def response(status, body):
     return {

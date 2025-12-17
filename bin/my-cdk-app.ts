@@ -71,10 +71,11 @@ const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
   },
 });
 
+new VisitorFeedbackStack(app, 'VisitorFeedbackStack', {
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION || 'us-east-1' },
+  userTable: FRStack.userTable, 
+  broadcastLambda: FRStack.broadcastLambda
+});
 
-// new VisitorFeedbackStack(app, 'VisitorFeedbackStack', {
-//   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION || 'us-east-1' },
-//   userTable: FRStack.userTable, 
-// });
  
 //new FrontendDeploymentStack(app, "Unity-FrontendDeploymentStack");

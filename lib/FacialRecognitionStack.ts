@@ -1,24 +1,27 @@
-import * as cdk from 'aws-cdk-lib';
+import * as cdk from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import { Effect } from "aws-cdk-lib/aws-iam";
 import { aws_rekognition as rekognition } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
+import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
+import { WebSocketLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import * as path from 'path';
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-
 export class FacialRecognitionStack extends cdk.Stack {
  public readonly userTable: dynamodb.Table;
+ public readonly broadcastLambda: lambda.Function;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    //////////// DynamoDB Resources ////////////
+     //////////// DynamoDB Resources ////////////
 
     // Users Table
     this.userTable = new dynamodb.Table(this, 'userTable', {
@@ -71,13 +74,15 @@ export class FacialRecognitionStack extends cdk.Stack {
         projectionType: dynamodb.ProjectionType.ALL,
       });
 
-        // create BulkUploadSTatusTable table
-    const BulkUploadSTatusTable = new dynamodb.Table(this, 'BulkUploadSTatusTable', {
-      tableName: 'BulkUploadSTatusTable',
-      partitionKey: { name: 'batchId', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // serverless
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // only for dev/testing
-      });
+      // create connection table
+      const connection = new dynamodb.Table(this, "ConnectionTable",{
+            tableName: "ConnectionTable",
+            partitionKey:{
+                name: "ConnectionId",
+                type: dynamodb.AttributeType.STRING,
+            },
+             removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });         
 
     //////////// S3 Resources ////////////
 
@@ -106,38 +111,6 @@ export class FacialRecognitionStack extends cdk.Stack {
 );
 
     //////////// Lambda Resources ////////////
-
-    //create lambda for pre registration
-    const PreRegisterCheck =new lambda.Function(this, 'lambda_pre_register_check_Handler',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'PreRegisterCheck.PreRegisterCheck',
-      code: lambda.Code.fromAsset('lambda'),
-      environment:{
-        BUCKET_NAME: bucket.bucketName,
-        COLLECTION_ID: collection.collectionId,
-        USER_TABLE:this.userTable.tableName,
-      },
-      timeout:cdk.Duration.seconds(30),
-      functionName: 'PreRegisterCheck', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-    });
-       
-    //create lambda for arrivals picture
-    const ArrivalRekognition = new lambda.Function(this, 'Arrival_Handler',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'ArrivalRekognition.ArrivalRekognition',
-      code: lambda.Code.fromAsset('lambda'),
-      environment:{
-        BUCKET_NAME: bucket.bucketName,
-        COLLECTION_ID: collection.collectionId,
-        USER_TABLE: this.userTable.tableName,
-        TOPIC_ARN: arrivalTopic.topicArn,
-        InviteTable: InvitedVisitorTable.tableName
-      },
-      timeout:cdk.Duration.seconds(30),
-      functionName: 'ArrivalRekognition', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-    });
 
     //create lambda to send feedback
     const sendFeedbackLambda = new lambda.Function(this, 'SendFeedbackLambda', {
@@ -200,6 +173,112 @@ export class FacialRecognitionStack extends cdk.Stack {
     });
 
 
+    //connect lambda function
+    const wsConnectLambda =new lambda.Function(this, 'ws-connect-lambda',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'ws_connect.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'connect-lambda', 
+        environment: {
+          TABLE_NAME: connection.tableName,
+        },
+      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+      });
+      //disable lambda function
+    const wsDisconnectLambda =new lambda.Function(this, 'ws-disconnect-lambda',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'ws_disable.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'disconnect-lambda', 
+      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+      });
+
+// Create websocket API for real time admin dashboard
+  const wsAPI = new apigatewayv2.WebSocketApi(this, "AdminDashboardWS",{
+              connectRouteOptions:{
+                  integration: new WebSocketLambdaIntegration(
+                      'ws-connect-integration',
+                      wsConnectLambda
+                  ),
+              },
+              disconnectRouteOptions:{
+                  integration: new WebSocketLambdaIntegration(
+                      'ws-disconnect-integration',
+                      wsDisconnectLambda
+                  ),
+              },
+          });
+  
+          const apiStage = new apigatewayv2.WebSocketStage(this, 'dev', {
+              webSocketApi: wsAPI,
+              stageName: 'dev',
+              autoDeploy: true,
+              });
+  
+          const managementApiEndpoint = cdk.Fn.join("", [
+    "https://",
+    cdk.Fn.select(2, cdk.Fn.split("/", wsAPI.apiEndpoint)),
+    "/", 
+    apiStage.stageName
+  ]);
+
+  //boradcast lambda
+  this.broadcastLambda = new lambda.Function(this, 'ws-broadcast-lambda', {
+    runtime: lambda.Runtime.PYTHON_3_11,
+    handler: 'broadcast.handler',
+    code: lambda.Code.fromAsset('lambda'),
+    timeout: cdk.Duration.seconds(30),
+    functionName: 'broadcast-lambda',
+    environment: {
+      TABLE_NAME: connection.tableName,
+      WS_ENDPOINT: managementApiEndpoint,
+      },
+      initialPolicy:[
+      new iam.PolicyStatement({
+        effect: Effect.ALLOW,
+          actions: ["execute-api:ManageConnections"],
+          resources:[`arn:aws:execute-api:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:${wsAPI.apiId}/${apiStage.stageName}/*/@connections/*`],
+          }),
+          ],
+      logRetention: logs.RetentionDays.ONE_DAY,
+          });
+    //create lambda for arrivals picture
+    const ArrivalRekognition = new lambda.Function(this, 'Arrival_Handler',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'ArrivalRekognition.ArrivalRekognition',
+      code: lambda.Code.fromAsset('lambda'),
+      environment:{
+        BUCKET_NAME: bucket.bucketName,
+        COLLECTION_ID: collection.collectionId,
+        USER_TABLE: this.userTable.tableName,
+        TOPIC_ARN: arrivalTopic.topicArn,
+        InviteTable: InvitedVisitorTable.tableName,
+        BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
+      },
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'ArrivalRekognition', 
+      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+    });
+
+        //create lambda for pre registration
+    const PreRegisterCheck =new lambda.Function(this, 'lambda_pre_register_check_Handler',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'PreRegisterCheck.PreRegisterCheck',
+      code: lambda.Code.fromAsset('lambda'),
+      environment:{
+        BUCKET_NAME: bucket.bucketName,
+        COLLECTION_ID: collection.collectionId,
+        USER_TABLE:this.userTable.tableName,
+        BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
+      },
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'PreRegisterCheck', 
+      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+    });
+
+
     //////////// Grant permissions to Resources ////////////
 
     // Grant permissions for lambdas to S3 and the user table
@@ -207,6 +286,7 @@ export class FacialRecognitionStack extends cdk.Stack {
     bucket.grantReadWrite(ArrivalRekognition);
     this.userTable.grantReadWriteData(PreRegisterCheck);
     this.userTable.grantReadWriteData(ArrivalRekognition);
+    const registerRole = PreRegisterCheck.role!;
     const arrivalRole = ArrivalRekognition.role!;
     sendFeedbackLambda.grantInvoke(arrivalRole);
     InvitedVisitorTable.grantReadWriteData(RegisterIndividualVisitor);
@@ -242,11 +322,20 @@ export class FacialRecognitionStack extends cdk.Stack {
     );
 
     ArrivalRekognition.addToRolePolicy(
-  new iam.PolicyStatement({
-    actions: ["sns:Publish"],
-    resources: ["*"],
-  })
-);
+      new iam.PolicyStatement({
+        actions: ["sns:Publish"],
+        resources: ["*"],
+      })
+    );
+
+  //grant permissions to connect lambda and disable lambda to edit the table created
+  connection.grantReadWriteData(wsConnectLambda);
+  connection.grantReadWriteData(wsDisconnectLambda);
+  connection.grantReadWriteData(this.broadcastLambda);
+  wsAPI.addRoute("$default", { integration: new WebSocketLambdaIntegration("id", this.broadcastLambda) })
+  // enable other functions to call bradcast function
+  this.broadcastLambda.grantInvoke(arrivalRole);
+  this.broadcastLambda.grantInvoke(registerRole);
 
     //////////// API  Resources ////////////
 
@@ -389,6 +478,7 @@ export class FacialRecognitionStack extends cdk.Stack {
         },
       }],
     });
+
 
     
 

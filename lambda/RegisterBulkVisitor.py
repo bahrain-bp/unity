@@ -152,7 +152,7 @@ def send_invitation_email(name, email, formatted_visit_dt):
             margin-top: 20px;
             font-size: 16px;
             color: #ffffff;
-            background-color: ##ff7614; /* platform orange */
+            background-color: #ff7614; /* platform orange */
             text-decoration: none;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -208,7 +208,7 @@ def send_invitation_email(name, email, formatted_visit_dt):
         msg['Subject'] = subject
         msg['From'] = GMAIL_USER
         msg['To'] = email
-        
+
         # Send email via Gmail SMTP
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(GMAIL_USER, GMAIL_PASS)

@@ -8,13 +8,15 @@ import * as path from 'path';
 
 interface VisitorFeedbackStackProps extends cdk.StackProps {
   userTable: dynamodb.Table; // pass the table from another stack
+  broadcastLambda: lambda.IFunction;
 }
 
 export class VisitorFeedbackStack extends cdk.Stack{
     userTable: dynamodb.Table;
+    broadcastLambda: lambda.Function;
     constructor(scope: Construct, id: string, props: VisitorFeedbackStackProps){
         super(scope,id,props);
-        const userTable = props.userTable; // reference from the other stack
+         const { userTable, broadcastLambda } = props;
 
   
     // Visitor Feedback Table
@@ -71,7 +73,8 @@ const commonEnv = {
   FEEDBACK_TABLE: feedbackTable.tableName,
   VISITOR_TABLE: userTable.tableName,
   FEEDBACK_SECRET: 'secret',
-  used_tokens_table: usedTokensTable.tableName
+  used_tokens_table: usedTokensTable.tableName,
+  BROADCAST_LAMBDA: broadcastLambda.functionArn,
 };
 
      // Lambda to get user info
@@ -104,6 +107,9 @@ const getFeedbackLambda = createPythonLambda(
 
     usedTokensTable.grantReadWriteData(getVisitorInfoLambda);
     usedTokensTable.grantReadWriteData(submitFeedbackLambda);
+
+    const submitFeedbackrRole = submitFeedbackLambda.role!;
+    broadcastLambda.grantInvoke(submitFeedbackrRole);
 
 
     // API Gateway

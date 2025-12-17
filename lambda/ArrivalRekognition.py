@@ -8,12 +8,15 @@ dynamodb = boto3.resource('dynamodb')
 USER_TABLE = os.environ['USER_TABLE']
 USER_TABLE = dynamodb.Table(USER_TABLE)
 lambda_client = boto3.client('lambda')
+s3 = boto3.client('s3')
 rekog = boto3.client('rekognition')
+BUCKET = os.environ['BUCKET_NAME']
 COLLECTION = os.environ['COLLECTION_ID']
 sns = boto3.client('sns')
 TOPIC_ARN = os.environ['TOPIC_ARN']
 InviteTable = os.environ['InviteTable']
 InviteTable = dynamodb.Table(InviteTable)
+BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 
 def ArrivalRekognition(event, context):
     if event["httpMethod"] == "OPTIONS":
@@ -82,18 +85,20 @@ def ArrivalRekognition(event, context):
 
             if not items_v:
                 print("not invited")
-                return  response(403, {"error": "visitor is not invited"})
+                return  response(200, {"error": "visitor is not invited"})
             
             # Bahrain timezone
             bahrain_tz = timezone(timedelta(hours=3))
             today_bahrain = datetime.now(bahrain_tz).date()
+            now_bahrain = datetime.now(bahrain_tz)
+            formatted = now_bahrain.strftime("%Y-%m-%d %I:%M %p")  # e.g., 2025-12-17 11:30 AM
             # Check if any item matches today's date
             duplicate_today = any(
                 datetime.strptime(item['visitDate'], "%Y-%m-%d").date() == today_bahrain
                 for item in items_v
             )
             if not duplicate_today:
-               return response(409, {"error": f"There is no visit scheduled for today for the visitor {visitor['name']}!"})
+               return response(200, {"error": f"There is no visit scheduled for today for the visitor {visitor['name']}!"})
 
             SendSMS(visitor['name'])
 
@@ -102,14 +107,28 @@ def ArrivalRekognition(event, context):
             InvocationType='Event',  # async invocation
             Payload=json.dumps(payload)
         )
-           
+            
+            #update the visitor check-in card
+            to_dashboard = {
+                "card": "visitor_checkin",
+                "data": {
+                    "visitor_name": visitor['name'],
+                    "checkin_time": formatted
+                }
+            }
+            # Invoke the broadcast Lambda asynchronously
+            lambda_client.invoke(
+                FunctionName=BROADCAST_LAMBDA,
+                InvocationType="Event",  # async
+                Payload=json.dumps(to_dashboard)
+            )
 
             return response(200, {
                 "name": visitor['name'],
                 "status": "match",
             })
         else:
-            return response(404, {"error": "Visitor is not registered"})
+            return response(200, {"error": "Visitor is not registered"})
 
     except Exception as e:
         print("ERROR:", str(e))

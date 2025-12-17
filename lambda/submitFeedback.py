@@ -3,6 +3,7 @@ import boto3
 import json
 import jwt
 from datetime import datetime, timezone, timedelta
+from decimal import Decimal
 
 FEEDBACK_TABLE = os.environ["FEEDBACK_TABLE"]
 FEEDBACK_SECRET = os.environ["FEEDBACK_SECRET"]
@@ -11,6 +12,8 @@ used_tokens_table_name = os.environ["used_tokens_table"]
 dynamodb = boto3.resource("dynamodb")
 feedback_table = dynamodb.Table(FEEDBACK_TABLE)
 used_tokens_table = dynamodb.Table(used_tokens_table_name)
+lambda_client = boto3.client('lambda')
+BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 
 def handler(event, context):
     try:
@@ -65,7 +68,7 @@ def handler(event, context):
         bahrain_tz = timezone(timedelta(hours=3))
         today_bahrain = datetime.now(bahrain_tz).date().isoformat()
         feedback_item = {
-            "visitorId": visitor_id,
+            "id": visitor_id,
             "createdAt": today_bahrain,
 
             # Store all fields directly
@@ -79,11 +82,27 @@ def handler(event, context):
             "overallRating": data["overallRating"],
             "commentText": data["commentText"],
         }
+        #construct the comment
+        comment = f'"{data["commentText"]}" - {data["name"]}'
+
+        to_dashboard = {
+            "card": "visitor_comment",
+            "data": {
+                "comment":  comment,
+                }
+            }
+            # Invoke the broadcast Lambda asynchronously
+        lambda_client.invoke(
+                FunctionName=BROADCAST_LAMBDA,
+                InvocationType="Event",  # async
+                Payload=json.dumps(to_dashboard)
+            )
 
         # Save
         feedback_table.put_item(Item=feedback_item)
         used_tokens_table.put_item(Item={'token': token, 'usedAt': today_bahrain})
         print("Feedback saved successfully")
+        broadcast_avg_feedback()
         return resp(200, {"message": "Feedback submitted successfully"})
         
 
@@ -93,6 +112,40 @@ def handler(event, context):
         return resp(401, {"error": "Invalid token"})
     except Exception as e:
         return resp(500, {"error": str(e)})
+
+
+def broadcast_avg_feedback():
+    # Fetch all feedback items
+    resp = feedback_table.scan()
+    items = resp.get("Items", [])
+
+    if not items:
+        avg_score = 0
+    else:
+        total_score = sum(Decimal(item["overallRating"]) for item in items)
+        avg_score = float(total_score / len(items))
+
+        # Calculate stars
+        num_colored_stars = int(avg_score)              # full colored stars
+        num_empty_stars = 5 - num_colored_stars        # remaining empty stars
+        print(avg_score)
+        # Prepare dashboard payload
+        to_dashboard = {
+            "card": "avg_feedback_score",
+            "data": {
+                "avg_score": round(avg_score, 1),       # e.g., 4.3
+                "colored_stars": num_colored_stars,
+                "empty_stars": num_empty_stars
+            }
+        }
+
+        # Invoke broadcast Lambda asynchronously
+        lambda_client.invoke(
+            FunctionName=BROADCAST_LAMBDA,
+            InvocationType="Event",
+            Payload=json.dumps(to_dashboard)
+        )
+        print("success")
 
 
 # Helper for consistent JSON + CORS

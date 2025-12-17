@@ -1,0 +1,72 @@
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); // 4 columns on large screens
+  grid-auto-rows: minmax(120px, auto);
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* Top 4 cards */
+.box1, .box2, .box3, .box4 {
+  min-height: 120px;
+}
+
+/* Middle graphs span 2 columns */
+.box5, .box6 {
+  grid-column: span 2;
+  min-height: 300px;
+}
+
+/* Bottom row container */
+.bottom-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); // 3 equal columns
+  gap: 1.5rem;
+  grid-column: 1 / -1; // span full width of the main grid
+}
+
+/* Bottom boxes styling */
+.box7, .box8, .box9 {
+     height: 25vh;      // box height = 25% of viewport height
+  min-height: 170px; // ensures it’s not too small on tiny screens
+  max-height: 300px; // optional, prevents it from being huge on large screens
+  display: flex;
+  flex-direction: column;
+}
+
+/* Box styling */
+.box {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Orange side border */
+.orange-theme {
+  border-left: 4px solid #ff7614;
+}
+
+/* Responsive: stack everything on smaller screens */
+@media (max-width: 1024px) {
+  .dashboard {
+    grid-template-columns: 1fr; // everything becomes a column
+  }
+  .box5, .box6 {
+    grid-column: span 1;
+  }
+  .bottom-row {
+    grid-template-columns: 1fr; // stack bottom row vertically
+  }
+}
