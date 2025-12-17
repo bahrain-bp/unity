@@ -43,7 +43,6 @@ Material:
   - RayTracingPrepass
   - MOTIONVECTORS
   - DepthOnly
-  - SHADOWCASTER
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -320,7 +319,7 @@ Material:
     m_Colors:
     - _BaseColor: {r: 0.33256188, g: 0.37106907, b: 0.36948657, a: 0.19999999}
     - _BaseColorMap_MipInfo: {r: 0, g: 0, b: 0, a: 0}
-    - _Color: {r: 0.33256185, g: 0.37106904, b: 0.3694865, a: 0.19999999}
+    - _Color: {r: 0.3325619, g: 0.3710691, b: 0.3694866, a: 0.19999999}
     - _DiffusionProfileAsset: {r: 0, g: 0, b: 0, a: 0}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
