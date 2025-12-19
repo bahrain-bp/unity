@@ -4,6 +4,8 @@ import SimulatedLight from "../components/RecentVisitors";
 import AvgFeedbackScore from "../components/AvgFeedbackScore";
 import VisitorComments from "../components/VisitorComments";
 import ActiveUsers  from "../components/ActiveUsers";
+import InvitationsToday  from "../components/InvitationsToday";
+
 const Dashboard = () => {
   return (
     <div className="dashboard">
@@ -11,7 +13,7 @@ const Dashboard = () => {
       <div className="box box1 orange-theme"><AvgFeedbackScore /></div>
       <div className="box box2 orange-theme"><TotalBahtwinVisitors /></div>
       <div className="box box3 orange-theme"><ActiveUsers/></div>
-      <div className="box box4 orange-theme">Box 4</div>
+      <div className="box box4 orange-theme"><InvitationsToday /></div>
 
       {/* Middle 2 graphs */}
       <div className="box box5 orange-theme">Graph 1</div>

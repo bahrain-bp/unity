@@ -112,6 +112,21 @@ const getFeedbackLambda = createPythonLambda(
     broadcastLambda.grantInvoke(submitFeedbackrRole);
 
 
+    const LoadFeedback = new lambda.Function(this, 'LoadFeedback',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'LoadFeedback.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment:{
+        FEEDBACK_TABLE: feedbackTable.tableName,
+      },
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'LoadFeedback', 
+      logRetention: logs.RetentionDays.ONE_DAY,
+    });
+    feedbackTable.grantReadData(LoadFeedback);
+
+
+
     // API Gateway
     const api = new apigateway.RestApi(this, 'FeedbackApi', {
     restApiName: 'Visitor Feedback API',
@@ -134,6 +149,13 @@ const getFeedbackLambda = createPythonLambda(
     getFeedbackResource.addMethod(
     'GET',
     new apigateway.LambdaIntegration(getFeedbackLambda, { proxy: true })
+    );
+
+    const adminResource = api.root.addResource('admin');
+    const load_feedbackResource = adminResource.addResource('loadFeedback')
+    load_feedbackResource.addMethod(
+    'POST',
+    new apigateway.LambdaIntegration(LoadFeedback, { proxy: true })
     );
 
     // Helper function to add OPTIONS for CORS preflight
@@ -172,6 +194,7 @@ const addCorsOptions = (apiResource: apigateway.IResource) => {
 addCorsOptions(getVisitorInfoResource);
 addCorsOptions(submitFeedbackResource);
 addCorsOptions(getFeedbackResource);
+addCorsOptions(load_feedbackResource);
 
 
 

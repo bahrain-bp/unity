@@ -1,17 +1,43 @@
 import { useEffect, useState } from "react";
 import { Users } from "lucide-react";
 import "../../sass/DashboardCards.scss";
+import { ImageClient } from "../services/api";
 
 interface Visitor {
   visitor_name: string;
   checkin_time: string;
 }
 
+interface LoadDashboardResponse {
+  card: string;
+  data: Visitor[];
+}
+
 export default function RecentVisitors() {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [connected, setConnected] = useState<boolean>(false);
 
+  // Fetch last 5 checked-in visitors on page load
+  const fetchRecentVisitors = async () => {
+    try {
+      const { data } = await ImageClient.post<LoadDashboardResponse>(
+        "/admin/loadDashboard",
+        { component: "RecentVisitors" } // send component name
+      );
+
+      if (data.card === "RecentVisitors" && Array.isArray(data.data)) {
+        setVisitors(data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching recent visitors:", err);
+    }
+  };
+
   useEffect(() => {
+    // Load initial last 5 visitors
+    fetchRecentVisitors();
+
+    // Open WebSocket for real-time updates
     const ws = new WebSocket(
       "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
     );
@@ -30,7 +56,7 @@ export default function RecentVisitors() {
           setVisitors(prev => [
             { visitor_name: data.data.visitor_name, checkin_time: data.data.checkin_time },
             ...prev
-          ]);
+          ].slice(0, 5)); // keep only last 5
         }
       } catch (err) {
         console.error("WebSocket parse error:", err);

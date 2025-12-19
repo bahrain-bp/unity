@@ -9,6 +9,8 @@ from email.mime.text import MIMEText
 from boto3.dynamodb.conditions import Key
 
 
+lambda_client = boto3.client("lambda")
+BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 
 GMAIL_USER = os.environ['GMAIL_USER']      # Your Gmail address
 GMAIL_PASS = os.environ['GMAIL_PASS']      # Gmail app password
@@ -52,11 +54,11 @@ def handler(event, context):
         print("is duplicate function was executed. no duplicate")
 
         # generate unique ID
-        inviteId = str(uuid.uuid4())
+        visitorId  = str(uuid.uuid4())
         # Insert into DynamoDB
         InviteTable.put_item(
             Item={
-                "inviteId": inviteId,
+                "visitorId": visitorId ,
                 "name": name,
                 "email": email,
                 "visitDate": visit_date,
@@ -66,6 +68,25 @@ def handler(event, context):
             }
         )
         print("DynamoDB put successflly")
+
+        # Count today's invitations
+        today_date = now_bahrain.date().isoformat()
+        total_today_invitations = count_today_invitations(today_date)
+
+        # Prepare dashboard payload
+        to_dashboard = {
+            "card": "today_invitations",
+            "data": {
+                "total": total_today_invitations
+            }
+        }
+
+        # Invoke the broadcast Lambda asynchronously
+        lambda_client.invoke(
+            FunctionName=BROADCAST_LAMBDA,
+            InvocationType="Event",  # async
+            Payload=json.dumps(to_dashboard)
+        )
 
         # send an invitation via email
         send_invitation_email(name, email, formatted_visit_dt)
@@ -195,6 +216,12 @@ def is_duplicate_visit(email, visit_date):
             Key('email').eq(email) & Key('visitDate').eq(visit_date)
     )
     return len(response.get('Items', [])) > 0
+
+def count_today_invitations(today_date):
+    response = InviteTable.scan(
+        FilterExpression=Key("visitDate").eq(today_date)
+    )
+    return response.get("Count", 0)
 
 #response handling function
 def response(status, body):

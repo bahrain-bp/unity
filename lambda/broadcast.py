@@ -40,6 +40,12 @@ def handler(event, context):
         "card": card_type,
         "data": card_data
     }
+    elif card_type == "today_invitations":
+        print(card_data)
+        broadcast_message  = {
+        "card": card_type,
+        "data": card_data
+    }
 
 
     # WebSocket Management API

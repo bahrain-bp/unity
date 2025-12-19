@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
 import "../../sass/DashboardCards.scss";
+import { FeedbackClient } from "../services/api";
 
 interface AvgFeedbackData {
   avg_score: number;
   colored_stars: number;
   empty_stars: number;
+}
+
+interface LoadDashboardResponse {
+  card: string;
+  data: AvgFeedbackData[];
 }
 
 export default function AvgFeedbackScore() {
@@ -16,7 +22,25 @@ export default function AvgFeedbackScore() {
   });
   const [connected, setConnected] = useState<boolean>(false);
 
+  // Fetch initial feedback
+  const fetchFeedback = async () => {
+    try {
+      const { data } = await FeedbackClient.post<LoadDashboardResponse>(
+        "/admin/loadFeedback",
+        { component: "avg_feedback_score" }
+      );
+
+      if (data.card === "avg_feedback_score" && Array.isArray(data.data) && data.data.length > 0) {
+        setFeedback(data.data[0]); // pick first element from the array
+      }
+    } catch (err) {
+      console.error("Error fetching feedback:", err);
+    }
+  };
+
   useEffect(() => {
+    fetchFeedback();
+
     const ws = new WebSocket(
       "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
     );
@@ -27,7 +51,7 @@ export default function AvgFeedbackScore() {
       try {
         const data = JSON.parse(event.data);
 
-        if (data.card === "avg_feedback_score") {
+        if (data.card === "avg_feedback_score" && data.data) {
           setFeedback({
             avg_score: data.data.avg_score,
             colored_stars: data.data.colored_stars,
@@ -59,7 +83,7 @@ export default function AvgFeedbackScore() {
   };
 
   return (
-    <>
+    <div className="dashboard-card feedback-theme">
       <div className="card-header">
         <div className="card-icon">
           <Star size={30} color="#ff7614" />
@@ -71,6 +95,6 @@ export default function AvgFeedbackScore() {
       </div>
       <div className="card-value">{feedback.avg_score}</div>
       <div className="star-container">{renderStars()}</div>
-    </>
+    </div>
   );
 }

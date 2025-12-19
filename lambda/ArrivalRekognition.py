@@ -92,6 +92,7 @@ def ArrivalRekognition(event, context):
             today_bahrain = datetime.now(bahrain_tz).date()
             now_bahrain = datetime.now(bahrain_tz)
             formatted = now_bahrain.strftime("%Y-%m-%d %I:%M %p")  # e.g., 2025-12-17 11:30 AM
+
             # Check if any item matches today's date
             duplicate_today = any(
                 datetime.strptime(item['visitDate'], "%Y-%m-%d").date() == today_bahrain
@@ -99,6 +100,16 @@ def ArrivalRekognition(event, context):
             )
             if not duplicate_today:
                return response(200, {"error": f"There is no visit scheduled for today for the visitor {visitor['name']}!"})
+            
+            # Find the invite record that matches today
+            invite_today = None
+            for item in items_v:
+                print(item)
+                visit_date = datetime.strptime(item['visitDate'], "%Y-%m-%d").date()
+                if visit_date == today_bahrain:
+                    invite_today = item
+                    break
+            
 
             SendSMS(visitor['name'])
 
@@ -107,7 +118,16 @@ def ArrivalRekognition(event, context):
             InvocationType='Event',  # async invocation
             Payload=json.dumps(payload)
         )
-            
+
+            # Update the invite record with check-in info
+            InviteTable.update_item(
+                Key={'visitorId': invite_today['visitorId']},
+                UpdateExpression="SET checked_in = :c, checkin_time = :t",
+                ExpressionAttributeValues={
+                    ':c': 'yes',
+                    ':t': formatted
+                }
+            )
             #update the visitor check-in card
             to_dashboard = {
                 "card": "visitor_checkin",

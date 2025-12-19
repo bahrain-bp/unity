@@ -12,6 +12,8 @@ from email.mime.text import MIMEText
 from boto3.dynamodb.conditions import Key
 from datetime import datetime, timezone, timedelta
 
+lambda_client = boto3.client("lambda")
+BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 # Environment variables
 GMAIL_USER = os.environ['GMAIL_USER']
 GMAIL_PASS = os.environ['GMAIL_PASS']
@@ -88,10 +90,10 @@ def handler(event, context):
                 return response(409, {"error": f"Row {i}: Visitor already registered for this date"})
 
             # Register in DynamoDB
-            inviteId = str(uuid.uuid4())
+            visitorId  = str(uuid.uuid4())
             InviteTable.put_item(
                 Item={
-                    "inviteId": inviteId,
+                    "visitorId ": visitorId ,
                     "name": row["name"].strip(),
                     "email": email,
                     "visitDate": visit_date_iso,
@@ -99,6 +101,24 @@ def handler(event, context):
                     "status": "invited",
                     "createdAt": now_bahrain.isoformat()
                 }
+            )
+            # Count today's invitations
+            today_date = now_bahrain.date().isoformat()
+            total_today_invitations = count_today_invitations(today_date)
+
+            # Prepare dashboard payload
+            to_dashboard = {
+                "card": "today_invitations",
+                "data": {
+                    "total": total_today_invitations
+                }
+            }
+
+            # Invoke the broadcast Lambda asynchronously
+            lambda_client.invoke(
+                FunctionName=BROADCAST_LAMBDA,
+                InvocationType="Event",  # async
+                Payload=json.dumps(to_dashboard)
             )
 
             # Send invitation
@@ -218,6 +238,11 @@ def send_invitation_email(name, email, formatted_visit_dt):
         print("Error sending email:", e)
         return False
 
+def count_today_invitations(today_date):
+    response = InviteTable.scan(
+        FilterExpression=Key("visitDate").eq(today_date)
+    )
+    return response.get("Count", 0)
 
 def response(status, body):
     return {

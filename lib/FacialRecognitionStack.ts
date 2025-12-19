@@ -14,14 +14,15 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import * as path from 'path';
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+
 export class FacialRecognitionStack extends cdk.Stack {
- public readonly userTable: dynamodb.Table;
- public readonly broadcastLambda: lambda.Function;
+  public readonly userTable: dynamodb.Table;
+  public readonly broadcastLambda: lambda.Function;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-     //////////// DynamoDB Resources ////////////
+    //////////// DynamoDB Resources ////////////
 
     // Users Table
     this.userTable = new dynamodb.Table(this, 'userTable', {
@@ -139,36 +140,17 @@ export class FacialRecognitionStack extends cdk.Stack {
       logRetention: logs.RetentionDays.ONE_DAY
     });
 
-    //create lambda to save individual visitor invite
-    const RegisterIndividualVisitor = new lambda.Function(this, 'RegisterIndividualVisitor',{
+        //create lambda to load dashboard
+    const LoadDashboard = new lambda.Function(this, 'LoadDashboard',{
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'RegisterIndividualVisitor.handler',
+      handler:'LoadDashboard.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment:{
-        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
-        GMAIL_PASS: 'thun ojje rdpt ocjg', 
-        BUCKET_NAME: bucket.bucketName,
         InviteTable: InvitedVisitorTable.tableName,
+        USER_TABLE: this.userTable.tableName
       },
       timeout:cdk.Duration.seconds(30),
-      functionName: 'RegisterIndividualVisitor', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-    });
-
-
-    //create lambda for bulk upload invites
-    const RegisterBulkVisitor = new lambda.Function(this, 'RegisterBulkVisitor',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'RegisterBulkVisitor.handler',
-      code: lambda.Code.fromAsset('lambda'),
-      environment:{
-        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
-        GMAIL_PASS: 'thun ojje rdpt ocjg', 
-        BUCKET_NAME: bucket.bucketName,
-        InviteTable: InvitedVisitorTable.tableName,
-      },
-      timeout:cdk.Duration.seconds(30),
-      functionName: 'RegisterBulkVisitor', 
+      functionName: 'LoadDashboard', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
 
@@ -277,6 +259,51 @@ export class FacialRecognitionStack extends cdk.Stack {
       functionName: 'PreRegisterCheck', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
+    //create lambda to save individual visitor invite
+    const RegisterIndividualVisitor = new lambda.Function(this, 'RegisterIndividualVisitor',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'RegisterIndividualVisitor.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment:{
+        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
+        GMAIL_PASS: 'thun ojje rdpt ocjg', 
+        BUCKET_NAME: bucket.bucketName,
+        InviteTable: InvitedVisitorTable.tableName,
+        BROADCAST_LAMBDA: this.broadcastLambda.functionArn
+      },
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'RegisterIndividualVisitor', 
+      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+    });
+    //create lambda for bulk upload invites
+    const RegisterBulkVisitor = new lambda.Function(this, 'RegisterBulkVisitor',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'RegisterBulkVisitor.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment:{
+        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
+        GMAIL_PASS: 'thun ojje rdpt ocjg', 
+        BUCKET_NAME: bucket.bucketName,
+        InviteTable: InvitedVisitorTable.tableName,
+        BROADCAST_LAMBDA: this.broadcastLambda.functionArn
+      },
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'RegisterBulkVisitor', 
+      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+    });
+
+    //get user info lambda
+    const GetUserInfo = new lambda.Function(this, 'GetUserInfo',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'GetUserInfo.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment:{
+        USER_TABLE:this.userTable.tableName
+      },
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'GetUserInfo', 
+      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+    });
 
 
     //////////// Grant permissions to Resources ////////////
@@ -286,12 +313,17 @@ export class FacialRecognitionStack extends cdk.Stack {
     bucket.grantReadWrite(ArrivalRekognition);
     this.userTable.grantReadWriteData(PreRegisterCheck);
     this.userTable.grantReadWriteData(ArrivalRekognition);
+    this.userTable.grantReadWriteData(LoadDashboard);
+    this.userTable.grantReadWriteData(GetUserInfo);
     const registerRole = PreRegisterCheck.role!;
     const arrivalRole = ArrivalRekognition.role!;
     sendFeedbackLambda.grantInvoke(arrivalRole);
     InvitedVisitorTable.grantReadWriteData(RegisterIndividualVisitor);
     InvitedVisitorTable.grantReadWriteData(RegisterBulkVisitor);
-    InvitedVisitorTable.grantReadData(ArrivalRekognition);
+    InvitedVisitorTable.grantReadWriteData(ArrivalRekognition);
+    InvitedVisitorTable.grantReadWriteData(LoadDashboard);
+    const individualRegisterRole = RegisterIndividualVisitor.role!;
+    const BulkRegisterRole = RegisterBulkVisitor.role!;
     // Grant Lambda permission to publish to SNS
     arrivalTopic.grantPublish(ArrivalRekognition);
 
@@ -336,6 +368,8 @@ export class FacialRecognitionStack extends cdk.Stack {
   // enable other functions to call bradcast function
   this.broadcastLambda.grantInvoke(arrivalRole);
   this.broadcastLambda.grantInvoke(registerRole);
+  this.broadcastLambda.grantInvoke(individualRegisterRole);
+  this.broadcastLambda.grantInvoke(BulkRegisterRole);
 
     //////////// API  Resources ////////////
 
@@ -381,6 +415,19 @@ export class FacialRecognitionStack extends cdk.Stack {
     registerVisitorBulk.addMethod('POST', new apigw.LambdaIntegration(RegisterBulkVisitor, {
       proxy: true,
     }));
+
+    // create dashboard resource under the admin resource
+    const load_Dashboard = adminResource.addResource('loadDashboard');
+    
+    // connect GET to Lambda
+    load_Dashboard.addMethod('POST', new apigw.LambdaIntegration(LoadDashboard, {
+      proxy: true,
+    }));
+    const getUserInfo = visitorResource.addResource('me');
+        getUserInfo.addMethod(
+        'GET',
+        new apigw.LambdaIntegration(GetUserInfo, { proxy: true })
+        );
 
     arrivalResource.addMethod('OPTIONS', new apigw.MockIntegration({
       integrationResponses: [{
@@ -479,6 +526,30 @@ export class FacialRecognitionStack extends cdk.Stack {
       }],
     });
 
+     load_Dashboard.addMethod('OPTIONS', new apigw.MockIntegration({
+      integrationResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+          'method.response.header.Access-Control-Allow-Origin': "'*'",
+          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+        },
+      }],
+      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+      requestTemplates: {
+        'application/json': '{"statusCode": 200}'
+      },
+    }), {
+      methodResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': true,
+          'method.response.header.Access-Control-Allow-Methods': true,
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      }],
+    });
+
 
     
 
@@ -517,6 +588,11 @@ getImageUrlResource.addMethod(
   new apigw.LambdaIntegration(getImageUrlFn, { proxy: true }),
   { authorizationType: apigw.AuthorizationType.NONE }
 );
+
+new cdk.CfnOutput(this, 'AdminApiBaseUrl', {
+  value: api_arrival.urlForPath('/admin/'),
+  exportName: 'AdminApiBaseUrl',
+});
     
   }
 }
