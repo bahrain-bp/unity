@@ -37,7 +37,7 @@ public class SlatWallGenerator : MonoBehaviour
             slat.transform.rotation = transform.rotation;
 
             // size it
-            slat.transform.localScale = new Vector3(slatWidth, slatHeight, slatDepth);
+            //slat.transform.localScale = new Vector3(slatWidth, slatHeight, slatDepth);
         }
     }
 }
