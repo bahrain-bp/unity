@@ -10,8 +10,9 @@ public class CeilingCylindersGenerator : MonoBehaviour
     [Header("Prefab")]
     public GameObject cylinderPrefab;
 
-    [Header("Shared Material")]
-    public Material sharedMaterial;
+    [Header("Materials (Persistent)")]
+    [Tooltip("Provide 8 material ASSETS (already colored). These will persist in and out of Play Mode.")]
+    public Material[] rowMaterials = new Material[8];
 
     [Header("Grid Size")]
     [Min(1)] public int rows = 48;
@@ -28,14 +29,6 @@ public class CeilingCylindersGenerator : MonoBehaviour
     [Header("Color Pattern")]
     [Min(1)] public int rowsPerColor = 6;
 
-    [Tooltip("Colors in order (maroon → olive). Extra rows will continue in reverse (ping-pong).")]
-    public Color[] colors = new Color[8];
-
-    [Header("Shader Color Property")]
-    public string colorProperty = "_BaseColor";
-
-    private MaterialPropertyBlock _mpb;
-
     [ContextMenu("Rebuild Cylinders")]
     public void Rebuild()
     {
@@ -44,35 +37,38 @@ public class CeilingCylindersGenerator : MonoBehaviour
             Debug.LogWarning("CeilingCylindersGenerator: cylinderPrefab is not assigned.");
             return;
         }
-        if (sharedMaterial == null)
+
+        if (rowMaterials == null || rowMaterials.Length == 0)
         {
-            Debug.LogWarning("CeilingCylindersGenerator: sharedMaterial is not assigned.");
-            return;
-        }
-        if (colors == null || colors.Length == 0)
-        {
-            Debug.LogWarning("CeilingCylindersGenerator: colors array is empty.");
+            Debug.LogWarning("CeilingCylindersGenerator: rowMaterials is empty.");
             return;
         }
 
+        // Ensure all material slots are assigned
+        for (int i = 0; i < rowMaterials.Length; i++)
+        {
+            if (rowMaterials[i] == null)
+            {
+                Debug.LogWarning($"CeilingCylindersGenerator: rowMaterials[{i}] is not assigned.");
+                return;
+            }
+        }
+
         ClearChildren();
-        if (_mpb == null) _mpb = new MaterialPropertyBlock();
 
         Vector3 rDir = rowDirection.sqrMagnitude > 0.0001f ? rowDirection.normalized : Vector3.right;
         Vector3 cDir = colDirection.sqrMagnitude > 0.0001f ? colDirection.normalized : Vector3.forward;
 
-        int n = colors.Length;
+        int n = rowMaterials.Length;
 
+        // Keep prefab orientation (string stays on top) while allowing generator rotation
         Quaternion spawnRot = transform.rotation * cylinderPrefab.transform.rotation;
 
         for (int r = 0; r < rows; r++)
         {
-            // Each band = rowsPerColor rows
             int band = r / rowsPerColor;
-
-            // Ping-pong across colors: 0..n-1..1..0..n-1...
-            int colorIndex = PingPongIndex(band, n);
-            Color rowColor = colors[colorIndex];
+            int matIndex = PingPongIndex(band, n);
+            Material mat = rowMaterials[matIndex];
 
             for (int c = 0; c < columns; c++)
             {
@@ -89,17 +85,13 @@ public class CeilingCylindersGenerator : MonoBehaviour
 
                 go.name = $"Cyl_{r:00}_{c:00}";
                 go.transform.position = transform.position + rDir * (r * rowSpacing) + cDir * (c * colSpacing);
-
                 go.transform.rotation = spawnRot;
 
                 var rend = go.GetComponentInChildren<Renderer>();
                 if (rend != null)
                 {
-                    rend.sharedMaterial = sharedMaterial;
-
-                    _mpb.Clear();
-                    _mpb.SetColor(colorProperty, rowColor);
-                    rend.SetPropertyBlock(_mpb);
+                    // Persistent material assignment
+                    rend.sharedMaterial = mat;
                 }
             }
         }
@@ -108,9 +100,8 @@ public class CeilingCylindersGenerator : MonoBehaviour
     private static int PingPongIndex(int band, int n)
     {
         if (n <= 1) return 0;
-
-        int period = (n * 2) - 2;      
-        int m = band % period;         
+        int period = (n * 2) - 2;
+        int m = band % period;
         return (m < n) ? m : period - m;
     }
 
