@@ -6,6 +6,9 @@ $color-blue: #42B4FF;
 $color-purple: #8361E0;
 $color-white: #F0F0F0;
 
+$color-red: #e71010;
+$color-green: #1baa3f;
+
 $color-font: #161D26;
 $color-bg: #ebebeb;
 $color-grey: #cfcfcf;
@@ -36,4 +39,9 @@ $font-display: "Lora", serif;
 @mixin glowBox($color, $spread) {
   background-color: rgba($color, 0.2);
   box-shadow: 0px 0px $spread rgba($color, 0.3);
+}
+@mixin flexCenter() {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
