@@ -13,61 +13,18 @@ import VisitorFeedBack from "./pages/VisitorFeedback";
 import ErrorPage from "./pages/error";
 import ThankYouPage from "./pages/thank-you";
 import AdminDashboard from "./pages/AdminDashboard";
-import { WebSocketProvider } from "./context/WebSocketContext"; // import your provider
+import Feedback from "./pages/Feedback";
 import { useEffect } from "react";
 
 
 function App() {
   const year = new Date().getFullYear();
 
-  //import { useEffect } from "react";
 
-//added this inside the function app, after the declaration of year  
-useEffect(() => {
-  let lastHeartbeatSentAt = 0;
-  const HEARTBEAT_INTERVAL = 30_000; // 30 seconds
-
-  const maybeSendHeartbeat = () => {
-    const now = Date.now();
-
-    if (now - lastHeartbeatSentAt < HEARTBEAT_INTERVAL) {
-      return; // throttle
-    }
-
-    lastHeartbeatSentAt = now;
-
-//please add the url in the env
-
-    fetch("https://twrmzrk7v3.execute-api.us-east-1.amazonaws.com/dev/heartbeat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: "test-user-frontend", // replace later with Cognito userId
-        timestamp: now,
-      }),
-    }).catch(() => {
-      // silently ignore network errors
-    });
-  };
-
-//idk if this is correct but i think it works, that's what matters now 
-
-  window.addEventListener("click", maybeSendHeartbeat);
-  window.addEventListener("scroll", maybeSendHeartbeat);
-  window.addEventListener("keydown", maybeSendHeartbeat);
-
-  return () => {
-    window.removeEventListener("click", maybeSendHeartbeat);
-    window.removeEventListener("scroll", maybeSendHeartbeat);
-    window.removeEventListener("keydown", maybeSendHeartbeat);
-  };
-}, []);
 
 
   return (
-    <WebSocketProvider>
+    <>
       <Router>
         <Routes>
           <Route
@@ -139,6 +96,10 @@ useEffect(() => {
             path="/AdminDashboard"
             element={<AdminDashboard />}
           />
+          <Route
+            path="/feedback"
+            element={<Feedback />}
+          />
         </Routes>
       </Router>
 
@@ -149,7 +110,8 @@ useEffect(() => {
           &copy;{year} Bahrain Amazon Web Services. All Rights Reserved
         </div>
       </footer>
-    </WebSocketProvider>
+      </>
+    
   );
 }
 

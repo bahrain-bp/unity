@@ -5,6 +5,7 @@ import AvgFeedbackScore from "../components/AvgFeedbackScore";
 import VisitorComments from "../components/VisitorComments";
 import ActiveUsers  from "../components/ActiveUsers";
 import InvitationsToday  from "../components/InvitationsToday";
+import UsersLast6HoursChart from "../components/UsersLast6HoursChart";
 
 const Dashboard = () => {
   return (
@@ -16,7 +17,7 @@ const Dashboard = () => {
       <div className="box box4 orange-theme"><InvitationsToday /></div>
 
       {/* Middle 2 graphs */}
-      <div className="box box5 orange-theme">Graph 1</div>
+      <div className="box box5 orange-theme"><UsersLast6HoursChart /></div>
       <div className="box box6 orange-theme">Graph 2</div>
 
       {/* Bottom 3 boxes inside bottom-row container */}

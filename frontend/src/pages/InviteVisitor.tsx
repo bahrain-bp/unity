@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-import axios from "axios";
 import { FaUpload } from "react-icons/fa";
 import "../../sass/_visitorInvite.scss";
 import { ImageClient } from "../services/api";
@@ -69,8 +68,8 @@ function VisitorTestPage() {
           reader.readAsDataURL(csvFile);
         });
 
-        const response = await axios.post(
-          "https://vljyjl7oae.execute-api.us-east-1.amazonaws.com/prod/admin/registerVisitorBulk",
+        const response = await ImageClient.post(
+          "/admin/registerVisitorBulk",
           { file: fileBase64 }
         );
 

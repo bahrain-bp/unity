@@ -7,7 +7,7 @@ const ThankYouPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="feedback-page">
+    <div className="feedback1-page">
       <div className="auth">
         <h2>Thank You!</h2>
         <p className="subtitle">
@@ -19,7 +19,7 @@ const ThankYouPage = () => {
         </p>
 
         <button
-          className="submit-btn"
+          className="auth__button"
           style={{ display: "block", margin: "2rem auto 0" }}
           onClick={() => navigate("/")}
         >

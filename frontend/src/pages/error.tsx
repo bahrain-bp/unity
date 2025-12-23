@@ -10,7 +10,7 @@ const ErrorPage = () => {
   const serverMessage = location.state?.message;
 
   return (
-    <div className="feedback-page">
+    <div className="feedback1-page">
       <div className="auth">
         <h2>Error</h2>
         <p className="subtitle">{serverMessage || "Oops! Something went wrong."}</p>

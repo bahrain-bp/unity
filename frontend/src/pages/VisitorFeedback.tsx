@@ -25,47 +25,59 @@ const Feedback = () => {
 
   const navigate = useNavigate();
 
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const t = params.get("token");
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("token");
 
-  if (!t) {
-    navigate("/error", { state: { message: "invalid-link" } });
-    return;
+    if (!t) {
+      navigate("/error", { state: { message: "invalid-link" } });
+      return;
+    }
+
+    setToken(t);
+
+    const fetchVisitor = async () => {
+      try {
+        const res = await FeedbackClient.get("/getVisitorInfo", {
+          headers: { Authorization: `Bearer ${t}` },
+        });
+
+        setName(res.data.name);
+        setEmail(res.data.email);
+        setVisitorValid(true);
+      } catch (err: any) {
+        const serverMessage =
+          err.response?.data?.error || "Server error occurred";
+
+        navigate("/error", { state: { message: serverMessage } });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisitor();
+  }, [navigate]);
+
+  /* ===============================
+     LOADING STATE (FIXED)
+     =============================== */
+  if (loading) {
+    return (
+      <div className="feedback1-page">
+        <h1 className="page-header">BAHTWIN Visitor Feedback</h1>
+        <p className="empty-state">Validating your link…</p>
+      </div>
+    );
   }
 
-  setToken(t);
-
-  const fetchVisitor = async () => {
-    try {
-      const res = await FeedbackClient.get("/getVisitorInfo", {
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      setName(res.data.name);
-      setEmail(res.data.email);
-      setVisitorValid(true);
-    } catch (err) {
-      console.error(err);
-
-      // Pass the server error message directly if available
-      const serverMessage = err.response?.data?.error || "Server error occurred";
-      navigate("/error", { state: { message: serverMessage } });
-    } finally {
-      // Stop loading in both success and error cases
-      setLoading(false);
-    }
-  };
-
-  fetchVisitor();
-}, [navigate]);
-
-  if (loading) return <div className="feedback-loading">Validating your link…</div>;
   if (!visitorValid) return null;
 
-  const handleSubmit = async (e) => {
+  /* ===============================
+     SUBMIT HANDLER
+     =============================== */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
     const requiredFields = [
       purpose,
       checkInTime,
@@ -75,7 +87,9 @@ useEffect(() => {
       overallRating,
     ];
 
-    const hasEmpty = requiredFields.some((field) => !field || field === 0);
+    const hasEmpty = requiredFields.some(
+      (field) => !field || field === 0
+    );
 
     if (hasEmpty) {
       setShowError(true);
@@ -102,24 +116,26 @@ useEffect(() => {
           "Content-Type": "application/json",
         },
       });
-      navigate("/thank-you");
-    } catch (err) {
-      console.error(err);
 
-      // Handle server response messages
+      navigate("/thank-you");
+    } catch (err: any) {
       if (err.response) {
         const { status, data } = err.response;
 
         if (status === 401) {
           navigate("/error", { state: { message: "Visitor not allowed" } });
         } else if (status === 403) {
-          if (data && data.error === "Token already used") {
-            navigate("/error", { state: { message: "Feedback already submitted" } });
+          if (data?.error === "Token already used") {
+            navigate("/error", {
+              state: { message: "Feedback already submitted" },
+            });
           } else {
             navigate("/error", { state: { message: "Link invalid" } });
           }
         } else if (status >= 400 && status < 500) {
-          navigate("/error", { state: { message: data?.error || "Invalid request" } });
+          navigate("/error", {
+            state: { message: data?.error || "Invalid request" },
+          });
         } else {
           navigate("/error", { state: { message: "Server error" } });
         }
@@ -129,7 +145,10 @@ useEffect(() => {
     }
   };
 
-  const StarRating = ({ value, setValue }) => (
+  /* ===============================
+     STAR COMPONENT
+     =============================== */
+  const StarRating = ({ value, setValue }: any) => (
     <div className="stars">
       {[1, 2, 3, 4, 5].map((star) => (
         <span
@@ -143,8 +162,12 @@ useEffect(() => {
     </div>
   );
 
+  /* ===============================
+     MAIN UI
+     =============================== */
   return (
-    <div className="feedback-page">
+    <div className="feedback1-page">
+
       <div className="auth">
         <h2>Visitor Feedback</h2>
         <p className="subtitle">
@@ -170,7 +193,10 @@ useEffect(() => {
 
           <div className="form-group">
             <label>Check-in duration</label>
-            <select value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)}>
+            <select
+              value={checkInTime}
+              onChange={(e) => setCheckInTime(e.target.value)}
+            >
               <option value="">Select</option>
               <option value="less1">Less than 1 minute</option>
               <option value="1to2">1–2 minutes</option>
@@ -181,10 +207,17 @@ useEffect(() => {
 
           <div className="form-group">
             <label>Which registration method do you prefer?</label>
-            <select value={digitalPref} onChange={(e) => setDigitalPref(e.target.value)}>
+            <select
+              value={digitalPref}
+              onChange={(e) => setDigitalPref(e.target.value)}
+            >
               <option value="">Select</option>
-              <option value="face-recognition">Pre-registration via face recognition</option>
-              <option value="manual-reception">Manual registration at reception</option>
+              <option value="face-recognition">
+                Pre-registration via face recognition
+              </option>
+              <option value="manual-reception">
+                Manual registration at reception
+              </option>
             </select>
           </div>
 
@@ -224,7 +257,9 @@ useEffect(() => {
           </div>
 
           {showError && (
-            <div className="error">Please complete all required fields</div>
+            <div className="error">
+              Please complete all required fields
+            </div>
           )}
 
           <button type="submit" className="auth__button">
