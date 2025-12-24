@@ -11,11 +11,10 @@ public class PeccyFollower : MonoBehaviour
 
     [Header("Behaviour")]
     public bool followPlayer = false;     // Start with false so Peccy is idle
-    public float stopDistance = 4f;       // Distance to keep from the player
+    public float stopDistance = 7f;       // Distance to keep from the player
 
     private readonly int isWalkingHash = Animator.StringToHash("isWalking");
 
-    // Input System action for toggling follow mode
     private InputAction toggleFollowAction;
 
     void Awake()
