@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 66.6, y: -55.5}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: 14.22, y: -9.26}
+  m_SizeDelta: {x: 52.3, y: 7.52}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9068695458776290360
 CanvasRenderer:
@@ -95,12 +95,12 @@ MonoBehaviour:
   m_fontSize: 5
   m_fontSizeBase: 5
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 4
+  m_fontSizeMax: 5
   m_fontStyle: 1
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 4
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -247,8 +247,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 4.1, y: -41.2}
-  m_SizeDelta: {x: 12.57, y: 56.96}
+  m_AnchoredPosition: {x: 4.1, y: -40.047}
+  m_SizeDelta: {x: 12.57, y: 52.35}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5447210779888172996
 CanvasRenderer:
@@ -306,11 +306,11 @@ MonoBehaviour:
     serializedVersion: 2
     rgba: 4294967295
   m_fontSize: 13
-  m_fontSizeBase: 13
+  m_fontSizeBase: 12
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 10
+  m_fontSizeMax: 13
   m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -323,7 +323,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 1
+  m_overflowMode: 3
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -362,6 +362,7 @@ GameObject:
   - component: {fileID: 7184634593032355401}
   - component: {fileID: 3775738723590303891}
   - component: {fileID: 910121511495491098}
+  - component: {fileID: 1758289290698342642}
   m_Layer: 0
   m_Name: SpeechBubble
   m_TagString: Untagged
@@ -464,3 +465,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a258dd8736b86474cbb56e22db23c385, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+--- !u!114 &1758289290698342642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7890884157770651928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 309111df23c0c4a0db24924b486d3f01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScriptBubbleUI
+  messageText: {fileID: 5096997292124733360}
+  optionsText: {fileID: 565225628907764556}
