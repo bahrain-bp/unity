@@ -1,310 +1,194 @@
-import DashboardLayout from "./DashboardLayout";
-import Table from "@mui/joy/Table";
-import { useState } from "react";
-import Backdrop from "@mui/material/Backdrop";
-import Box from "@mui/material/Box";
-import Modal from "@mui/material/Modal";
-import Fade from "@mui/material/Fade";
-import Menu from "@mui/material/Menu";
-import { ADDUSER, MORE, PEN, TRASH } from "../../assets/icons";
+import DashboardLayout from "./DashboardLayout"
+import Table from "@mui/joy/Table"
+import { useState, useEffect } from "react"
+import { ADDUSER } from "../../assets/icons"
+import { GetUsers, CreateUser, UpdateUser, DeleteUser } from "../../services/Users"
+import type { User } from "../../components/dashboard/types"
+import UserRow from "../../components/dashboard/UserRow"
+import AddUserModal from "../../components/dashboard/AddUserModal"
+import DeleteUserModal from "../../components/dashboard/DeleteUserModal"
+import EditUserModal from "../../components/dashboard/EditUserModal"
 
-interface User {
-  username: string;
-  email: string;
-  status: "Verified" | "Unverified";
+// Helper to transform Cognito user to our User interface
+const transformCognitoUser = (cognitoUser: any): User => {
+  const emailAttr = cognitoUser.Attributes?.find((attr: any) => attr.Name === "email")
+  return {
+    username: cognitoUser.Username || "",
+    email: emailAttr?.Value || "",
+    status: cognitoUser.UserStatus === "CONFIRMED" ? "Verified" : "Unverified",
+  }
 }
 
-const MODAL_STYLE = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "#fff",
-  border: "none !important",
-  boxShadow: 24,
-  borderRadius: "1rem",
-  fontFamily: "inherit",
-  p: 3,
-  fontSize: "1.8rem",
-} as const;
+const Users = () => {
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [userToEdit, setUserToEdit] = useState<User | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
 
-const USERS_DATA: User[] = [
-  { username: "Husain", email: "Husain@gmail.com", status: "Verified" },
-  { username: "Hamed", email: "Hamed@gmail.com", status: "Verified" },
-  { username: "Yahya", email: "Yahya@gmail.com", status: "Verified" },
-  { username: "Malak", email: "Malak@gmail.com", status: "Unverified" },
-  { username: "Zainab", email: "Zainab@gmail.com", status: "Verified" },
-  { username: "Ruqaya", email: "Ruqaya@gmail.com", status: "Verified" },
-  { username: "Khadija", email: "Khadija@gmail.com", status: "Unverified" },
-  { username: "Ayah", email: "Ayah@gmail.com", status: "Unverified" },
-  { username: "Manar", email: "Manar@gmail.com", status: "Verified" },
-  { username: "Sara", email: "Sara@gmail.com", status: "Verified" },
-];
+  useEffect(() => {
+    getUsers()
+  }, [])
 
-interface UserRowProps {
-  user: User;
-  onEdit: () => void;
-  onDelete: () => void;
-}
+  const getUsers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-function UserRow({ user, onEdit, onDelete }: UserRowProps) {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const isMenuOpen = Boolean(anchorEl);
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleEdit = () => {
-    handleMenuClose();
-    onEdit();
-  };
-
-  const handleDeleteClick = () => {
-    handleMenuClose();
-    onDelete();
-  };
-
-  return (
-    <tr>
-      <td>{user.username}</td>
-      <td>{user.email}</td>
-      <td>
-        <span
-          className="dashboard__users--status"
-          data-status={user.status.toLowerCase()}
-        >
-          {user.status}
-        </span>
-      </td>
-      <td className="dashboard__users--btn">
-        <div
-          id="menu_btn"
-          aria-controls={isMenuOpen ? "basic-menu" : undefined}
-          aria-haspopup="true"
-          aria-expanded={isMenuOpen ? "true" : undefined}
-          onClick={handleMenuOpen}
-        >
-          {MORE()}
-        </div>
-        <Menu
-          id="basic-menu"
-          anchorEl={anchorEl}
-          open={isMenuOpen}
-          onClose={handleMenuClose}
-        >
-          <div
-            className="dashboard__users--menu-item"
-            title="Edit"
-            onClick={handleEdit}
-          >
-            {PEN()} Edit
-          </div>
-          <div
-            className="dashboard__users--menu-item"
-            title="Delete"
-            onClick={handleDeleteClick}
-          >
-            {TRASH()} Delete
-          </div>
-        </Menu>
-      </td>
-    </tr>
-  );
-}
-
-// Delete modal component
-interface DeleteModalProps {
-  isOpen: boolean;
-  username: string | null;
-  isDeleting: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}
-
-function DeleteModal({
-  isOpen,
-  username,
-  isDeleting,
-  onClose,
-  onConfirm,
-}: DeleteModalProps) {
-  return (
-    <Modal
-      aria-labelledby="delete-modal-title"
-      aria-describedby="delete-modal-description"
-      open={isOpen}
-      onClose={onClose}
-      closeAfterTransition
-      slots={{ backdrop: Backdrop }}
-      slotProps={{
-        backdrop: {
-          timeout: 500,
-        },
-      }}
-    >
-      <Fade in={isOpen}>
-        <Box sx={MODAL_STYLE}>
-          <p id="delete-modal-description">
-            Are you sure you want to delete <b>{username}</b>?
-          </p>
-          <button className="dashboard__users--btn btn" onClick={onConfirm}>
-            {isDeleting ? "Deleting..." : "Delete"}
-          </button>
-        </Box>
-      </Fade>
-    </Modal>
-  );
-}
-
-interface EditModalProps {
-  isOpen: boolean;
-  user: User | null;
-  isEditing: boolean;
-  onClose: () => void;
-  onSubmit: () => void;
-}
-
-function EditModal({
-  isOpen,
-  user,
-  isEditing,
-  onClose,
-  onSubmit,
-}: EditModalProps) {
-  return (
-    <Modal
-      aria-labelledby="edit-modal-title"
-      aria-describedby="edit-modal-description"
-      open={isOpen}
-      onClose={onClose}
-      closeAfterTransition
-      slots={{ backdrop: Backdrop }}
-      slotProps={{
-        backdrop: {
-          timeout: 500,
-        },
-      }}
-    >
-      <Fade in={isOpen}>
-        <Box sx={MODAL_STYLE}>
-          <h2 id="edit-modal-title">Edit User</h2>
-          <p id="edit-modal-description">
-            Editing <b>{user?.username}</b>
-          </p>
-          <div className="dashboard__users--form">
-            <input
-              type="text"
-              defaultValue={user?.username}
-              placeholder="Username"
-            />
-            <input
-              type="email"
-              defaultValue={user?.email}
-              placeholder="Email"
-            />
-            <select defaultValue={user?.status}>
-              <option value="Verified">Verified</option>
-              <option value="Unverified">Unverified</option>
-            </select>
-          </div>
-          <div className="dashboard__users--modal-actions">
-            <button
-              className="dashboard__users--btn btn btn-secondary"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button
-              className="dashboard__users--btn btn btn-primary"
-              onClick={onSubmit}
-            >
-              {isEditing ? "Saving..." : "Save Changes"}
-            </button>
-          </div>
-        </Box>
-      </Fade>
-    </Modal>
-  );
-}
-
-function Users() {
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [userToEdit, setUserToEdit] = useState<User | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+      const data = await GetUsers()
+      const transformedUsers = (data.users || []).map(transformCognitoUser)
+      setUsers(transformedUsers)
+    } catch (err: any) {
+      console.error("Error getting users:", err)
+      const errorMessage = err.response?.data?.message || err.message || "Failed to get users"
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleDeleteRequest = (user: User) => {
-    setUserToDelete(user);
-  };
+    setUserToDelete(user)
+  }
 
-  const handleDeleteConfirm = () => {
-    setIsDeleting(true);
+  const handleDeleteConfirm = async () => {
+    if (!userToDelete) return
 
-    // API REQUEST
+    setIsDeleting(true)
+    setError(null)
 
-    setIsDeleting(false);
-    setUserToDelete(null);
-  };
+    try {
+      await DeleteUser(userToDelete.email)
+      setUsers(users.filter(u => u.email !== userToDelete.email))
+      setUserToDelete(null)
+    } catch (err: any) {
+      console.error("Error deleting user:", err)
+      setError(err.response?.data?.message || err.message || "Failed to delete user")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   const handleDeleteCancel = () => {
-    setUserToDelete(null);
-    setIsDeleting(false);
-  };
+    setUserToDelete(null)
+    setIsDeleting(false)
+  }
 
   const handleEditRequest = (user: User) => {
-    setUserToEdit(user);
-  };
+    setUserToEdit(user)
+  }
 
-  const handleEditSubmit = () => {
-    setIsEditing(true);
+  const handleEditSubmit = async (userData: { username: string; email: string; status: string }) => {
+    if (!userToEdit) return
 
-    // API REQUEST
+    setIsEditing(true)
+    setError(null)
 
-    setIsEditing(false);
-    setUserToEdit(null);
-  };
+    try {
+      await UpdateUser(userToEdit.email, { email: userData.email })
+
+      setUsers(
+        users.map(u =>
+          u.email === userToEdit.email
+            ? { ...u, email: userData.email }
+            : u
+        )
+      )
+
+      setUserToEdit(null)
+    } catch (err: any) {
+      console.error("Error updating user:", err)
+      setError(err.response?.data?.message || err.message || "Failed to update user")
+    } finally {
+      setIsEditing(false)
+    }
+  }
 
   const handleEditCancel = () => {
-    setUserToEdit(null);
-    setIsEditing(false);
-  };
+    setUserToEdit(null)
+    setIsEditing(false)
+  }
+
+  const handleAddUserClick = () => {
+    setShowAddModal(true)
+  }
+
+  const handleAddUserSubmit = async (userData: { email: string; temporaryPassword?: string }) => {
+    setIsAdding(true)
+    setError(null)
+
+    try {
+      await CreateUser(userData)
+      await getUsers()
+      setShowAddModal(false)
+    } catch (err: any) {
+      console.error("Error creating user:", err)
+      setError(err.response?.data?.message || err.message || "Failed to create user")
+    } finally {
+      setIsAdding(false)
+    }
+  }
+
+  const handleAddUserCancel = () => {
+    setShowAddModal(false)
+    setIsAdding(false)
+  }
 
   return (
     <DashboardLayout className="dashboard__users" header="Users">
-      <button className="btn-orange btn-icon btn">
+      <button className="btn-orange btn-icon btn" onClick={handleAddUserClick}>
         {ADDUSER()} Add New User
       </button>
 
+      {error && (
+        <div className="dashboard__error">
+          <span>{error}</span>
+          <button onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
+
       <div className="dashboard__box">
-        <Table size="lg" aria-label="users table" stickyHeader>
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Email</th>
-              <th style={{ width: "15rem" }}>Status</th>
-              <th style={{ width: "10rem" }}>Modify</th>
-            </tr>
-          </thead>
-          <tbody>
-            {USERS_DATA.map((user) => (
-              <UserRow
-                key={user.email}
-                user={user}
-                onEdit={() => handleEditRequest(user)}
-                onDelete={() => handleDeleteRequest(user)}
-              />
-            ))}
-          </tbody>
-        </Table>
+        {loading ? (
+          <div style={{ padding: "2rem", textAlign: "center" }}>Loading users...</div>
+        ) : (
+          <Table size="lg" aria-label="users table" stickyHeader>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th style={{ width: "15rem" }}>Status</th>
+                <th style={{ width: "10rem" }}>Modify</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: "center", padding: "2rem" }}>
+                    No users found. Click "Add New User" to create one.
+                  </td>
+                </tr>
+              ) : (
+                users.map(user => (
+                  <UserRow key={user.email} user={user} onEdit={() => handleEditRequest(user)} onDelete={() => handleDeleteRequest(user)} />
+                ))
+              )}
+            </tbody>
+          </Table>
+        )}
       </div>
 
-      <DeleteModal
+      <AddUserModal
+        isOpen={showAddModal}
+        isAdding={isAdding}
+        onClose={handleAddUserCancel}
+        onSubmit={handleAddUserSubmit}
+      />
+
+      <DeleteUserModal
         isOpen={userToDelete !== null}
         username={userToDelete?.username ?? null}
         isDeleting={isDeleting}
@@ -312,7 +196,7 @@ function Users() {
         onConfirm={handleDeleteConfirm}
       />
 
-      <EditModal
+      <EditUserModal
         isOpen={userToEdit !== null}
         user={userToEdit}
         isEditing={isEditing}
@@ -320,7 +204,7 @@ function Users() {
         onSubmit={handleEditSubmit}
       />
     </DashboardLayout>
-  );
+  )
 }
 
-export default Users;
+export default Users

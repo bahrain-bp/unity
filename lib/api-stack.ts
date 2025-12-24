@@ -456,5 +456,240 @@ getImageResource.addMethod(
 
 
 
+
+
+
+          
+// Lambda function responsible for generating presigned S3 upload URLs
+// used by the frontend during user pre-registration to securely upload images.   
+    const generatePresignedUrlFn = new NodejsFunction(this, "GeneratePresignedUrlHandler", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, "../lambda/generatePresignedUploadUrl.ts"),
+      handler: "handler",
+      environment: {
+        BUCKET_NAME: preRegBucket.bucketName,
+      },
+    });
+      
+         preRegBucket.grantReadWrite(generatePresignedUrlFn);
+
+//API Gateway Route for Upload
+
+const uploadImageResource = api.root.addResource("upload-image");
+
+// Add CORS first
+// Rename the resource path
+
+// Add CORS first
+uploadImageResource.addCorsPreflight({
+  allowOrigins: ["*"],        // replace "*" with your frontend URL in production
+  allowMethods: ["POST"],
+});
+
+
+// **No Cognito auth required for pre-registration**
+uploadImageResource.addMethod(
+  "POST",
+  new apigw.LambdaIntegration(generatePresignedUrlFn),
+  {
+    authorizationType: apigw.AuthorizationType.NONE,
   }
+);
+
+
+
+
+
+
+
+
+
+
+
+
+const preRegisterCheckFn = new lambda.Function(this, "PreRegisterCheckHandler", {
+  runtime: lambda.Runtime.PYTHON_3_9,
+  handler: "PreRegisterCheck.handler",
+  code: lambda.Code.fromAsset("lambda"),
+  timeout: cdk.Duration.seconds(30),
+  environment: {
+    BUCKET_NAME: preRegBucket.bucketName,
+    USER_MANAGEMENT_TABLE: userTable.tableName,   // REQUIRED
+    COLLECTION_ID: "VisitorFaceCollection",
+  },
+});
+
+preRegBucket.grantReadWrite(preRegisterCheckFn);
+userTable.grantReadWriteData(preRegisterCheckFn);
+
+const validateImageResource = api.root.addResource("validate-image");
+
+validateImageResource.addCorsPreflight({
+  allowOrigins: ["*"],
+  allowMethods: ["POST"],
+});
+
+validateImageResource.addMethod(
+  "POST",
+  new apigw.LambdaIntegration(preRegisterCheckFn),
+  {
+    authorizationType: apigw.AuthorizationType.NONE,
+  }
+);
+
+
+
+// ────────────────────────────────
+// GET IMAGE (return presigned GET URL)
+// ────────────────────────────────
+const getImageFn = new NodejsFunction(this, "GetPresignedDownloadUrlHandler", {
+  runtime: lambda.Runtime.NODEJS_18_X,
+  entry: path.join(__dirname, "../lambda/generatePresignedDownloadUrl.ts"),
+  handler: "handler",
+  environment: {
+    BUCKET_NAME: preRegBucket.bucketName,
+  },
+});
+
+preRegBucket.grantRead(getImageFn);
+
+const getImageResource = api.root.addResource("get-image");
+
+getImageResource.addCorsPreflight({
+  allowOrigins: ["*"],
+  allowMethods: ["GET"],
+});
+
+getImageResource.addMethod(
+  "GET",
+  new apigw.LambdaIntegration(getImageFn),
+  {
+    authorizationType: apigw.AuthorizationType.NONE,
+  }
+);
+
+// USER MANAGEMENT
+
+  const usersResource = api.root.addResource("users")
+
+  usersResource.addCorsPreflight({
+  allowOrigins: ["*"],
+  allowMethods: ["GET", "POST", "PUT", "DELETE"],
+  allowHeaders: ["Content-Type", "Authorization"],
+  })
+
+  const userByIdResource = usersResource.addResource("{userId}");
+
+  //Lambda function to get users
+  const usersGetFn = new NodejsFunction(this, "UsersGetHandler", {
+  runtime: lambda.Runtime.NODEJS_18_X,
+  entry: path.join(__dirname, "../lambda/users-get.ts"),
+  handler: "handler",
+  environment: {
+    USER_POOL_ID: userPool.userPoolId,  
+  },
+  bundling: {
+    target: "node18",
+    minify: true,
+    sourceMap: false,
+  },
+  });
+
+  // Lambda permissions to access cognito users
+  usersGetFn.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ["cognito-idp:ListUsers"],
+      resources: [userPool.userPoolArn],
+    })
+  );
+
+  usersResource.addMethod("GET", new apigw.LambdaIntegration(usersGetFn), {
+    authorizer,
+    authorizationType: apigw.AuthorizationType.COGNITO,
+  });
+
+  // Lambda function to create users
+  const usersCreateFn = new NodejsFunction(this, "UsersCreateHandler", {
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: path.join(__dirname, "../lambda/users-create.ts"),
+    handler: "handler",
+    environment: {
+      USER_POOL_ID: userPool.userPoolId,
+    },
+    bundling: {
+      target: "node18",
+      minify: true,
+      sourceMap: false,
+    },
+  });
+
+  usersCreateFn.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ["cognito-idp:AdminCreateUser"],
+      resources: [userPool.userPoolArn],
+    })
+  );
+
+  usersResource.addMethod("POST", new apigw.LambdaIntegration(usersCreateFn), {
+    authorizer,
+    authorizationType: apigw.AuthorizationType.COGNITO,
+  });
+
+  // Lambda function to update users
+  const usersUpdateFn = new NodejsFunction(this, "UsersUpdateHandler", {
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: path.join(__dirname, "../lambda/users-update.ts"),
+    handler: "handler",
+    environment: {
+      USER_POOL_ID: userPool.userPoolId,
+    },
+    bundling: {
+      target: "node18",
+      minify: true,
+      sourceMap: false,
+    },
+  });
+
+  usersUpdateFn.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ["cognito-idp:AdminUpdateUserAttributes"],
+      resources: [userPool.userPoolArn],
+    })
+  );
+
+  userByIdResource.addMethod("PUT", new apigw.LambdaIntegration(usersUpdateFn), {
+    authorizer,
+    authorizationType: apigw.AuthorizationType.COGNITO,
+  });
+
+  // Lambda function to delete users
+  const usersDeleteFn = new NodejsFunction(this, "UsersDeleteHandler", {
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: path.join(__dirname, "../lambda/users-delete.ts"),
+    handler: "handler",
+    environment: {
+      USER_POOL_ID: userPool.userPoolId,
+    },
+    bundling: {
+      target: "node18",
+      minify: true,
+      sourceMap: false,
+    },
+  });
+
+  usersDeleteFn.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ["cognito-idp:AdminDeleteUser"],
+      resources: [userPool.userPoolArn],
+    })
+  );
+
+  userByIdResource.addMethod("DELETE", new apigw.LambdaIntegration(usersDeleteFn), {
+    authorizer,
+    authorizationType: apigw.AuthorizationType.COGNITO,
+  });
+  }
+
+  
+
 }

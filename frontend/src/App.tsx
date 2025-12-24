@@ -12,7 +12,7 @@ import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
 import Chatbot from "./components/ChatBot";
 import VisitorArrival from "./pages/visitorArrival";
-import InviteVisitor from "./pages/InviteVisitor";
+import InviteVisitor from "./pages/dashboard/InviteVisitor";
 import VisitorFeedBack from "./pages/VisitorFeedback";
 import ErrorPage from "./pages/error";
 import ThankYouPage from "./pages/thank-you";
@@ -162,7 +162,6 @@ function App() {
               </>
             }
           />
-
           <Route
             path="/thank-you"
             element={

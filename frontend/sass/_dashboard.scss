@@ -190,5 +190,17 @@
     &--btn {
       width: fit-content;
     }
+
+  &__error {
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0.8rem;
+    border: 1px solid $color-red;
+    background: rgba($color-red, 0.08);
+    color: $color-red;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 }
