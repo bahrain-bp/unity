@@ -1,0 +1,207 @@
+@use "var" as *;
+
+.dashboard {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  grid-template-rows: max-content 1fr;
+
+  &__header {
+    display: flex;
+    height: 8rem;
+    align-items: center;
+    background-color: $color-white;
+    border-bottom: 1px solid $color-grey;
+    padding: 2rem;
+    & h3 {
+      font-size: 2.2rem;
+      font-weight: 600;
+    }
+  }
+
+  &__container {
+    padding: 2rem;
+
+    & > button {
+      margin-bottom: 2rem;
+    }
+  }
+
+  &__box {
+    background-color: $color-white;
+    border: 1px solid $color-grey;
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  &__users {
+    & th {
+      vertical-align: middle !important;
+    }
+
+    & th,
+    & td {
+      font-size: 1.6rem;
+    }
+
+    &--btn {
+      @include flexCenter;
+      justify-content: start;
+      cursor: pointer;
+
+      & svg {
+        width: 3rem;
+        height: 3rem;
+        stroke: $color-font !important;
+      }
+
+      &.btn {
+        background-color: $color-orange;
+        padding: 0.8rem 2rem;
+        border-radius: 10rem;
+        margin-top: 2rem;
+        @include boxshadow;
+      }
+    }
+
+    &--menu-item {
+      display: flex;
+      align-items: center;
+      column-gap: 1rem;
+      padding: 1.3rem 2rem;
+      font-size: 1.4rem;
+      font-weight: 400;
+      transition: all 0.3s;
+      background-color: $color-white;
+      cursor: pointer;
+
+      &:hover {
+        background-color: $color-light-grey;
+      }
+
+      & svg {
+        width: 1.8rem;
+        height: 1.8rem;
+      }
+
+      &[title="Delete"] {
+        color: $color-red;
+
+        &:hover {
+          background-color: rgba($color-red, 0.2);
+        }
+      }
+    }
+
+    &--status {
+      padding: 0.5rem 0.8rem;
+      border-radius: 0.8rem;
+      font-size: 1.4rem;
+
+      &[data-status="verified"] {
+        background-color: rgba($color-green, 0.2);
+        color: $color-green;
+      }
+      &[data-status="unverified"] {
+        background-color: rgba($color-orange, 0.2);
+        color: $color-orange;
+      }
+    }
+  }
+
+  //
+  // WebGL Files
+  //
+
+  &__webgl {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1rem;
+
+    &--files {
+      width: 50vw;
+      // min-height: 40%;
+      background-color: $color-white;
+      border: 2px dashed $color-grey;
+      border-radius: 1rem;
+      transition: all 0.3s;
+      cursor: pointer;
+      padding: 1rem;
+      display: grid;
+      flex-wrap: wrap;
+      row-gap: 1rem;
+
+      &:hover {
+        background-color: $color-bg;
+      }
+    }
+
+    &--upload {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      row-gap: 1rem;
+      padding: 2rem 0;
+
+      & p {
+        font-size: 1.8rem;
+        font-weight: 600;
+      }
+
+      & span {
+        color: $color-dark-grey;
+        font-size: 1.4rem;
+      }
+
+      & svg {
+        color: $color-orange-2;
+        margin: auto;
+      }
+    }
+
+    &--file {
+      display: flex;
+      font-size: 1.6rem;
+      align-items: center;
+      border: 1px solid $color-grey;
+      width: fit-content;
+      padding: 0.6rem 1rem;
+      column-gap: 1rem;
+      border-radius: 1rem;
+      height: fit-content;
+      background-color: $color-white;
+
+      & > svg {
+        width: 4rem;
+        height: 4rem;
+        stroke-width: 1px;
+        color: $color-orange-2;
+      }
+
+      &-close {
+        height: 2rem;
+        & svg {
+          width: 2rem;
+          height: 2rem;
+        }
+      }
+    }
+
+    &--btn {
+      width: fit-content;
+    }
+  }
+
+  &__error {
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0.8rem;
+    border: 1px solid $color-red;
+    background: rgba($color-red, 0.08);
+    color: $color-red;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}

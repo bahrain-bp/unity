@@ -18,6 +18,8 @@ const Chatbot = () => {
       : [{ text: "Hello! How can I help you?", sender: "bot" }];
   });
 
+  const [isLoading, setLoading] = useState(false);
+
   const [sessionId, setSessionId] = useState<string | null>(() => {
     const storedData = sessionStorage.getItem("chatData");
     return storedData ? JSON.parse(storedData).sessionId : null;
@@ -42,12 +44,15 @@ const Chatbot = () => {
   }, [msgs, sessionId]);
 
   const getRes = async (question: string) => {
+    setLoading(true);
     try {
       const req = sessionId ? { question, sessionId } : { question };
       const res = await Client.post("/assistant", req);
+      setLoading(false);
       return { answer: res.data.answer, sessionId: res.data.sessionId };
     } catch (error) {
       console.error(error);
+      setLoading(false);
       return {
         answer: "Sorry, something went wrong while fetching the response.",
         sessionId: null,
@@ -61,16 +66,14 @@ const Chatbot = () => {
 
     setShowQuestions(false);
 
-
-    const res = await getRes(questionText)
-    if(res.sessionId) {
-      setSessionId(res.sessionId)
-
+    const res = await getRes(questionText);
+    if (res.sessionId) {
+      setSessionId(res.sessionId);
     }
 
-    const botMsg: Message = { text: res.answer, sender: "bot" }
-    setMsgs(prev => [...prev, botMsg])
-  }
+    const botMsg: Message = { text: res.answer, sender: "bot" };
+    setMsgs((prev) => [...prev, botMsg]);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value);
@@ -112,6 +115,7 @@ const Chatbot = () => {
             {msgs.map((msg, index) => (
               <ChatMessage key={index} text={msg.text} sender={msg.sender} />
             ))}
+            {isLoading && <ChatMessage key={0} text="Typing..." sender="bot" />}
 
             {showQuestions && msgs.length === 1 && (
               <div className="quick-questions">

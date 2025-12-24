@@ -17,12 +17,9 @@ export class DBStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // Main application table (UnityBahtwinTable)
+    // 1) Main application table (UnityBahtwinTable)
     this.table = new dynamodb.Table(this, "BahtwinTable", {
       tableName: "UnityBahtwinTable",
-    // 1) Single DynamoDB table for Bahtwin
-    this.table = new dynamodb.Table(this, "BahtwinTable", {
-      tableName: "UnityBahtwinTable", // physical name
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -52,6 +49,66 @@ export class DBStack extends Stack {
     new CfnOutput(this, "UnityBahtwinTableNameOutput", {
       value: this.table.tableName,
       exportName: "UnityBahtwinTableName",
+    });
+
+    // 2) User management table
+    this.userManagementTable = new dynamodb.Table(this, "UserManagementTable", {
+      tableName: "UserManagement",
+      partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    // 3) Pre-registration images bucket
+    this.preRegBucket = new s3.Bucket(this, "PreregistrationImagesBucket", {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    this.preRegBucket.addCorsRule({
+      allowedOrigins: ["*"],
+      allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.POST, s3.HttpMethods.PUT],
+      allowedHeaders: ["*"],
+    });
+
+    // 4) PlugActions table (audit + cooldown)
+    this.plugActionsTable = new dynamodb.Table(this, "PlugActionsTable", {
+      tableName: "PlugActions",
+      partitionKey: { name: "user_id", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    new CfnOutput(this, "PlugActionsTableNameOutput", {
+      value: this.plugActionsTable.tableName,
+      exportName: "PlugActionsTableName",
+    });
+
+    // 5) IoT telemetry table (all devices/sensors)
+    this.iotTelemetryTable = new dynamodb.Table(this, "IoTTelemetryTable", {
+      tableName: "IoTDeviceTelemetry",
+      partitionKey: { name: "device", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    new CfnOutput(this, "IoTDeviceTelemetryTableNameOutput", {
+      value: this.iotTelemetryTable.tableName,
+      exportName: "IoTDeviceTelemetryTableName",
+    });
+
+    // 6) Chatbot table
+    this.chatbotTable = new dynamodb.TableV2(this, "chatbotTable", {
+      partitionKey: { name: "sessionId", type: dynamodb.AttributeType.STRING },
+    });
+
+    new cdk.CfnOutput(this, "tablenameoutput", {
+      value: this.chatbotTable.tableName,
+      exportName: "UnityChatbotTable",
     });
 
     this.chatbotTable = new dynamodb.TableV2(this, "chatbotTable", {

@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthHook";
-import peccy from "../assets/peccy.png";
+import tmpUserImg from "../assets/user.png";
 import logo from "../assets/logo.svg";
 import Drawer from "@mui/material/Drawer";
 import { MENU } from "../assets/icons";
 import { ImageClient } from "../services/api";
 
 function Navbar() {
-  const { email, isAuthenticated, signOut, userId } = useAuth();
-  const username = localStorage.getItem("username");
+  const { email, isAuthenticated, signOut, userId, userRole } = useAuth();
 
   const [open, setOpen] = useState(false);
   const [userImg, setUserImg] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -21,11 +21,12 @@ function Navbar() {
   const getUserImg = async () => {
     try {
       const result = await ImageClient.get(
-        `/visitor/get-image-url?userId=${userId}`
+        `/visitor/me?userId=${userId}`
       );
 
       if (result.status === 200) {
         setUserImg(result.data.imageUrl);
+        setUsername(result.data.name);
       }
     } catch (err) {
       console.error(err);
@@ -47,12 +48,13 @@ function Navbar() {
         <div className="navbar__menu">
           <Link to={"/info"}>Information</Link>
           <Link to={"/environment"}>Environment</Link>
+          {userRole === "admin" && <Link to={"/dashboard"}>Dashboard</Link>}
         </div>
         <div className="navbar__auth">
           {isAuthenticated ? (
             <div className="navbar__user">
               <label htmlFor="user-btn">
-                <img src={userImg ?? peccy} alt="profile picture" />
+                <img src={userImg ?? tmpUserImg} alt="profile picture" />
                 {username ? username : email.replace(/@.*/, "")}
               </label>
               <input id="user-btn" type="checkbox" />
@@ -81,10 +83,13 @@ function Navbar() {
           </Link>
           <Link to={"/info"}>Information</Link>
           <Link to={"/environment"}>Environment</Link>
+          {userRole === "admin" && (
+            <Link to={"/dashboard"}>Dashboard</Link>
+          )}
           {isAuthenticated ? (
             <div className="navbar__user">
               <label htmlFor="user-btn2">
-                <img src={userImg ?? peccy} alt="profile picture" />
+                <img src={userImg ?? tmpUserImg} alt="profile picture" />
                 {username ? username : email.replace(/@.*/, "")}
               </label>
               <input id="user-btn2" type="checkbox" />
