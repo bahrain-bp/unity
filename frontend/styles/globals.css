@@ -1790,8 +1790,8 @@ body {
   font-size: 1.4rem;
 }
 .dashboard__users--status[data-status=verified] {
-  background-color: rgba(27, 170, 63, 0.2);
-  color: #1baa3f;
+  background-color: rgba(1, 148, 38, 0.2);
+  color: #019426;
 }
 .dashboard__users--status[data-status=unverified] {
   background-color: rgba(255, 142, 60, 0.2);
@@ -1864,6 +1864,17 @@ body {
 }
 .dashboard__webgl--btn {
   width: fit-content;
+}
+.dashboard__error {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 0.8rem;
+  border: 1px solid #e71010;
+  background: rgba(231, 16, 16, 0.08);
+  color: #e71010;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .sidebar {
