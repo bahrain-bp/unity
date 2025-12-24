@@ -13,9 +13,11 @@ public class RoomLabel : MonoBehaviour
 
     public void UpdateLabel()
     {
-        if (roomData != null && textMesh != null)
-        {
-            textMesh.text = $"{roomData.roomName}\n" + $"(02.{roomData.roomNumber})";
-        }
+        if (roomData == null || textMesh == null) return;
+
+        if (roomData.roomNumber > 0)
+            textMesh.text = $"{roomData.roomName}\n(02.{roomData.roomNumber})";
+        else
+            textMesh.text = roomData.roomName;
     }
 }
