@@ -37,10 +37,13 @@ def ArrivalRekognition(event, context):
             Image={'Bytes': image},
             Attributes=['ALL']
         )
-
         face_details = detect_response.get("FaceDetails", [])
         if not face_details:
             return response(400, {"error": "No face detected. Please retake the photo."})
+        if len(face_details) > 1:
+            return response(400, {
+            "error": "Multiple faces detected. Please upload an image with only one face."
+        })
 
         # Search match
         match_response = rekog.search_faces_by_image(

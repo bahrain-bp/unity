@@ -3,28 +3,34 @@ import {
   PutItemCommand,
   QueryCommand,
 } from "@aws-sdk/client-dynamodb";
-import {
-  LambdaClient,
-  InvokeCommand,
-} from "@aws-sdk/client-lambda";
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
 const dynamo = new DynamoDBClient({});
 const lambdaClient = new LambdaClient({});
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Methods": "POST,OPTIONS",
-};
 
 const ACTIVE_WINDOW_SECONDS = 5 * 60;        // 5 minutes
 const LAST_6_HOURS_SECONDS = 6 * 60 * 60;
 const BAHRAIN_OFFSET_SECONDS = 3 * 60 * 60;
 
 /* ────────────────────────────────
-   Time helpers (Bahrain timezone)
+   Response helper
 ──────────────────────────────── */
+function respond(status: number, body: object) {
+  return {
+    statusCode: status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+      "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    },
+    body: JSON.stringify(body),
+  };
+}
 
+/* ────────────────────────────────
+   Time helpers
+──────────────────────────────── */
 function getBahrainDayStartUtcSeconds(nowUtc: Date) {
   const offsetMs = BAHRAIN_OFFSET_SECONDS * 1000;
   const bahrainNowMs = nowUtc.getTime() + offsetMs;
@@ -34,9 +40,7 @@ function getBahrainDayStartUtcSeconds(nowUtc: Date) {
 }
 
 function formatBahrainHourLabel(timestampSeconds: number) {
-  const date = new Date(
-    (timestampSeconds + BAHRAIN_OFFSET_SECONDS) * 1000
-  );
+  const date = new Date((timestampSeconds + BAHRAIN_OFFSET_SECONDS) * 1000);
   const y = date.getUTCFullYear();
   const m = String(date.getUTCMonth() + 1).padStart(2, "0");
   const d = String(date.getUTCDate()).padStart(2, "0");
@@ -55,32 +59,30 @@ function last6HourBuckets(nowSeconds: number) {
 /* ────────────────────────────────
    Lambda handler
 ──────────────────────────────── */
-
 export const handler = async (event: any) => {
   try {
+    console.log("Received event:", JSON.stringify(event));
+
     if (event?.httpMethod === "OPTIONS") {
-      return { statusCode: 200, headers: CORS_HEADERS, body: "" };
+      console.log("OPTIONS request received, returning 200");
+      return respond(200, {});
     }
 
-    const body =
-      typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+    const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+    console.log("Parsed request body:", body);
 
     const userId = body?.userId;
     if (!userId) {
-      return {
-        statusCode: 400,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({ message: "Missing userId" }),
-      };
+      console.warn("Missing userId in request");
+      return respond(400, { message: "Missing userId" });
     }
 
     const nowUtc = new Date();
     const timestamp = Math.floor(nowUtc.getTime() / 1000);
+    console.log(`Current UTC timestamp: ${timestamp}`);
 
-    /* ────────────────────────────────
-       1️⃣ Save heartbeat
-    ──────────────────────────────── */
-
+    // 1️⃣ Save heartbeat
+    console.log(`Saving heartbeat for userId: ${userId}`);
     await dynamo.send(
       new PutItemCommand({
         TableName: process.env.WEBSITE_ACTIVITY_TABLE!,
@@ -93,14 +95,13 @@ export const handler = async (event: any) => {
         },
       })
     );
+    console.log("Heartbeat saved successfully");
 
-    /* ────────────────────────────────
-       2️⃣ Query activity
-    ──────────────────────────────── */
-
+    // 2️⃣ Query activity
     const last6HoursCutoff = timestamp - LAST_6_HOURS_SECONDS;
     const activeCutoff = timestamp - ACTIVE_WINDOW_SECONDS;
     const todayCutoff = getBahrainDayStartUtcSeconds(nowUtc);
+    console.log("Query cutoffs:", { last6HoursCutoff, activeCutoff, todayCutoff });
 
     const [last6Hours, today] = await Promise.all([
       dynamo.send(
@@ -124,11 +125,10 @@ export const handler = async (event: any) => {
         })
       ),
     ]);
+    console.log("Queried last 6 hours items:", last6Hours.Items?.length ?? 0);
+    console.log("Queried today items:", today.Items?.length ?? 0);
 
-    /* ────────────────────────────────
-       3️⃣ Calculate metrics
-    ──────────────────────────────── */
-
+    // 3️⃣ Calculate metrics
     const activeUsers = new Set<string>();
     const usersToday = new Set<string>();
     const hourlyBuckets = new Map<string, Set<string>>();
@@ -141,71 +141,42 @@ export const handler = async (event: any) => {
       if (ts >= activeCutoff) activeUsers.add(user);
 
       const bucket = formatBahrainHourLabel(ts);
-      if (!hourlyBuckets.has(bucket)) {
-        hourlyBuckets.set(bucket, new Set());
-      }
+      if (!hourlyBuckets.has(bucket)) hourlyBuckets.set(bucket, new Set());
       hourlyBuckets.get(bucket)!.add(user);
     }
+    console.log("Active users in last 5 minutes:", Array.from(activeUsers));
 
     for (const item of today.Items ?? []) {
       if (item.userId?.S) usersToday.add(item.userId.S);
     }
+    console.log("Users today:", Array.from(usersToday));
 
     const usersLast6Hours = last6HourBuckets(timestamp).map((hour) => ({
       hour,
       count: hourlyBuckets.get(hour)?.size ?? 0,
     }));
+    console.log("Users last 6 hours series:", usersLast6Hours);
 
-    /* ────────────────────────────────
-       4️⃣ Send cards to broadcast Lambda
-    ──────────────────────────────── */
-
-    const invoke = (payload: any) =>
-      lambdaClient.send(
+    // 4️⃣ Send cards to broadcast Lambda
+    const invoke = (payload: any) => {
+      console.log("Invoking broadcast Lambda with payload:", payload);
+      return lambdaClient.send(
         new InvokeCommand({
           FunctionName: process.env.BROADCAST_LAMBDA!,
           InvocationType: "Event",
           Payload: Buffer.from(JSON.stringify(payload)),
         })
       );
-
-    // 🔹 Active users (live)
-    await invoke({
-      card: "active_users_now",
-      data: {
-        count: activeUsers.size,
-        timestamp,
-      },
-    });
-
-    // 🔹 Users today
-    await invoke({
-      card: "users_today",
-      data: {
-        count: usersToday.size,
-        timezone: "Asia/Bahrain",
-      },
-    });
-
-    // 🔹 Last 6 hours chart
-    await invoke({
-      card: "users_last_6_hours",
-      data: {
-        series: usersLast6Hours,
-      },
-    });
-
-    return {
-      statusCode: 200,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({ status: "ok" }),
     };
+
+    await invoke({ card: "active_users_now", data: { count: activeUsers.size, timestamp } });
+    await invoke({ card: "users_today", data: { count: usersToday.size, timezone: "Asia/Bahrain" } });
+    await invoke({ card: "users_last_6_hours", data: { series: usersLast6Hours } });
+    console.log("All broadcast Lambda invocations completed");
+
+    return respond(200, { status: "ok" });
   } catch (error) {
     console.error("Heartbeat error:", error);
-    return {
-      statusCode: 500,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({ message: "Internal error" }),
-    };
+    return respond(500, { message: "Internal error" });
   }
 };

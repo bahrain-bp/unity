@@ -1,101 +1,133 @@
-import React, { useEffect, useState } from "react";
-import { Bar } from "react-chartjs-2";
+import { useState, useEffect } from "react";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
   Tooltip,
-  Legend,
-} from "chart.js";
+  CartesianGrid,
+  Label,
+} from "recharts";
+import { Users } from "lucide-react";
+import "../../sass/DashboardCards.scss";
 
-// Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-// TypeScript interfaces for API response
-interface HourData {
-  hour: number;
-  users: number;
+interface UserHourData {
+  hour: string;
+  count: number;
 }
 
-interface UsersResponse {
-  date: string;
-  timezone: string;
-  hours: HourData[];
-  generatedAt: number;
+interface UsersLast6HoursData {
+  series: UserHourData[];
 }
 
-const UsersLast6HoursChart: React.FC = () => {
-  const [chartData, setChartData] = useState({
-    labels: [] as string[],
-    datasets: [] as {
-      label: string;
-      data: number[];
-      backgroundColor: string;
-      borderColor: string;
-      borderWidth: number;
-    }[],
-  });
+interface LoadDashboardResponse {
+  card: string;
+  data: UsersLast6HoursData;
+}
+
+export default function UsersLast6Hours() {
+  const [seriesData, setSeriesData] = useState<UserHourData[]>([]);
+  const [connected, setConnected] = useState<boolean>(false);
+
+  const fetchUsersData = async () => {
+    try {
+      const response = await fetch("/admin/loadUsersLast6Hours", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ component: "users_last_6_hours" }),
+      });
+
+      const data: LoadDashboardResponse = await response.json();
+
+      if (data.card === "users_last_6_hours" && data.data.series) {
+        setSeriesData(data.data.series);
+      }
+    } catch (err) {
+      console.error("Error fetching users last 6 hours:", err);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
+    fetchUsersData();
+
+    const ws = new WebSocket(
+      "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
+    );
+
+    ws.onopen = () => setConnected(true);
+
+    ws.onmessage = (event) => {
       try {
-        const res = await fetch(
-          "https://twrmzrk7v3.execute-api.us-east-1.amazonaws.com/dev/users-today-hourly"
-        );
-        const data: UsersResponse = await res.json();
-        console.log(data)
-
-        // Get the last 6 hours
-        const last6Hours = data.hours.slice(-6);
-        const labels = last6Hours.map((item) => `${item.hour}:00`);
-        const users = last6Hours.map((item) => item.users);
-
-        setChartData({
-          labels,
-          datasets: [
-            {
-              label: "Users",
-              data: users,
-              backgroundColor: "rgba(75, 192, 192, 0.6)",
-              borderColor: "rgba(75, 192, 192, 1)",
-              borderWidth: 1,
-            },
-          ],
-        });
+        const data: LoadDashboardResponse = JSON.parse(event.data);
+        if (data.card === "users_last_6_hours" && data.data.series) {
+          setSeriesData(data.data.series);
+        }
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("WebSocket parse error:", err);
       }
     };
 
-    fetchData();
+    ws.onclose = () => setConnected(false);
+    ws.onerror = (err) => console.error("WebSocket error:", err);
+
+    return () => ws.close();
   }, []);
 
   return (
-    <div>
-      <h2>Users in the Last 6 Hours</h2>
-      <Bar
-        data={chartData}
-        options={{
-          responsive: true,
-          plugins: {
-            legend: { display: true, position: "top" },
-            title: { display: true, text: "Users Last 6 Hours" },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: "Number of Users" },
-            },
-            x: {
-              title: { display: true, text: "Hour" },
-            },
-          },
-        }}
-      />
+    <div
+      className="dashboard-card users-graph-theme"
+      style={{ display: "flex", flexDirection: "column", height: "100%" }}
+    >
+      <div className="card-header">
+        <div className="card-icon">
+          <Users size={30} color="#ff7614" />
+        </div>
+        <div className="card-title">
+          Users in Last 6 Hours
+          <span className={`status-dot ${connected ? "online" : "offline"}`} />
+        </div>
+      </div>
+
+      {/* Chart fills remaining space */}
+      <div style={{ flexGrow: 1 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={seriesData}
+            margin={{ top: 20, right: 20, left: 0, bottom: 40 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="hour"
+              tick={{ fontSize: 12 }}
+              tickFormatter={(value) => value.split(" ")[1]} // only hour
+            >
+              <Label
+                value="Hour"
+                position="insideBottom"
+                offset={-5}
+                style={{ fontWeight: "bold" }}
+              />
+            </XAxis>
+            <YAxis allowDecimals={false}>
+              <Label
+                value="Users"
+                angle={-90}
+                position="insideLeft"
+                style={{ textAnchor: "middle", fontWeight: "bold" }}
+              />
+            </YAxis>
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="count"
+              stroke="#ff7614"
+              strokeWidth={2}
+              dot={{ r: 4 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
-};
-
-export default UsersLast6HoursChart;
+}

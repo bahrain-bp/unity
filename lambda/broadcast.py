@@ -46,6 +46,25 @@ def handler(event, context):
         "card": card_type,
         "data": card_data
     }
+    elif card_type == "active_users_now":
+        print(card_data)
+        broadcast_message  = {
+        "card": card_type,
+        "data": card_data
+    }
+    elif card_type =="users_today":
+        print(card_data)
+        broadcast_message  = {
+        "card": card_type,
+        "data": card_data
+    }
+    elif card_type =="users_last_6_hours":
+        print(card_data)
+        broadcast_message  = {
+        "card": card_type,
+        "data": card_data
+    }
+
 
 
     # WebSocket Management API

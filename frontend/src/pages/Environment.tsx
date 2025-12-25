@@ -2,40 +2,15 @@ import { useEffect, useRef } from "react";
 
 export default function Environment() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    // ─────────────────────────────────────────────
-    // Open WebSocket (presence tracking)
-    // ─────────────────────────────────────────────
-const ws = new WebSocket(
-  "wss://46fbojq009.execute-api.us-east-1.amazonaws.com/prod?role=visitor"
-);
-//remove this, later, and add the websocket url in env 
-// this websocket url is for visitor presence tracking
+    // --- Unity loader script ---
+    const loaderScript = document.createElement("script");
+    loaderScript.src = "/unity/Bahtwin_Unity_version1.loader.js";
+    loaderScript.onload = () => {
+      const w = window as any;
 
-    ws.onopen = () => {
-      console.log("✅ WebSocket connected (user is active)");
-    };
-
-    ws.onclose = () => {
-      console.log("❌ WebSocket disconnected (user left)");
-    };
-
-    ws.onerror = (err) => {
-      console.error("WebSocket error:", err);
-    };
-
-    wsRef.current = ws;
-
-    // ─────────────────────────────────────────────
-    //  Load Unity WebGL
-    // ─────────────────────────────────────────────
-    const script = document.createElement("script");
-    script.src = "/unity/Bahtwin_Unity_version1.loader.js";
-
-    script.onload = () => {
-      if ((window as any).createUnityInstance && canvasRef.current) {
+      if (w.createUnityInstance && canvasRef.current) {
         // Mobile adjustments
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
           const meta = document.createElement("meta");
@@ -47,11 +22,12 @@ const ws = new WebSocket(
           const canvas = canvasRef.current;
           canvas.style.width = "100%";
           canvas.style.height = "100vh";
+          // canvas.style.position = "fixed";
           document.body.style.textAlign = "left";
         }
 
         // Create Unity instance
-        (window as any)
+        w
           .createUnityInstance(canvasRef.current, {
             arguments: [],
             dataUrl: "/unity/Bahtwin_Unity_version1.data.unityweb",
@@ -62,20 +38,45 @@ const ws = new WebSocket(
             productName: "BAHTWIN_Unity",
             productVersion: "0.1.0",
           })
-          .catch((message: any) => alert(message));
+          .then((instance: any) => {
+            console.log("Unity instance ready");
+            // expose globally (optional, but useful)
+            w.unityInstance = instance;
+
+            // Initialize Smart Plug bridge if it’s loaded
+            if (w.initSmartPlugBridge) {
+              console.log("Initializing SmartPlug bridge…");
+              w.initSmartPlugBridge(instance);
+            } else {
+              console.warn(
+                "initSmartPlugBridge not found. Is /js/unity-realtime-bridge.js loaded?"
+              );
+            }
+          })
+          .catch((message: any) => {
+            console.error("Unity load error:", message);
+            alert(message);
+          });
       }
     };
 
-    document.body.appendChild(script);
+    document.body.appendChild(loaderScript);
+
+    // --- Smart Plug bridge script (/public/js/unity-smartplug-bridge.js) ---
+    const bridgeScript = document.createElement("script");
+    bridgeScript.src = "/js/unity-realtime-bridge.js";
+    document.body.appendChild(bridgeScript);
 
     // ─────────────────────────────────────────────
     // Cleanup (user leaves page)
     // ─────────────────────────────────────────────
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close(); // triggers $disconnect
+      if (loaderScript.parentNode) {
+        loaderScript.parentNode.removeChild(loaderScript);
       }
-      document.body.removeChild(script);
+      if (bridgeScript.parentNode) {
+        bridgeScript.parentNode.removeChild(bridgeScript);
+      }
     };
   }, []);
 
@@ -97,7 +98,7 @@ const ws = new WebSocket(
           height: "100vh",
           background: "#231F20",
         }}
-      />
+      ></canvas>
     </div>
   );
 }

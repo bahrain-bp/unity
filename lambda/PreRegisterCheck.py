@@ -45,6 +45,22 @@ def PreRegisterCheck(event, context):
             return response(400, {
             "error": "Multiple faces detected. Please upload an image with only one face."
         })
+        # Search for existing face in the collection
+        match_response = rekog.search_faces_by_image(
+            CollectionId=COLLECTION,
+            Image={'Bytes': image_bytes},
+            FaceMatchThreshold=95,  # strict threshold
+            MaxFaces=1
+        )
+        matches = match_response.get("FaceMatches", [])
+        # If a strong match exists → user already registered
+        if matches:
+            similarity = matches[0]["Similarity"]
+
+            if similarity >= 95:
+                return response(409, {  # 409 Conflict is appropriate here
+                    "error": "User already registered."
+                })
 
         # Face detected → upload image to S3
         key = f"pre-reg/{userId}.jpg"

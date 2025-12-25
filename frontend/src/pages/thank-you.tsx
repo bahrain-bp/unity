@@ -1,7 +1,5 @@
-// src/pages/ThankYouPage.jsx
-import React from "react";
 import { useNavigate } from "react-router-dom";
-import "../../sass/_feedback.scss"; // Use same styling
+import "../../sass/_feedback.scss"; 
 
 const ThankYouPage = () => {
   const navigate = useNavigate();

@@ -99,7 +99,7 @@ function Authentication() {
       if (!userId) {
         handleSignup();
       } else {
-        handleImageUpload();
+        handleImageUpload(userId);
       }
     } else {
       handleSignIn();
