@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoomSO
   roomName: Prayer Room
   roomID: PRAYER_ROOM
-  roomNumber: 0
+  roomNumber: 802
   hasAV_VC: 0
   capacity: 0
