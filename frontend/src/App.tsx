@@ -58,6 +58,7 @@ function PublicOnlyRoute({ children }) {
 }
 
 function App() {
+  const {userId} = useAuth();
   useEffect(() => {
     let lastHeartbeatSentAt = 0;
     const HEARTBEAT_INTERVAL = 30_000; // 30 seconds
@@ -77,7 +78,7 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: "test-user-frontend", // replace later with Cognito userId
+          userId: userId, // replace later with Cognito userId
           timestamp: now,
         }),
       }).catch(() => {
