@@ -25,8 +25,8 @@ export function FeedbackCard({ feedback }: Props) {
 
       <Field label="Purpose of Visit" value={feedback.purpose} />
       <Field label="Check-in Duration" value={formatCheckIn(feedback.checkInTime)} />
-      <Field label="Preferred Registration" value={formatRegistration(feedback.digitalPref)} />
-      <Field label="Visit Experience" value={feedback.faster} />
+      <Field label="Preferred Registration Method" value={formatRegistration(feedback.digitalPref)} />
+      <Field label="Was your Visit Experience Faster and Smoother using BAHTWIN?" value={feedback.faster} />
       <Field label="Face Recognition Usefulness" value={renderStars(feedback.faceHelp)} />
       <Field label="Overall Satisfaction" value={renderStars(feedback.overallRating)} />
 

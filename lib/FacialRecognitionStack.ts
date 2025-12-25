@@ -88,8 +88,8 @@ export class FacialRecognitionStack extends cdk.Stack {
     //////////// S3 Resources ////////////
 
     //create S3 Bucket for images and static files
-    const bucket = new s3.Bucket(this, 'BahtwinTestBucket',{
-      bucketName: 'bahtwin-testing',
+    const bucket = new s3.Bucket(this, 'BahtwinUploadBucket',{
+      bucketName: 'bahtwin-upload',
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects:true,
       });
@@ -97,8 +97,8 @@ export class FacialRecognitionStack extends cdk.Stack {
     //////////// Rekognition Resources ////////////
 
     // Create an Amazon Rekognition Collection
-    const collection= new rekognition.CfnCollection(this, 'bahtwin-testing-collection', {
-      collectionId: 'bahtwin-testing-collection', 
+    const collection= new rekognition.CfnCollection(this, 'bahtwin--collection', {
+      collectionId: 'bahtwin-collection', 
     });
 
     //////////// SNS Resources ////////////
@@ -131,7 +131,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       }),
       environment: {
         JWT_SECRET: 'secret',  // same as before
-        FRONTEND_URL: 'http://localhost:5173/visitorfeedback',  // your frontend link (test change later)
+        FRONTEND_URL: 'http://localhost:5173/visitorfeedback',  
         GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending
         GMAIL_PASS: 'thun ojje rdpt ocjg',        // Gmail app password
       },
@@ -265,7 +265,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       handler:'RegisterIndividualVisitor.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment:{
-        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
+        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      
         GMAIL_PASS: 'thun ojje rdpt ocjg', 
         BUCKET_NAME: bucket.bucketName,
         InviteTable: InvitedVisitorTable.tableName,
@@ -281,7 +281,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       handler:'RegisterBulkVisitor.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment:{
-        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
+        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',     
         GMAIL_PASS: 'thun ojje rdpt ocjg', 
         BUCKET_NAME: bucket.bucketName,
         InviteTable: InvitedVisitorTable.tableName,
@@ -298,7 +298,8 @@ export class FacialRecognitionStack extends cdk.Stack {
       handler:'GetUserInfo.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment:{
-        USER_TABLE:this.userTable.tableName
+        USER_TABLE:this.userTable.tableName,
+        BUCKET_NAME: bucket.bucketName
       },
       timeout:cdk.Duration.seconds(30),
       functionName: 'GetUserInfo', 
@@ -424,10 +425,9 @@ export class FacialRecognitionStack extends cdk.Stack {
       proxy: true,
     }));
     const getUserInfo = visitorResource.addResource('me');
-        getUserInfo.addMethod(
-        'GET',
-        new apigw.LambdaIntegration(GetUserInfo, { proxy: true })
-        );
+    getUserInfo.addMethod('GET',new apigw.LambdaIntegration(GetUserInfo, { 
+      proxy: true 
+    }));
 
     arrivalResource.addMethod('OPTIONS', new apigw.MockIntegration({
       integrationResponses: [{
@@ -550,6 +550,30 @@ export class FacialRecognitionStack extends cdk.Stack {
       }],
     });
 
+    getUserInfo .addMethod('OPTIONS', new apigw.MockIntegration({
+      integrationResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+          'method.response.header.Access-Control-Allow-Origin': "'*'",
+          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+        },
+      }],
+      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+      requestTemplates: {
+        'application/json': '{"statusCode": 200}'
+      },
+    }), {
+      methodResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': true,
+          'method.response.header.Access-Control-Allow-Methods': true,
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      }],
+    });
+
 
     
 
@@ -593,6 +617,41 @@ new cdk.CfnOutput(this, 'AdminApiBaseUrl', {
   value: api_arrival.urlForPath('/admin/'),
   exportName: 'AdminApiBaseUrl',
 });
+
+// active users
+// Active Users analytics table
+const websiteActivityTable = new dynamodb.Table(this, "WebsiteActivityTable", {
+  tableName: "WebsiteActivity",
+  partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+  sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+  billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+  removalPolicy: cdk.RemovalPolicy.DESTROY,
+  timeToLiveAttribute: "ttl",
+});
+
+const websiteHeartbeatLambda = new NodejsFunction(this, "WebsiteHeartbeatLambda", {
+  runtime: lambda.Runtime.NODEJS_18_X,
+  entry: path.join(__dirname, "../lambda/heartbeat.ts"),
+  handler: "handler",
+  environment: {
+    WEBSITE_ACTIVITY_TABLE: websiteActivityTable.tableName,
+    BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
+  },
+});
+
+const heartbeatResource =visitorResource.addResource("heartbeat");
+heartbeatResource.addCorsPreflight({
+  allowOrigins: ["*"],
+  allowMethods: ["POST", "OPTIONS"],
+  allowHeaders: ["Content-Type"],
+});
+heartbeatResource.addMethod("POST", new apigw.LambdaIntegration(websiteHeartbeatLambda));
+websiteActivityTable.grantReadWriteData(websiteHeartbeatLambda);
+const heartbeatRole = websiteHeartbeatLambda.role!;
+this.broadcastLambda.grantInvoke(heartbeatRole);
+
     
   }
 }
+
+

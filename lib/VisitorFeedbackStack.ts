@@ -145,17 +145,18 @@ const getFeedbackLambda = createPythonLambda(
     new apigateway.LambdaIntegration(submitFeedbackLambda, { proxy: true })
     );
 
-    const getFeedbackResource = api.root.addResource('getFeedback');
-    getFeedbackResource.addMethod(
-    'GET',
-    new apigateway.LambdaIntegration(getFeedbackLambda, { proxy: true })
-    );
-
+  
     const adminResource = api.root.addResource('admin');
     const load_feedbackResource = adminResource.addResource('loadFeedback')
     load_feedbackResource.addMethod(
     'POST',
     new apigateway.LambdaIntegration(LoadFeedback, { proxy: true })
+    );
+
+    const getFeedbackResource = adminResource.addResource('getFeedback');
+    getFeedbackResource.addMethod(
+    'GET',
+    new apigateway.LambdaIntegration(getFeedbackLambda, { proxy: true })
     );
 
     // Helper function to add OPTIONS for CORS preflight

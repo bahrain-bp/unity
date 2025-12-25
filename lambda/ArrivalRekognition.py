@@ -74,6 +74,7 @@ def ArrivalRekognition(event, context):
                 "email": visitor['email'],
                 "name": visitor['name']
             }
+            print(payload)
 
             # if visitor not invited by administrator check-in not allowed
             db_response_email = InviteTable.query(

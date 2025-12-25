@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Users } from "lucide-react";
 import "../../sass/DashboardCards.scss";
 import { ImageClient } from "../services/api";
 

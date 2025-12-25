@@ -27,9 +27,7 @@ def handler(event, context):
         "data": []
     }
 
-    # -------------------------
     # Recent Visitors
-    # -------------------------
     if component == "RecentVisitors":
         response_checked_in = InviteTable.scan(
             FilterExpression=Attr("checked_in").eq("yes")
@@ -50,9 +48,7 @@ def handler(event, context):
                 for v in sorted_items[:5]
             ]
 
-    # -------------------------
     # Today Invitations Count
-    # -------------------------
     elif component == "today_invitations":
         bahrain_tz = timezone(timedelta(hours=3))
         today_date = datetime.now(bahrain_tz).date().isoformat()
@@ -67,9 +63,7 @@ def handler(event, context):
             {"total": total_today}
         ]
 
-    # -------------------------
     # Total BAHTWIN Visitors
-    # -------------------------
     elif component == "total_bahtwin_visitors":
         response_count = userTable.scan(Select="COUNT")
         total_visitors = response_count.get("Count", 0)
@@ -78,9 +72,7 @@ def handler(event, context):
             {"total_visitors": total_visitors}
         ]
 
-    # -------------------------
     # Unknown component
-    # -------------------------
     else:
         return response(400, {"error": "Unknown component"})
 

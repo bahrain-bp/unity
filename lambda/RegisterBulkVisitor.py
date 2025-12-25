@@ -64,19 +64,23 @@ def handler(event, context):
                 return response(400, {"error": f"Row {i}: Invalid visit time format, expected HH:MM AM/PM"})
 
             # Validate date
-            visit_date_str = row["visitDate"].strip()
-            # Combine date and time for storage
+            visit_date_str = row["visitDate"].strip()  # e.g. "12/22/2025"
+
+            # Convert string to date object (MM/DD/YYYY)
+            visit_date = datetime.strptime(visit_date_str, "%m/%d/%Y").date()
+
+            # Combine date and time
             visit_dt = datetime.combine(visit_date, visit_dt_time.time())
+
             formatted_visit_dt = visit_dt.strftime("%A, %B %d, %Y at %I:%M %p")
-            visit_time_24h = visit_dt.strftime("%H:%M")  # For DynamoDB storage
-            visit_date_iso = visit_dt.date().isoformat()
+            visit_time_24h = visit_dt.strftime("%H:%M")      # For DynamoDB storage
+            visit_date_iso = visit_dt.date().isoformat()     # YYYY-MM-DD
 
             # Check if visit date is in the past
             bahrain_tz = timezone(timedelta(hours=3))
             visit_dt = datetime.combine(visit_date, visit_dt_time.time()).replace(tzinfo=bahrain_tz)
             now_bahrain = datetime.now(bahrain_tz)
             try:
-                visit_date = datetime.strptime(visit_date_str, "%m/%d/%Y").date()
                 if visit_dt < now_bahrain:
                     return response(400, {"error": f"Row {i}: Visit date scheduled is invalid"})
                 formatted_visit_dt = visit_dt.strftime("%A, %B %d, %Y at %I:%M %p") 
@@ -93,7 +97,7 @@ def handler(event, context):
             visitorId  = str(uuid.uuid4())
             InviteTable.put_item(
                 Item={
-                    "visitorId ": visitorId ,
+                    "visitorId": visitorId ,
                     "name": row["name"].strip(),
                     "email": email,
                     "visitDate": visit_date_iso,
@@ -105,6 +109,7 @@ def handler(event, context):
             # Count today's invitations
             today_date = now_bahrain.date().isoformat()
             total_today_invitations = count_today_invitations(today_date)
+            print(total_today_invitations)
 
             # Prepare dashboard payload
             to_dashboard = {

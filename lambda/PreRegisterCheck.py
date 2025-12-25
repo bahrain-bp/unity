@@ -40,6 +40,11 @@ def PreRegisterCheck(event, context):
         face_details = detect_response.get("FaceDetails", [])
         if not face_details:
             return response(400, {"error": "No face detected. Please upload another image."})
+        
+        if len(face_details) > 1:
+            return response(400, {
+            "error": "Multiple faces detected. Please upload an image with only one face."
+        })
 
         # Face detected → upload image to S3
         key = f"pre-reg/{userId}.jpg"
