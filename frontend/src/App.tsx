@@ -58,46 +58,38 @@ function PublicOnlyRoute({ children }) {
 }
 
 function App() {
-  const {userId} = useAuth();
+  const { userId } = useAuth();
   useEffect(() => {
-    let lastHeartbeatSentAt = 0;
-    const HEARTBEAT_INTERVAL = 30_000; // 30 seconds
+  if (!userId) return; // don't register events until userId exists
 
-    const maybeSendHeartbeat = () => {
-      const now = Date.now();
+  let lastHeartbeatSentAt = 0;
+  const HEARTBEAT_INTERVAL = 30_000; // 30 seconds
 
-      if (now - lastHeartbeatSentAt < HEARTBEAT_INTERVAL) {
-        return;
-      }
+  const maybeSendHeartbeat = () => {
+    const now = Date.now();
+    if (now - lastHeartbeatSentAt < HEARTBEAT_INTERVAL) return;
 
-      lastHeartbeatSentAt = now;
+    lastHeartbeatSentAt = now;
 
-      fetch(`${import.meta.env.VITE_IMAGE_API_URL}visitor/heartbeat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: userId, // replace later with Cognito userId
-          timestamp: now,
-        }),
-      }).catch(() => {
-        // silently ignore network errors
-      });
-    };
+    fetch(`${import.meta.env.VITE_IMAGE_API_URL}visitor/heartbeat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, timestamp: now }),
+    }).catch(() => {
+      // silently ignore network errors
+    });
+  };
 
-    //idk if this is correct but i think it works, that's what matters now
+  window.addEventListener("click", maybeSendHeartbeat);
+  window.addEventListener("scroll", maybeSendHeartbeat);
+  window.addEventListener("keydown", maybeSendHeartbeat);
 
-    window.addEventListener("click", maybeSendHeartbeat);
-    window.addEventListener("scroll", maybeSendHeartbeat);
-    window.addEventListener("keydown", maybeSendHeartbeat);
-
-    return () => {
-      window.removeEventListener("click", maybeSendHeartbeat);
-      window.removeEventListener("scroll", maybeSendHeartbeat);
-      window.removeEventListener("keydown", maybeSendHeartbeat);
-    };
-  }, []);
+  return () => {
+    window.removeEventListener("click", maybeSendHeartbeat);
+    window.removeEventListener("scroll", maybeSendHeartbeat);
+    window.removeEventListener("keydown", maybeSendHeartbeat);
+  };
+}, [userId]); // <- re-run when userId becomes available
   return (
     <>
       <Router>
