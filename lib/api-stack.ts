@@ -338,9 +338,6 @@ constructor(scope: Construct, id: string, props: APIStackProps) {
             // authorizationType: apigw.AuthorizationType.COGNITO,
           });
 
-
-
-
           
 // Lambda function responsible for generating presigned S3 upload URLs
 // used by the frontend during user pre-registration to securely upload images.   
@@ -379,16 +376,6 @@ uploadImageResource.addMethod(
 );
 
 
-
-
-
-
-
-
-
-
-
-
 const preRegisterCheckFn = new lambda.Function(this, "PreRegisterCheckHandler", {
   runtime: lambda.Runtime.PYTHON_3_9,
   handler: "PreRegisterCheck.handler",
@@ -420,7 +407,6 @@ validateImageResource.addMethod(
 );
 
 
-
 // ────────────────────────────────
 // GET IMAGE (return presigned GET URL)
 // ────────────────────────────────
@@ -450,126 +436,9 @@ getImageResource.addMethod(
   }
 );
 
-
-
-
-
-
-
-
-
-
-          
-// Lambda function responsible for generating presigned S3 upload URLs
-// used by the frontend during user pre-registration to securely upload images.   
-    const generatePresignedUrlFn = new NodejsFunction(this, "GeneratePresignedUrlHandler", {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      entry: path.join(__dirname, "../lambda/generatePresignedUploadUrl.ts"),
-      handler: "handler",
-      environment: {
-        BUCKET_NAME: preRegBucket.bucketName,
-      },
-    });
-      
-         preRegBucket.grantReadWrite(generatePresignedUrlFn);
-
-//API Gateway Route for Upload
-
-const uploadImageResource = api.root.addResource("upload-image");
-
-// Add CORS first
-// Rename the resource path
-
-// Add CORS first
-uploadImageResource.addCorsPreflight({
-  allowOrigins: ["*"],        // replace "*" with your frontend URL in production
-  allowMethods: ["POST"],
-});
-
-
-// **No Cognito auth required for pre-registration**
-uploadImageResource.addMethod(
-  "POST",
-  new apigw.LambdaIntegration(generatePresignedUrlFn),
-  {
-    authorizationType: apigw.AuthorizationType.NONE,
-  }
-);
-
-
-
-
-
-
-
-
-
-
-
-
-const preRegisterCheckFn = new lambda.Function(this, "PreRegisterCheckHandler", {
-  runtime: lambda.Runtime.PYTHON_3_9,
-  handler: "PreRegisterCheck.handler",
-  code: lambda.Code.fromAsset("lambda"),
-  timeout: cdk.Duration.seconds(30),
-  environment: {
-    BUCKET_NAME: preRegBucket.bucketName,
-    USER_MANAGEMENT_TABLE: userTable.tableName,   // REQUIRED
-    COLLECTION_ID: "VisitorFaceCollection",
-  },
-});
-
-preRegBucket.grantReadWrite(preRegisterCheckFn);
-userTable.grantReadWriteData(preRegisterCheckFn);
-
-const validateImageResource = api.root.addResource("validate-image");
-
-validateImageResource.addCorsPreflight({
-  allowOrigins: ["*"],
-  allowMethods: ["POST"],
-});
-
-validateImageResource.addMethod(
-  "POST",
-  new apigw.LambdaIntegration(preRegisterCheckFn),
-  {
-    authorizationType: apigw.AuthorizationType.NONE,
-  }
-);
-
-
-
-// ────────────────────────────────
-// GET IMAGE (return presigned GET URL)
-// ────────────────────────────────
-const getImageFn = new NodejsFunction(this, "GetPresignedDownloadUrlHandler", {
-  runtime: lambda.Runtime.NODEJS_18_X,
-  entry: path.join(__dirname, "../lambda/generatePresignedDownloadUrl.ts"),
-  handler: "handler",
-  environment: {
-    BUCKET_NAME: preRegBucket.bucketName,
-  },
-});
-
-preRegBucket.grantRead(getImageFn);
-
-const getImageResource = api.root.addResource("get-image");
-
-getImageResource.addCorsPreflight({
-  allowOrigins: ["*"],
-  allowMethods: ["GET"],
-});
-
-getImageResource.addMethod(
-  "GET",
-  new apigw.LambdaIntegration(getImageFn),
-  {
-    authorizationType: apigw.AuthorizationType.NONE,
-  }
-);
-
+//----------------------------------------------------
 // USER MANAGEMENT
-
+//----------------------------------------------------
   const usersResource = api.root.addResource("users")
 
   usersResource.addCorsPreflight({
@@ -688,8 +557,78 @@ getImageResource.addMethod(
     authorizer,
     authorizationType: apigw.AuthorizationType.COGNITO,
   });
-  }
 
+  //----------------------------------------------
+  //ACTIVE USERS
+  //----------------------------------------------
+//   const activeUsersFn = new NodejsFunction(this, "GetActiveUsersHandler", {
+//   runtime: lambda.Runtime.NODEJS_18_X,
+//   entry: path.join(__dirname, "../lambda/echoShow/getActiveUserCount.ts"),
+//   handler: "handler",
+//   environment: {
+//     ACTIVE_CONNECTIONS_TABLE: dbStack.activeConnectionsTable.tableName,
+//   },
+// });
+ 
+//   dbStack.activeConnectionsTable.grantReadData(activeUsersFn);
   
-
+//   const activeUsersResource = api.root.addResource("active-users");
+  
+//   activeUsersResource.addMethod(
+//     "GET",
+//     new apigw.LambdaIntegration(activeUsersFn),
+//     {
+//       authorizationType: apigw.AuthorizationType.NONE,
+//     }
+//   );
+  
+  
+  
+  const websiteHeartbeatLambda = new NodejsFunction(
+    this,
+    "WebsiteHeartbeatLambda",
+    {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(
+        __dirname,
+        "../lambda/ActivePlayer/heartbeat.ts"
+      ),
+      handler: "handler",
+      environment: {
+        WEBSITE_ACTIVITY_TABLE: dbStack.websiteActivityTable.tableName,
+        ACTIVE_CONNECTIONS_TABLE: dbStack.activeConnectionsTable.tableName,
+        WS_ENDPOINT: "wss://46fbojq009.execute-api.us-east-1.amazonaws.com/prod",
+      },
+    }
+  );
+  
+  const heartbeatResource = api.root.addResource("heartbeat");
+  
+  
+  heartbeatResource.addCorsPreflight({
+    allowOrigins: ["*"], // or ["http://localhost:5173"]
+    allowMethods: ["POST", "OPTIONS"],
+    allowHeaders: ["Content-Type"],
+  });
+  
+  heartbeatResource.addMethod(
+    "POST",
+    new apigw.LambdaIntegration(websiteHeartbeatLambda),
+    {
+      authorizationType: apigw.AuthorizationType.NONE,
+    }
+  );
+  dbStack.websiteActivityTable.grantReadWriteData(websiteHeartbeatLambda);
+  dbStack.activeConnectionsTable.grantReadWriteData(websiteHeartbeatLambda);
+  
+  // Allow heartbeat lambda to broadcast over WebSocket connections
+  websiteHeartbeatLambda.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ["execute-api:ManageConnections"],
+      resources: [
+        `arn:aws:execute-api:${this.region}:${this.account}:46fbojq009/prod/POST/@connections/*`,
+      ],
+    })
+  );
+  }
 }
