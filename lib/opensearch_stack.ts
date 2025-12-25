@@ -12,8 +12,9 @@ export class OpenSearchStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-    const collectionName = "unity-kb-collection"
-
+    // const collectionName = "unity-kb-collection"
+    const prefixname = this.stackName.split('-')[0].toLowerCase();
+    const collectionName = `${prefixname}-kb-collection`;
     // S3 bucket for knowledge base data
     this.dataBucket = new s3.Bucket(this, 'KnowledgeBaseBucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY
@@ -38,7 +39,7 @@ export class OpenSearchStack extends cdk.Stack {
 
     // OpenSearch Serverless policies
     const encryptionPolicy = new opensearchserverless.CfnSecurityPolicy(this, 'EncryptionPolicy', {
-      name: 'unity-kb-encryption-policy',
+      name: `${prefixname}-kb-encryption-policy`,
       type: 'encryption',
       policy: JSON.stringify({
         Rules: [{ ResourceType: 'collection', Resource: [`collection/${collectionName}`] }],
@@ -47,7 +48,7 @@ export class OpenSearchStack extends cdk.Stack {
     });
 
     const networkPolicy = new opensearchserverless.CfnSecurityPolicy(this, 'NetworkPolicy', {
-      name: 'unity-kb-network-policy',
+      name: `${prefixname}-kb-network-policy`,
       type: 'network',
       policy: JSON.stringify([{
         Rules: [
@@ -69,7 +70,7 @@ export class OpenSearchStack extends cdk.Stack {
 
     // Data access policy
     this.dataAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, 'DataAccessPolicy', {
-      name: 'unity-kb-data-access-policy',
+      name: `${prefixname}-kb-data-access-policy`,
       type: 'data',
       policy: JSON.stringify([{
         Rules: [
@@ -102,7 +103,7 @@ export class OpenSearchStack extends cdk.Stack {
     // Outputs
     new cdk.CfnOutput(this, 'CollectionEndpoint', {
       value: this.collection.attrCollectionEndpoint,
-      exportName: 'UnityCollectionEndpoint'
+      exportName: `${prefixname}-CollectionEndpoint`
     });
   }
 }

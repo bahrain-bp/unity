@@ -1,0 +1,9 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.handler = void 0;
+const handler = async (event) => {
+    console.log("Default WS message:", event.body);
+    return { statusCode: 200, body: "ok" };
+};
+exports.handler = handler;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoid3MtZGVmYXVsdC5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIndzLWRlZmF1bHQudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBRU8sTUFBTSxPQUFPLEdBQUcsS0FBSyxFQUFFLEtBQXNDLEVBQUUsRUFBRTtJQUN0RSxPQUFPLENBQUMsR0FBRyxDQUFDLHFCQUFxQixFQUFFLEtBQUssQ0FBQyxJQUFJLENBQUMsQ0FBQztJQUMvQyxPQUFPLEVBQUUsVUFBVSxFQUFFLEdBQUcsRUFBRSxJQUFJLEVBQUUsSUFBSSxFQUFFLENBQUM7QUFDekMsQ0FBQyxDQUFDO0FBSFcsUUFBQSxPQUFPLFdBR2xCIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgQVBJR2F0ZXdheVByb3h5V2Vic29ja2V0RXZlbnRWMiB9IGZyb20gXCJhd3MtbGFtYmRhXCI7XHJcblxyXG5leHBvcnQgY29uc3QgaGFuZGxlciA9IGFzeW5jIChldmVudDogQVBJR2F0ZXdheVByb3h5V2Vic29ja2V0RXZlbnRWMikgPT4ge1xyXG4gIGNvbnNvbGUubG9nKFwiRGVmYXVsdCBXUyBtZXNzYWdlOlwiLCBldmVudC5ib2R5KTtcclxuICByZXR1cm4geyBzdGF0dXNDb2RlOiAyMDAsIGJvZHk6IFwib2tcIiB9O1xyXG59O1xyXG4iXX0=

@@ -1,0 +1,23 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.handler = void 0;
+const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
+const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
+const ddb = lib_dynamodb_1.DynamoDBDocumentClient.from(new client_dynamodb_1.DynamoDBClient({}));
+const TABLE = process.env.CONNECTIONS_TABLE;
+const handler = async (event) => {
+    const connectionId = event.requestContext.connectionId;
+    const now = Date.now();
+    // later you can extract userId from Cognito JWT / query string if needed
+    const item = {
+        connectionId,
+        createdAt: now,
+    };
+    await ddb.send(new lib_dynamodb_1.PutCommand({
+        TableName: TABLE,
+        Item: item,
+    }));
+    return { statusCode: 200, body: "Connected." };
+};
+exports.handler = handler;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoid3MtY29ubmVjdC5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIndzLWNvbm5lY3QudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQ0EsOERBQTBEO0FBQzFELHdEQUcrQjtBQUUvQixNQUFNLEdBQUcsR0FBRyxxQ0FBc0IsQ0FBQyxJQUFJLENBQUMsSUFBSSxnQ0FBYyxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUM7QUFDaEUsTUFBTSxLQUFLLEdBQUcsT0FBTyxDQUFDLEdBQUcsQ0FBQyxpQkFBa0IsQ0FBQztBQUV0QyxNQUFNLE9BQU8sR0FBRyxLQUFLLEVBQUUsS0FBc0MsRUFBRSxFQUFFO0lBQ3RFLE1BQU0sWUFBWSxHQUFHLEtBQUssQ0FBQyxjQUFjLENBQUMsWUFBYSxDQUFDO0lBQ3hELE1BQU0sR0FBRyxHQUFHLElBQUksQ0FBQyxHQUFHLEVBQUUsQ0FBQztJQUV2Qix5RUFBeUU7SUFDekUsTUFBTSxJQUFJLEdBQUc7UUFDWCxZQUFZO1FBQ1osU0FBUyxFQUFFLEdBQUc7S0FDZixDQUFDO0lBRUYsTUFBTSxHQUFHLENBQUMsSUFBSSxDQUFDLElBQUkseUJBQVUsQ0FBQztRQUM1QixTQUFTLEVBQUUsS0FBSztRQUNoQixJQUFJLEVBQUUsSUFBSTtLQUNYLENBQUMsQ0FBQyxDQUFDO0lBRUosT0FBTyxFQUFFLFVBQVUsRUFBRSxHQUFHLEVBQUUsSUFBSSxFQUFFLFlBQVksRUFBRSxDQUFDO0FBQ2pELENBQUMsQ0FBQztBQWhCVyxRQUFBLE9BQU8sV0FnQmxCIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgQVBJR2F0ZXdheVByb3h5V2Vic29ja2V0RXZlbnRWMiB9IGZyb20gXCJhd3MtbGFtYmRhXCI7XHJcbmltcG9ydCB7IER5bmFtb0RCQ2xpZW50IH0gZnJvbSBcIkBhd3Mtc2RrL2NsaWVudC1keW5hbW9kYlwiO1xyXG5pbXBvcnQge1xyXG4gIER5bmFtb0RCRG9jdW1lbnRDbGllbnQsXHJcbiAgUHV0Q29tbWFuZCxcclxufSBmcm9tIFwiQGF3cy1zZGsvbGliLWR5bmFtb2RiXCI7XHJcblxyXG5jb25zdCBkZGIgPSBEeW5hbW9EQkRvY3VtZW50Q2xpZW50LmZyb20obmV3IER5bmFtb0RCQ2xpZW50KHt9KSk7XHJcbmNvbnN0IFRBQkxFID0gcHJvY2Vzcy5lbnYuQ09OTkVDVElPTlNfVEFCTEUhO1xyXG5cclxuZXhwb3J0IGNvbnN0IGhhbmRsZXIgPSBhc3luYyAoZXZlbnQ6IEFQSUdhdGV3YXlQcm94eVdlYnNvY2tldEV2ZW50VjIpID0+IHtcclxuICBjb25zdCBjb25uZWN0aW9uSWQgPSBldmVudC5yZXF1ZXN0Q29udGV4dC5jb25uZWN0aW9uSWQhO1xyXG4gIGNvbnN0IG5vdyA9IERhdGUubm93KCk7XHJcblxyXG4gIC8vIGxhdGVyIHlvdSBjYW4gZXh0cmFjdCB1c2VySWQgZnJvbSBDb2duaXRvIEpXVCAvIHF1ZXJ5IHN0cmluZyBpZiBuZWVkZWRcclxuICBjb25zdCBpdGVtID0ge1xyXG4gICAgY29ubmVjdGlvbklkLFxyXG4gICAgY3JlYXRlZEF0OiBub3csXHJcbiAgfTtcclxuXHJcbiAgYXdhaXQgZGRiLnNlbmQobmV3IFB1dENvbW1hbmQoe1xyXG4gICAgVGFibGVOYW1lOiBUQUJMRSxcclxuICAgIEl0ZW06IGl0ZW0sXHJcbiAgfSkpO1xyXG5cclxuICByZXR1cm4geyBzdGF0dXNDb2RlOiAyMDAsIGJvZHk6IFwiQ29ubmVjdGVkLlwiIH07XHJcbn07XHJcbiJdfQ==

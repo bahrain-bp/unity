@@ -15,6 +15,7 @@ export class UnityWebSocketStack extends cdk.Stack {
   public readonly webSocketApi: apigwv2.WebSocketApi;
   public readonly stage: apigwv2.WebSocketStage;
 
+  
   // Convenience: HTTPS management endpoint for other Lambdas
   public readonly managementEndpoint: string;
 
@@ -22,6 +23,8 @@ export class UnityWebSocketStack extends cdk.Stack {
     super(scope, id, props);
 
     // 1) Connections table
+        const prefixname = this.stackName.split('-')[0].toLowerCase();
+
     this.connectionsTable = new dynamodb.Table(this, "WsConnectionsTable", {
       partitionKey: { name: "connectionId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -67,7 +70,7 @@ export class UnityWebSocketStack extends cdk.Stack {
 
     // 5) WebSocket API
     this.webSocketApi = new apigwv2.WebSocketApi(this, "UnityWebSocketApi", {
-      apiName: "unity-realtime-api",
+      apiName: `${prefixname}-unity-realtime-api`,
       connectRouteOptions: {
         integration: new integrations.WebSocketLambdaIntegration(
           "ConnectIntegration",
@@ -91,7 +94,7 @@ export class UnityWebSocketStack extends cdk.Stack {
     // 6) Stage
     this.stage = new apigwv2.WebSocketStage(this, "UnityWsStage", {
       webSocketApi: this.webSocketApi,
-      stageName: "dev",
+      stageName: `${prefixname}-dev`,
       autoDeploy: true,
     });
 

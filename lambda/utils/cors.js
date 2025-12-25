@@ -1,0 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createErrorResponse = exports.createResponse = exports.CORS_HEADERS = void 0;
+exports.CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+};
+const createResponse = (statusCode, body) => ({
+    statusCode,
+    headers: exports.CORS_HEADERS,
+    body: JSON.stringify(body),
+});
+exports.createResponse = createResponse;
+const createErrorResponse = (statusCode, error) => ({
+    statusCode,
+    headers: exports.CORS_HEADERS,
+    body: JSON.stringify({ error }),
+});
+exports.createErrorResponse = createErrorResponse;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29ycy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImNvcnMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQWEsUUFBQSxZQUFZLEdBQUc7SUFDMUIsY0FBYyxFQUFFLGtCQUFrQjtJQUNsQyw2QkFBNkIsRUFBRSxHQUFHO0NBQ25DLENBQUM7QUFFSyxNQUFNLGNBQWMsR0FBRyxDQUFDLFVBQWtCLEVBQUUsSUFBUyxFQUFFLEVBQUUsQ0FBQyxDQUFDO0lBQ2hFLFVBQVU7SUFDVixPQUFPLEVBQUUsb0JBQVk7SUFDckIsSUFBSSxFQUFFLElBQUksQ0FBQyxTQUFTLENBQUMsSUFBSSxDQUFDO0NBQzNCLENBQUMsQ0FBQztBQUpVLFFBQUEsY0FBYyxrQkFJeEI7QUFFSSxNQUFNLG1CQUFtQixHQUFHLENBQUMsVUFBa0IsRUFBRSxLQUFhLEVBQUUsRUFBRSxDQUFDLENBQUM7SUFDekUsVUFBVTtJQUNWLE9BQU8sRUFBRSxvQkFBWTtJQUNyQixJQUFJLEVBQUUsSUFBSSxDQUFDLFNBQVMsQ0FBQyxFQUFFLEtBQUssRUFBRSxDQUFDO0NBQ2hDLENBQUMsQ0FBQztBQUpVLFFBQUEsbUJBQW1CLHVCQUk3QiIsInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBjb25zdCBDT1JTX0hFQURFUlMgPSB7XHJcbiAgXCJDb250ZW50LVR5cGVcIjogXCJhcHBsaWNhdGlvbi9qc29uXCIsXHJcbiAgXCJBY2Nlc3MtQ29udHJvbC1BbGxvdy1PcmlnaW5cIjogXCIqXCIsXHJcbn07XHJcblxyXG5leHBvcnQgY29uc3QgY3JlYXRlUmVzcG9uc2UgPSAoc3RhdHVzQ29kZTogbnVtYmVyLCBib2R5OiBhbnkpID0+ICh7XHJcbiAgc3RhdHVzQ29kZSxcclxuICBoZWFkZXJzOiBDT1JTX0hFQURFUlMsXHJcbiAgYm9keTogSlNPTi5zdHJpbmdpZnkoYm9keSksXHJcbn0pO1xyXG5cclxuZXhwb3J0IGNvbnN0IGNyZWF0ZUVycm9yUmVzcG9uc2UgPSAoc3RhdHVzQ29kZTogbnVtYmVyLCBlcnJvcjogc3RyaW5nKSA9PiAoe1xyXG4gIHN0YXR1c0NvZGUsXHJcbiAgaGVhZGVyczogQ09SU19IRUFERVJTLFxyXG4gIGJvZHk6IEpTT04uc3RyaW5naWZ5KHsgZXJyb3IgfSksXHJcbn0pO1xyXG4iXX0=

@@ -13,33 +13,37 @@ import { UnityWebSocketStack } from "../lib/unity-websocket-stack";
 
 const app = new cdk.App();
 
+const environment = app.node.tryGetContext('environment') || 'dev';
+
+const stackNamePrefix = `${environment}`;
+
 const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
   region: process.env.CDK_DEFAULT_REGION || "us-east-1",
 };
 
 // 1) DB stack (all tables)
-const dbStack = new DBStack(app, "Unity-DBStack", { env });
+const dbStack = new DBStack(app, `${stackNamePrefix}-Unity-DBStack`, { env });
 
 // 2) WebSocket stack
-const wsStack = new UnityWebSocketStack(app, "UnityWebSocketStack", { env });
+const wsStack = new UnityWebSocketStack(app, `${stackNamePrefix}-UnityWebSocketStack`, { env });
 
-// 3) IoT stack (Things + policy + rule + ingest Lambda + WS broadcast)
-const iotStack = new IoTStack(app, "Unity-IoTStack", {
+// // 3) IoT stack (Things + policy + rule + ingest Lambda + WS broadcast)
+const iotStack = new IoTStack(app, `${stackNamePrefix}-Unity-IoTStack`, {
   env,
   dbStack,
   wsStack,
 });
 
 // 4) OpenSearch + Index + Bedrock
-const openSearchStack = new OpenSearchStack(app, 'Unity-OpenSearchStack', { env });
+const openSearchStack = new OpenSearchStack(app, `${stackNamePrefix}-Unity-OpenSearchStack`, { env });
 
-const indexStack = new IndexStack(app, 'Unity-IndexStack', {
+const indexStack = new IndexStack(app, `${stackNamePrefix}-Unity-IndexStack`, {
   openSearchStack,
   env,
 });
 
-const bedrockStack = new BedrockStack(app, 'Unity-BedrockStack', {
+const bedrockStack = new BedrockStack(app, `${stackNamePrefix}-Unity-BedrockStack`, {
   openSearchStack,
   indexStack,
   dbStack,
@@ -52,24 +56,27 @@ const bedrockStack = new BedrockStack(app, 'Unity-BedrockStack', {
 indexStack.addDependency(openSearchStack);
 bedrockStack.addDependency(indexStack);
 
+// uncomment this when u fix build issue! and remove the comment if it works
+
 // 5) Frontend deployment
-new FrontendDeploymentStack(app, "Unity-FrontendDeploymentStack");
+//new FrontendDeploymentStack(app, `${stackNamePrefix}-Unity-FrontendDeploymentStack`);
 
 // 6) API stack (Cognito + API Gateway + Lambdas)
-new APIStack(app, "Unity-APIStack", {
+new APIStack(app, `${stackNamePrefix}-Unity-APIStack`, {
   dbStack,
   bedrockStack,
   wsStack,
   env,
 });
 
+// Yahya : i did not change the names of these 2 as they are used by 1 person only(should not cause conflicts while deploying)
 
-const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
-  },
-});
+// const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
+//   env: {
+//     account: process.env.CDK_DEFAULT_ACCOUNT,
+//     region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+//   },
+// });
 
 
 // new VisitorFeedbackStack(app, 'VisitorFeedbackStack', {

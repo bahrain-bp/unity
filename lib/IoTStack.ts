@@ -22,7 +22,9 @@ interface DeviceConfig {
 export class IoTStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: IoTStackProps) {
     super(scope, id, props);
-
+    
+    
+    const prefixname = this.stackName.split('-')[0].toLowerCase();
     const { dbStack, wsStack } = props;
 
     // Ensure DBStack and WebSocketStack are created before IoTStack
@@ -34,15 +36,15 @@ export class IoTStack extends cdk.Stack {
     // ────────────────────────────────
     const devices: DeviceConfig[] = [
       {
-        name: "pi3-01",
+        name: `${prefixname}-pi3-01`,
         sensors: ["temp_c", "humidity"],
       },
       {
-        name: "pico-01",
+        name: `${prefixname}-pico-01`,
         sensors: ["temp_c", "humidity"],
       },
       {
-        name: "pico-02",
+        name: `${prefixname}-pico-02`,
         sensors: ["temp_c", "humidity"],
       },
     ];
@@ -63,7 +65,7 @@ export class IoTStack extends cdk.Stack {
     // 2) Shared IoT Policy for all devices
     // ────────────────────────────────
     const iotPolicy = new iot.CfnPolicy(this, "DeviceTelemetryPolicy", {
-      policyName: "DeviceTelemetryPolicy",
+      policyName: `${prefixname}-DeviceTelemetryPolicy`,
       policyDocument: {
         Version: "2012-10-17",
         Statement: [
