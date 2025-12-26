@@ -1,36 +1,36 @@
-import { useState, useEffect } from "react";
-import "../../sass/DashboardCards.scss";
+import { useEffect, useState } from "react";
 import { User } from "lucide-react";
+import "../../sass/DashboardCards.scss";
+import { ImageClient } from "../services/api";
 
-interface ActiveUsersData {
-  count: number;
-  timestamp: number;
-}
-
-interface LoadDashboardResponse {
+interface ActiveUsersNowResponse {
   card: string;
-  data: ActiveUsersData;
+  data: {
+    count: number;
+    timestamp: number;
+  }[];
 }
 
 export default function ActiveUsersNow() {
-  const [activeUsers, setActiveUsers] = useState<ActiveUsersData>({
-    count: 0,
-    timestamp: 0,
-  });
+  const [activeUsers, setActiveUsers] = useState<number>(0);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
 
+  // Initial load (same as InvitationsToday)
   const fetchActiveUsers = async () => {
     try {
-      const response = await fetch("/admin/loadActiveUsers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ component: "active_users_now" }),
-      });
+      const { data } = await ImageClient.post<ActiveUsersNowResponse>(
+        "/admin/loadDashboard",
+        { component: "active_users_now" }
+      );
 
-      const data: LoadDashboardResponse = await response.json();
-
-      if (data.card === "active_users_now" && data.data) {
-        setActiveUsers(data.data);
+      if (
+        data.card === "active_users_now" &&
+        Array.isArray(data.data) &&
+        data.data.length > 0
+      ) {
+        setActiveUsers(data.data[0].count);
+        setLastUpdated(data.data[0].timestamp);
       }
     } catch (err) {
       console.error("Error fetching active users:", err);
@@ -48,10 +48,11 @@ export default function ActiveUsersNow() {
 
     ws.onmessage = (event) => {
       try {
-        const data: LoadDashboardResponse = JSON.parse(event.data);
+        const data = JSON.parse(event.data);
 
-        if (data.card === "active_users_now" && data.data) {
-          setActiveUsers(data.data);
+        if (data.card === "active_users_now") {
+          setActiveUsers(data.data.count);
+          setLastUpdated(data.data.timestamp);
         }
       } catch (err) {
         console.error("WebSocket parse error:", err);
@@ -64,25 +65,26 @@ export default function ActiveUsersNow() {
     return () => ws.close();
   }, []);
 
-  const formatTime = (ts: number) => {
-    const date = new Date(ts * 1000);
-    return date.toLocaleTimeString();
-  };
+  const formatTime = (ts: number) =>
+    new Date(ts * 1000).toLocaleTimeString();
 
   return (
     <div className="dashboard-card active-users-theme">
       <div className="card-header">
-         <div className="card-icon">
+        <div className="card-icon">
           <User size={30} color="#ff7614" />
         </div>
+
         <div className="card-title">
           Online Users Now
           <span className={`status-dot ${connected ? "online" : "offline"}`} />
         </div>
       </div>
-      <div className="card-value">{activeUsers.count}</div>
+
+      <div className="card-value">{activeUsers}</div>
+
       <div className="card-subtext">
-        Updated at: {activeUsers.timestamp ? formatTime(activeUsers.timestamp) : "--"}
+        Updated at: {lastUpdated ? formatTime(lastUpdated) : "--"}
       </div>
     </div>
   );

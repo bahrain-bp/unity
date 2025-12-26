@@ -65,7 +65,7 @@ export default function TotalBahtwinVisitors() {
           <Users size={30} />
         </div>
         <div className="card-title">
-          Total BAHTWIN Visitors
+          Total BAHTWIN Users
           <span className={`status-dot ${connected ? "online" : "offline"}`} />
         </div>
       </div>

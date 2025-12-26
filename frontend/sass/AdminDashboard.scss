@@ -1,37 +1,41 @@
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); // 4 columns on large screens
-  grid-auto-rows: minmax(120px, auto);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   padding: 1.5rem;
 }
 
-/* Top 4 cards */
+/* Top 4 KPI boxes */
 .box1, .box2, .box3, .box4 {
   min-height: 120px;
 }
 
-/* Middle graphs span 2 columns */
-.box5, .box6 {
-  grid-column: span 2;
+/* Full width chart */
+.box5 {
+  grid-column: 1 / -1;
   min-height: 300px;
 }
 
-/* Bottom row container */
+/* Bottom row as grid */
 .bottom-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); // 3 equal columns
   gap: 1.5rem;
-  grid-column: 1 / -1; // span full width of the main grid
+  grid-column: 1 / -1;
+
+  /* Layout: box7 = 1 fraction, box8 & box9 = remaining width equally */
+  grid-template-columns: 1fr 1.5fr 1.5fr;
 }
 
-/* Bottom boxes styling */
+/* Bottom row boxes height */
 .box7, .box8, .box9 {
-     height: 25vh;      // box height = 25% of viewport height
-  min-height: 170px; // ensures it’s not too small on tiny screens
-  max-height: 300px; // optional, prevents it from being huge on large screens
+  height: 180px; /* same height as top boxes */
   display: flex;
   flex-direction: column;
+}
+
+/* Box8 & Box9 scrollable */
+.box8, .box9 {
+  overflow-y: auto;
 }
 
 /* Box styling */
@@ -41,11 +45,10 @@
   padding: 1rem 1.2rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  
 
   &:hover {
     transform: translateY(-2px);
@@ -57,19 +60,94 @@
 .orange-theme {
   border-left: 4px solid #ff7614;
 }
-.users-graph-theme{
+
+/* Users graph styling */
+.users-graph-theme {
   width: 100%;
 }
 
-/* Responsive: stack everything on smaller screens */
+.users-today-theme {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+  overflow: hidden; // prevents layout crashes
+}
+
+.card-value {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.card-bottom-row {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.card-delta-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem; // slightly bigger
+  font-weight: 500;
+  flex-wrap: wrap; // allows wrapping if container is small
+}
+
+.card-delta-footer.positive {
+  color: #10b981;
+}
+
+.card-delta-footer.negative {
+  color: #ef4444;
+}
+
+.delta-text {
+  margin-right: 0.25rem;
+}
+
+.footer-text {
+  color: #6b7280;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+}
+
+.status-dot.online {
+  background-color: #10b981;
+}
+
+.status-dot.offline {
+  background-color: #ef4444;
+}
+
+/* Specific bottom box7 override */
+.box7 {
+  justify-content: flex-start; // aligns UsersToday content at top
+}
+
+/* Responsive design */
 @media (max-width: 1024px) {
   .dashboard {
-    grid-template-columns: 1fr; // everything becomes a column
+    grid-template-columns: 1fr; // stack everything vertically
   }
-  .box5, .box6 {
-    grid-column: span 1;
+
+  .box5 {
+    min-height: 250px;
   }
+
   .bottom-row {
     grid-template-columns: 1fr; // stack bottom row vertically
+  }
+
+  .box7, .box8, .box9 {
+    height: 150px;
   }
 }

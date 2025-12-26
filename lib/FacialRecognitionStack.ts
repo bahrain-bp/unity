@@ -83,13 +83,23 @@ export class FacialRecognitionStack extends cdk.Stack {
                 type: dynamodb.AttributeType.STRING,
             },
              removalPolicy: cdk.RemovalPolicy.DESTROY,
-        });         
+        });   
+        
+      // Active Users analytics table
+      const websiteActivityTable = new dynamodb.Table(this, "WebsiteActivityTable", {
+        tableName: "WebsiteActivity",
+        partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+        sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        timeToLiveAttribute: "ttl",
+      });
 
     //////////// S3 Resources ////////////
 
     //create S3 Bucket for images and static files
-    const bucket = new s3.Bucket(this, 'BahtwinUploadBucket',{
-      bucketName: 'bahtwin-upload',
+    const bucket = new s3.Bucket(this, 'BahtwinTestBucket',{
+      bucketName: 'bahtwin-testing',
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects:true,
       });
@@ -97,8 +107,8 @@ export class FacialRecognitionStack extends cdk.Stack {
     //////////// Rekognition Resources ////////////
 
     // Create an Amazon Rekognition Collection
-    const collection= new rekognition.CfnCollection(this, 'bahtwin--collection', {
-      collectionId: 'bahtwin-collection', 
+    const collection= new rekognition.CfnCollection(this, 'bahtwin-testing-collection', {
+      collectionId: 'bahtwin-testing-collection', 
     });
 
     //////////// SNS Resources ////////////
@@ -131,7 +141,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       }),
       environment: {
         JWT_SECRET: 'secret',  // same as before
-        FRONTEND_URL: 'http://localhost:5173/visitorfeedback',  
+        FRONTEND_URL: 'http://localhost:5173/visitorfeedback',  // your frontend link (test change later)
         GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending
         GMAIL_PASS: 'thun ojje rdpt ocjg',        // Gmail app password
       },
@@ -147,7 +157,8 @@ export class FacialRecognitionStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda'),
       environment:{
         InviteTable: InvitedVisitorTable.tableName,
-        USER_TABLE: this.userTable.tableName
+        USER_TABLE: this.userTable.tableName,
+        WEBSITE_ACTIVITY_TABLE: websiteActivityTable.tableName
       },
       timeout:cdk.Duration.seconds(30),
       functionName: 'LoadDashboard', 
@@ -265,7 +276,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       handler:'RegisterIndividualVisitor.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment:{
-        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      
+        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
         GMAIL_PASS: 'thun ojje rdpt ocjg', 
         BUCKET_NAME: bucket.bucketName,
         InviteTable: InvitedVisitorTable.tableName,
@@ -281,7 +292,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       handler:'RegisterBulkVisitor.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment:{
-        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',     
+        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
         GMAIL_PASS: 'thun ojje rdpt ocjg', 
         BUCKET_NAME: bucket.bucketName,
         InviteTable: InvitedVisitorTable.tableName,
@@ -305,6 +316,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       functionName: 'GetUserInfo', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
+    bucket.grantRead(GetUserInfo);
 
 
     //////////// Grant permissions to Resources ////////////
@@ -315,6 +327,7 @@ export class FacialRecognitionStack extends cdk.Stack {
     this.userTable.grantReadWriteData(PreRegisterCheck);
     this.userTable.grantReadWriteData(ArrivalRekognition);
     this.userTable.grantReadWriteData(LoadDashboard);
+    websiteActivityTable.grantReadWriteData(LoadDashboard);
     this.userTable.grantReadWriteData(GetUserInfo);
     const registerRole = PreRegisterCheck.role!;
     const arrivalRole = ArrivalRekognition.role!;
@@ -619,15 +632,7 @@ new cdk.CfnOutput(this, 'AdminApiBaseUrl', {
 });
 
 // active users
-// Active Users analytics table
-const websiteActivityTable = new dynamodb.Table(this, "WebsiteActivityTable", {
-  tableName: "WebsiteActivity",
-  partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
-  sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
-  billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-  removalPolicy: cdk.RemovalPolicy.DESTROY,
-  timeToLiveAttribute: "ttl",
-});
+
 
 const websiteHeartbeatLambda = new NodejsFunction(this, "WebsiteHeartbeatLambda", {
   runtime: lambda.Runtime.NODEJS_18_X,
@@ -640,18 +645,65 @@ const websiteHeartbeatLambda = new NodejsFunction(this, "WebsiteHeartbeatLambda"
 });
 
 const heartbeatResource =visitorResource.addResource("heartbeat");
-heartbeatResource.addCorsPreflight({
-  allowOrigins: ["*"],
-  allowMethods: ["POST", "OPTIONS"],
-  allowHeaders: ["Content-Type"],
-});
+
 heartbeatResource.addMethod("POST", new apigw.LambdaIntegration(websiteHeartbeatLambda));
+
+heartbeatResource.addMethod('OPTIONS', new apigw.MockIntegration({
+      integrationResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+          'method.response.header.Access-Control-Allow-Origin': "'*'",
+          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+        },
+      }],
+      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+      requestTemplates: {
+        'application/json': '{"statusCode": 200}'
+      },
+    }), {
+      methodResponses: [{
+        statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': true,
+          'method.response.header.Access-Control-Allow-Methods': true,
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      }],
+    });
 websiteActivityTable.grantReadWriteData(websiteHeartbeatLambda);
 const heartbeatRole = websiteHeartbeatLambda.role!;
 this.broadcastLambda.grantInvoke(heartbeatRole);
 
+// GET USER BADGE INFO (Unity)
+const getUserBadgeInfoFn = new NodejsFunction(
+  this,
+  "GetUserBadgeInfoHandler",
+  {
+    runtime: lambda.Runtime.NODEJS_18_X,
+    entry: path.join(__dirname, "../lambda/getUserBadgeInfo.ts"),
+    handler: "handler",
+    environment: {
+      USER_TABLE: this.userTable.tableName,
+      BUCKET_NAME: bucket.bucketName,
+    },
+  }
+);
+
+this.userTable.grantReadWriteData(getUserBadgeInfoFn);
+bucket.grantRead(getUserBadgeInfoFn);
+
+const badgeResource = visitorResource.addResource("badge");
+badgeResource.addMethod(
+  "POST",
+  new apigw.LambdaIntegration(getUserBadgeInfoFn),
+  { authorizationType: apigw.AuthorizationType.NONE }
+);
+
+badgeResource.addCorsPreflight({
+  allowOrigins: ["*"],
+  allowMethods: ["POST"],
+});
     
   }
 }
-
-

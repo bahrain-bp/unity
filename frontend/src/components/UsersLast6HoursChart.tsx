@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -11,37 +11,38 @@ import {
 } from "recharts";
 import { Users } from "lucide-react";
 import "../../sass/DashboardCards.scss";
+import { ImageClient } from "../services/api";
 
 interface UserHourData {
   hour: string;
   count: number;
 }
 
-interface UsersLast6HoursData {
-  series: UserHourData[];
-}
-
-interface LoadDashboardResponse {
+interface UsersLast6HoursResponse {
   card: string;
-  data: UsersLast6HoursData;
+  data: {
+    series: UserHourData[];
+  }[];
 }
 
 export default function UsersLast6Hours() {
   const [seriesData, setSeriesData] = useState<UserHourData[]>([]);
   const [connected, setConnected] = useState<boolean>(false);
 
+  // Initial load (same pattern as other dashboard cards)
   const fetchUsersData = async () => {
     try {
-      const response = await fetch("/admin/loadUsersLast6Hours", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ component: "users_last_6_hours" }),
-      });
+      const { data } = await ImageClient.post<UsersLast6HoursResponse>(
+        "/admin/loadDashboard",
+        { component: "users_last_6_hours" }
+      );
 
-      const data: LoadDashboardResponse = await response.json();
-
-      if (data.card === "users_last_6_hours" && data.data.series) {
-        setSeriesData(data.data.series);
+      if (
+        data.card === "users_last_6_hours" &&
+        Array.isArray(data.data) &&
+        data.data.length > 0
+      ) {
+        setSeriesData(data.data[0].series);
       }
     } catch (err) {
       console.error("Error fetching users last 6 hours:", err);
@@ -59,8 +60,9 @@ export default function UsersLast6Hours() {
 
     ws.onmessage = (event) => {
       try {
-        const data: LoadDashboardResponse = JSON.parse(event.data);
-        if (data.card === "users_last_6_hours" && data.data.series) {
+        const data = JSON.parse(event.data);
+
+        if (data.card === "users_last_6_hours") {
           setSeriesData(data.data.series);
         }
       } catch (err) {
@@ -83,6 +85,7 @@ export default function UsersLast6Hours() {
         <div className="card-icon">
           <Users size={30} color="#ff7614" />
         </div>
+
         <div className="card-title">
           Users in Last 6 Hours
           <span className={`status-dot ${connected ? "online" : "offline"}`} />
@@ -97,10 +100,11 @@ export default function UsersLast6Hours() {
             margin={{ top: 20, right: 20, left: 0, bottom: 40 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
+
             <XAxis
               dataKey="hour"
               tick={{ fontSize: 12 }}
-              tickFormatter={(value) => value.split(" ")[1]} // only hour
+              tickFormatter={(value) => value.split(" ")[1]} // show only hour
             >
               <Label
                 value="Hour"
@@ -109,6 +113,7 @@ export default function UsersLast6Hours() {
                 style={{ fontWeight: "bold" }}
               />
             </XAxis>
+
             <YAxis allowDecimals={false}>
               <Label
                 value="Users"
@@ -117,7 +122,9 @@ export default function UsersLast6Hours() {
                 style={{ textAnchor: "middle", fontWeight: "bold" }}
               />
             </YAxis>
+
             <Tooltip />
+
             <Line
               type="monotone"
               dataKey="count"

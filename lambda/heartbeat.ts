@@ -1,4 +1,4 @@
-import {
+import { 
   DynamoDBClient,
   PutItemCommand,
   QueryCommand,
@@ -10,6 +10,7 @@ const lambdaClient = new LambdaClient({});
 
 const ACTIVE_WINDOW_SECONDS = 5 * 60;        // 5 minutes
 const LAST_6_HOURS_SECONDS = 6 * 60 * 60;
+const TTL_SECONDS = 2 * 24 * 60 * 60;
 const BAHRAIN_OFFSET_SECONDS = 3 * 60 * 60;
 
 /* ────────────────────────────────
@@ -91,7 +92,7 @@ export const handler = async (event: any) => {
           sk: { S: `${timestamp}#${userId}` },
           userId: { S: userId },
           timestamp: { N: timestamp.toString() },
-          ttl: { N: (timestamp + LAST_6_HOURS_SECONDS).toString() },
+          ttl: { N: (timestamp + TTL_SECONDS).toString() },
         },
       })
     );
@@ -101,9 +102,12 @@ export const handler = async (event: any) => {
     const last6HoursCutoff = timestamp - LAST_6_HOURS_SECONDS;
     const activeCutoff = timestamp - ACTIVE_WINDOW_SECONDS;
     const todayCutoff = getBahrainDayStartUtcSeconds(nowUtc);
-    console.log("Query cutoffs:", { last6HoursCutoff, activeCutoff, todayCutoff });
+    const yesterdayStart = todayCutoff - 24 * 60 * 60;
+    const yesterdayEnd = todayCutoff - 1;
 
-    const [last6Hours, today] = await Promise.all([
+    console.log("Query cutoffs:", { last6HoursCutoff, activeCutoff, todayCutoff, yesterdayStart, yesterdayEnd });
+
+    const [last6Hours, today, yesterday] = await Promise.all([
       dynamo.send(
         new QueryCommand({
           TableName: process.env.WEBSITE_ACTIVITY_TABLE!,
@@ -124,13 +128,27 @@ export const handler = async (event: any) => {
           },
         })
       ),
+      dynamo.send(
+        new QueryCommand({
+          TableName: process.env.WEBSITE_ACTIVITY_TABLE!,
+          KeyConditionExpression: "pk = :pk AND sk BETWEEN :start AND :end",
+          ExpressionAttributeValues: {
+            ":pk": { S: "WEBSITE" },
+            ":start": { S: `${yesterdayStart}` },
+            ":end": { S: `${yesterdayEnd}#\uffff` },
+          },
+        })
+      ),
     ]);
+
     console.log("Queried last 6 hours items:", last6Hours.Items?.length ?? 0);
     console.log("Queried today items:", today.Items?.length ?? 0);
+    console.log("Queried yesterday items:", yesterday.Items?.length ?? 0);
 
     // 3️⃣ Calculate metrics
     const activeUsers = new Set<string>();
     const usersToday = new Set<string>();
+    const usersYesterday = new Set<string>();
     const hourlyBuckets = new Map<string, Set<string>>();
 
     for (const item of last6Hours.Items ?? []) {
@@ -151,11 +169,23 @@ export const handler = async (event: any) => {
     }
     console.log("Users today:", Array.from(usersToday));
 
+    for (const item of yesterday.Items ?? []) {
+      if (item.userId?.S) usersYesterday.add(item.userId.S);
+    }
+    console.log("Users yesterday:", Array.from(usersYesterday));
+
     const usersLast6Hours = last6HourBuckets(timestamp).map((hour) => ({
       hour,
       count: hourlyBuckets.get(hour)?.size ?? 0,
     }));
     console.log("Users last 6 hours series:", usersLast6Hours);
+
+    const usersTodayCount = usersToday.size;
+    const usersYesterdayCount = usersYesterday.size;
+    const usersTodayChangePct =
+      usersYesterdayCount > 0
+        ? ((usersTodayCount - usersYesterdayCount) / usersYesterdayCount) * 100
+        : 0;
 
     // 4️⃣ Send cards to broadcast Lambda
     const invoke = (payload: any) => {
@@ -170,8 +200,17 @@ export const handler = async (event: any) => {
     };
 
     await invoke({ card: "active_users_now", data: { count: activeUsers.size, timestamp } });
-    await invoke({ card: "users_today", data: { count: usersToday.size, timezone: "Asia/Bahrain" } });
+    await invoke({
+      card: "users_today",
+      data: {
+        count: usersTodayCount,
+        usersYesterday: usersYesterdayCount,
+        usersTodayChangePct,
+        timezone: "Asia/Bahrain",
+      },
+    });
     await invoke({ card: "users_last_6_hours", data: { series: usersLast6Hours } });
+
     console.log("All broadcast Lambda invocations completed");
 
     return respond(200, { status: "ok" });
