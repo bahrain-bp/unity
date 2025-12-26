@@ -10,7 +10,7 @@ public class BubbleAnchorSwitcher : MonoBehaviour
     public Camera cam;
 
     [Header("Wall Detection")]
-    public LayerMask wallMask;       
+    public LayerMask wallMask;
     public float extraPadding = 0.02f;
     public float boxThicknessZ = 0.05f;
 
@@ -55,10 +55,10 @@ public class BubbleAnchorSwitcher : MonoBehaviour
         side.Normalize();
 
         Vector3 tryRight = safeBase + side * safeSideOffset;
-        Vector3 tryLeft  = safeBase - side * safeSideOffset;
+        Vector3 tryLeft = safeBase - side * safeSideOffset;
 
         bool rightOk = !IsBubbleOverlappingWall(tryRight);
-        bool leftOk  = !IsBubbleOverlappingWall(tryLeft);
+        bool leftOk = !IsBubbleOverlappingWall(tryLeft);
 
         if (rightOk && leftOk)
         {
