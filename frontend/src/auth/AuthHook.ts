@@ -17,8 +17,11 @@ export interface UseAuth {
   isLoading: boolean;
   isAuthenticated: boolean;
   email: string;
+  userId: string;
+  userGroups: string[]; // Add this
+  userRole: string | null; // Add this - primary group/role
   signIn: (email: string, password: string) => Promise<Result>;
-  signUp: (email: string, password: string) => Promise<Result>;
+  signUp: (email: string, password: string) => Promise<SignUpResult>;
   confirmSignUp: (email: string, code: string) => Promise<Result>;
   signOut: () => Promise<Result>;
 }
@@ -26,6 +29,10 @@ export interface UseAuth {
 interface Result {
   success: boolean;
   message: string;
+}
+
+interface SignUpResult extends Result {
+  userId?: string;
 }
 
 export const useAuth = () => {
@@ -36,6 +43,9 @@ export const useProvideAuth = (): UseAuth => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
+  const [userGroups, setUserGroups] = useState<string[]>([]); // Add this
+  const [userRole, setUserRole] = useState<string | null>(null); // Add this
 
   useEffect(() => {
     checkAuthState();
@@ -51,6 +61,36 @@ export const useProvideAuth = (): UseAuth => {
 
   const clearIdToken = () => {
     localStorage.removeItem("idToken");
+    localStorage.removeItem("username");
+  };
+
+  // Helper function to extract groups from token
+  const getUserGroups = async (): Promise<string[]> => {
+    try {
+      const session = await fetchAuthSession();
+      const groups = session.tokens?.accessToken?.payload["cognito:groups"];
+      
+      if (groups && Array.isArray(groups)) {
+        return groups;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching user groups:", error);
+      return [];
+    }
+  };
+
+  // Helper function to determine primary role
+  const getPrimaryRole = (groups: string[]): string | null => {
+    if (groups.length === 0) return null;
+    
+    // Priority order: admin > newhire > visitor
+    if (groups.includes("admin")) return "admin";
+    if (groups.includes("newhire")) return "newhire";
+    if (groups.includes("visitor")) return "visitor";
+    
+    // Return first group if none match
+    return groups[0];
   };
 
   const checkAuthState = async () => {
@@ -59,13 +99,20 @@ export const useProvideAuth = (): UseAuth => {
       const session = await fetchAuthSession();
 
       if (session.tokens) {
-        // 🔹 Save token so Unity bridge can read it
         const idToken = session.tokens.idToken?.toString();
         if (idToken) {
           localStorage.setItem("idToken", idToken);
         }
+        // API REQUEST TO GET USERNAME, PROFILE IMAGE
 
         setEmail(user.signInDetails?.loginId || "");
+        setUserId(user.userId);
+        
+        // Get user groups
+        const groups = await getUserGroups();
+        setUserGroups(groups);
+        setUserRole(getPrimaryRole(groups));
+        
         setIsAuthenticated(true);
       } else {
         clearIdToken();
@@ -73,6 +120,9 @@ export const useProvideAuth = (): UseAuth => {
     } catch (error) {
       clearIdToken();
       setEmail("");
+      setUserId("");
+      setUserGroups([]);
+      setUserRole(null);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -82,15 +132,22 @@ export const useProvideAuth = (): UseAuth => {
   const signIn = async (email: string, password: string): Promise<Result> => {
     try {
       const result = await amplifySignIn({
-        username: email, // Cognito uses username field, we pass email
+        username: email,
         password,
       });
 
       if (result.isSignedIn) {
         setEmail(email);
+        const user = await getCurrentUser();
+        setUserId(user.userId);
+        
+        // Get user groups after sign in
+        const groups = await getUserGroups();
+        setUserGroups(groups);
+        setUserRole(getPrimaryRole(groups));
+        
         setIsAuthenticated(true);
 
-        // 🔹 Get ID token and save it for Unity
         await saveIdToken();
 
         return { success: true, message: "Sign in successful" };
@@ -105,10 +162,13 @@ export const useProvideAuth = (): UseAuth => {
     }
   };
 
-  const signUp = async (email: string, password: string): Promise<Result> => {
+  const signUp = async (
+    email: string,
+    password: string
+  ): Promise<SignUpResult> => {
     try {
       const result = await amplifySignUp({
-        username: email, // Use email as username
+        username: email,
         password,
         options: {
           userAttributes: {
@@ -118,15 +178,23 @@ export const useProvideAuth = (): UseAuth => {
       });
 
       if (result.isSignUpComplete) {
-        return { success: true, message: "Sign up successful" };
+        return {
+          success: true,
+          message: "Sign up successful",
+          userId: result.userId,
+        };
       } else if (result.nextStep.signUpStep === "CONFIRM_SIGN_UP") {
         return {
           success: true,
           message: "Please check your email for verification code",
+          userId: result.userId,
         };
       }
 
-      return { success: false, message: "Sign up incomplete" };
+      return {
+        success: false,
+        message: "Sign up incomplete",
+      };
     } catch (error: any) {
       return {
         success: false,
@@ -157,8 +225,11 @@ export const useProvideAuth = (): UseAuth => {
     try {
       await amplifySignOut();
       setEmail("");
+      setUserId("");
+      setUserGroups([]);
+      setUserRole(null);
       setIsAuthenticated(false);
-      clearIdToken(); // 🔹 remove token for safety
+      clearIdToken();
       return { success: true, message: "Signed out successfully" };
     } catch (error: any) {
       return {
@@ -172,6 +243,9 @@ export const useProvideAuth = (): UseAuth => {
     isLoading,
     isAuthenticated,
     email,
+    userId,
+    userGroups,
+    userRole,
     signIn,
     signUp,
     confirmSignUp,

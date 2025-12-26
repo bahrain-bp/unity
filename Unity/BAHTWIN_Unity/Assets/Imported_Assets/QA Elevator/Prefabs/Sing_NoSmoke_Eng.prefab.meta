@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 241ea5d8f66509f429d1cfa028dbff76
+timeCreated: 1504261667
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Prefabs/Sing_NoSmoke_Eng.prefab
+  uploadId: 671330

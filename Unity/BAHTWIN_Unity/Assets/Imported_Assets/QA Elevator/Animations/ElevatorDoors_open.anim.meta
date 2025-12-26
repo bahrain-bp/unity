@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: f5096b8c393f87641971f84c0d06ebca
+timeCreated: 1501062242
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Animations/ElevatorDoors_open.anim
+  uploadId: 671330

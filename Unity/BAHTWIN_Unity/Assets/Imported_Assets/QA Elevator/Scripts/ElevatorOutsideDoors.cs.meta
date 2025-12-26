@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f71d739ef1fa45a49a12789b3fbea28d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Scripts/ElevatorOutsideDoors.cs
+  uploadId: 671330

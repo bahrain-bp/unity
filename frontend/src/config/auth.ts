@@ -1,18 +1,18 @@
 export const AwsConfigAuth = {
   Auth: {
     Cognito: {
-      userPoolId: "us-east-1_3TSi7JPvf",
-      userPoolClientId: "7nq4lkthr815h7ucksnl0cirm6",
+      userPoolId: import.meta.env.VITE_APP_AUTH_USER_POOL_ID,
+      userPoolClientId: import.meta.env.VITE_APP_AUTH_USER_POOL_WEB_CLIENT_ID,
       loginWith: {
         email: true,
       },
-      signUpVerificationMethod: "code",
+      signUpVerificationMethod: "code" as const,
       userAttributes: {
         email: {
           required: true,
         },
       },
-      allowGuestAccess: false,
+      // allowGuestAccess: false,
       passwordFormat: {
         minLength: 8,
         requireLowercase: true,
@@ -22,4 +22,4 @@ export const AwsConfigAuth = {
       },
     },
   },
-};
+} as const;

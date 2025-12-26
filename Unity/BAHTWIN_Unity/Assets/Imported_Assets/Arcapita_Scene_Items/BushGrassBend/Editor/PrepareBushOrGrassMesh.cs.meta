@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 8e1304d73db19d847afcb83d105fcf0d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 210986
+  packageName: Bush or Grass bend as Detail Mesh
+  packageVersion: 0.0.1
+  assetPath: Assets/BushGrassBend/Editor/PrepareBushOrGrassMesh.cs
+  uploadId: 481076

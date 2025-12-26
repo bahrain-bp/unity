@@ -1,17 +1,8 @@
 import { useState } from "react";
 import InfoCard from "../components/InfoCard";
-import {
-  LOCATION,
-  SHOP,
-  RESTAURANT,
-  HOTEL,
-  ED,
-  FILTER,
-  X,
-} from "../assets/icons";
+import {LOCATION, SHOP, RESTAURANT, HOTEL, ED, FILTER, X} from "../assets/icons";
 import { Link } from "react-router-dom";
 import locations from "../assets/locations.json";
-// import gradientBlob from "../assets/gradient-blob2.png";
 import Backdrop from "@mui/material/Backdrop";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
@@ -87,7 +78,6 @@ function Info() {
 
   return (
     <div className="info">
-      {/* <img className="info__gradient" src={gradientBlob} alt="blob3" /> */}
       <span className="info__gradient" />
       <div className="info__container">
         <h1>Start Exploring!</h1>
@@ -100,9 +90,6 @@ function Info() {
           <Link to={"/environment"} className="btn">
             {ED()}
             Enter 3D Evironment
-            {/* <div className="hoverEffect">
-              <div></div>
-            </div> */}
           </Link>
           <button className="btn" onClick={handleOpen}>Show Nearby Services</button>
         </div>
@@ -175,6 +162,7 @@ function Info() {
                             : ""
                         }`}
                         name={location.name}
+                        distance={location.distance}
                         icon={setCardIcon(location.type)}
                         content={location.name}
                         onClick={() => setActiveLocation(location.name)}

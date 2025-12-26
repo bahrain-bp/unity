@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 6167e75000c30364cbe84f54321c9899
+timeCreated: 1501853709
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 99467
+  packageName: QA Elevator (Programmed)
+  packageVersion: 2.01
+  assetPath: Assets/QA Elevator/Models/Materials/ElevatorOpenBtnGlow_mtl.mat
+  uploadId: 671330
