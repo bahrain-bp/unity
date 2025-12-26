@@ -178,7 +178,8 @@ a {
 }
 
 .success,
-.error {
+.error,
+.note {
   padding: 0.8rem 1rem;
   font-size: 1.4rem;
   border-radius: 1rem;
@@ -207,6 +208,18 @@ a {
 .success {
   color: $color-green;
   background-color: rgba($color-green, 0.1);
+}
+
+.note {
+  color: $color-grey;
+  background-color: rgba($color-grey, 0.1);
+  & svg {
+    display: none;
+  }
+
+  & p {
+    color: $color-dark-grey !important;
+  }
 }
 
 .flexCenter {
