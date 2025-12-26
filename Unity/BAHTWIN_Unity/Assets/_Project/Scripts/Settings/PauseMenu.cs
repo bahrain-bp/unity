@@ -8,30 +8,29 @@ public class PauseMenu : MonoBehaviour
     public GameObject pauseMenuUI;
     public GameObject playUI;
     public GameObject tutorialUI;
-    private GameManager.GameFlow currentFlow;
+    private GameFlowManager.GameFlow currentFlow;
 
     [Header("Player Control")]
     [SerializeField] private PlayerInput playerInput;
     [SerializeField] private GameObject player;
     private MonoBehaviour fpsController;
 
-    //[Serilazition] private GameManager gameManager;
     private bool isPaused = false;
 
     private void OnEnable()
     {
-        GameManager.OnGameFlowChanged += HandleGameFlowChanged;
+        GameFlowManager.OnGameFlowChanged += HandleGameFlowChanged;
     }
 
     private void OnDisable()
     {
-        GameManager.OnGameFlowChanged -= HandleGameFlowChanged;
+        GameFlowManager.OnGameFlowChanged -= HandleGameFlowChanged;
     }
 
     void Start()
     {
         pauseMenuUI.SetActive(false);
-        HandleGameFlowChanged(GameManager.Instance.CurrentFlow);
+        HandleGameFlowChanged(GameFlowManager.Instance.CurrentFlow);
         fpsController = player.GetComponent<MonoBehaviour>();
     }
 
@@ -46,21 +45,21 @@ public class PauseMenu : MonoBehaviour
                 PauseGame();
         }
     }
-    private void HandleGameFlowChanged(GameManager.GameFlow flow)
+    private void HandleGameFlowChanged(GameFlowManager.GameFlow flow)
     {
         currentFlow = flow;
         
         if (isPaused) return;
 
-        playUI.SetActive(flow != GameManager.GameFlow.Tutorial);
-        tutorialUI.SetActive(flow == GameManager.GameFlow.Tutorial);
+        playUI.SetActive(flow != GameFlowManager.GameFlow.Tutorial);
+        tutorialUI.SetActive(flow == GameFlowManager.GameFlow.Tutorial);
     }
 
     public void ResumeGame()
     {
         pauseMenuUI.SetActive(false);
-        playUI.SetActive(currentFlow != GameManager.GameFlow.Tutorial);
-        tutorialUI.SetActive(currentFlow == GameManager.GameFlow.Tutorial);
+        playUI.SetActive(currentFlow != GameFlowManager.GameFlow.Tutorial);
+        tutorialUI.SetActive(currentFlow == GameFlowManager.GameFlow.Tutorial);
         Time.timeScale = 1f;
         playerInput.enabled = true;
         fpsController.enabled = true;
