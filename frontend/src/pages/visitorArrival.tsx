@@ -80,7 +80,7 @@ const Arrival: React.FC = () => {
   };
 
   return (
-    <DashboardLayout header="Visitor Arrival">
+    <DashboardLayout className="visitor-arrival" header="Visitor Arrival">
       <div className="auth-sec invite-page">
         <div className="auth">
           <div className="auth__logo auth__logo--center">

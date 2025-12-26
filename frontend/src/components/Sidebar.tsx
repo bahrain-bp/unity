@@ -1,13 +1,36 @@
-'use client'
+"use client";
 
 // import { usePathname } from "next/navigation";
-import {OVERVIEW, USERS, USER, ED } from "../assets/icons";
+import { OVERVIEW, USERS, USER, ED } from "../assets/icons";
 import logo from "../assets/logo.svg";
-import {Link, useLocation} from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar() {
   const location = useLocation();
   const pathname = location.pathname;
+
+  const dashboard_pages = [
+    {
+      name: "Overview",
+      route: "/dashboard",
+      icon: OVERVIEW,
+    },
+    {
+      name: "Users",
+      route: "/dashboard/users",
+      icon: USERS,
+    },
+    {
+      name: "WebGL Files",
+      route: "/dashboard/upload-unity",
+      icon: ED,
+    },
+    {
+      name: "Visitor Arrival",
+      route: "/visitor-arrival",
+      icon: USER,
+    },
+  ];
 
   return (
     <div className="sidebar">
@@ -16,21 +39,22 @@ export default function Sidebar() {
         <p>BAHTWIN</p>
       </Link>
       <div className="sidebar__menu">
-        <Link to={"/dashboard"} className={pathname === "/dashboard" ? "active" : ""}>
-          {OVERVIEW()} <span>Overview</span>
-        </Link>
-        <Link to={"/dashboard/users"} className={pathname === "/dashboard/users" ? "active" : ""}>
-          {USERS()} <span>Users</span>
-        </Link>
-        <Link to={"/dashboard/upload-unity"} className={pathname === "/dashboard/upload-unity" ? "active" : ""}>
-          {ED()} <span>WebGL Files</span>
-        </Link>
-        <Link to={"/visitor-arrival"} className={pathname === "/visitor-arrival" ? "active" : ""}>
-          {USER()} <span>Visitor Arrival</span>
-        </Link>
+        {dashboard_pages.map((page) => {
+          return (
+            <Link
+              to={page.route}
+              className={pathname === page.route ? "active" : ""}
+            >
+              {page.icon()} <span>{page.name}</span>
+            </Link>
+          );
+        })}
       </div>
       <div className="sidebar__bottom">
-        <Link to={"/account"} className={pathname === "/account" ? "active" : ""}>
+        <Link
+          to={"/account"}
+          className={pathname === "/account" ? "active" : ""}
+        >
           {USER()}
           <span>Account</span>
         </Link>

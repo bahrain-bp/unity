@@ -204,7 +204,8 @@ a {
 }
 
 .success,
-.error {
+.error,
+.note {
   padding: 0.8rem 1rem;
   font-size: 1.4rem;
   border-radius: 1rem;
@@ -214,13 +215,15 @@ a {
   border: 1px solid currentColor;
 }
 .success svg,
-.error svg {
+.error svg,
+.note svg {
   width: 2.5rem;
   height: 2.5rem;
   color: inherit;
 }
 .success p,
-.error p {
+.error p,
+.note p {
   color: #161D26;
   font-weight: 500;
 }
@@ -233,6 +236,17 @@ a {
 .success {
   color: #019426;
   background-color: rgba(1, 148, 38, 0.1);
+}
+
+.note {
+  color: #cfcfcf;
+  background-color: rgba(207, 207, 207, 0.1);
+}
+.note svg {
+  display: none;
+}
+.note p {
+  color: #6B6B6B !important;
 }
 
 .flexCenter {
@@ -1644,6 +1658,7 @@ body {
 .auth__form--uploadPlaceholder p {
   color: #6B6B6B;
   font-size: 1.2rem;
+  text-align: center;
 }
 .auth__form--uploadPlaceholder:hover {
   background-color: #cfcfcf;
