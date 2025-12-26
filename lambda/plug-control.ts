@@ -14,6 +14,9 @@ const VOICE_MONKEY_BASE_URL = process.env.VOICE_MONKEY_BASE_URL!;
 const VOICE_MONKEY_TOKEN = process.env.VOICE_MONKEY_TOKEN!;
 const COOLDOWN_SECONDS = parseInt(process.env.COOLDOWN_SECONDS || "30", 10);
 
+// GSI name (add this index on the same table)
+const PLUG_INDEX_NAME = process.env.PLUG_INDEX_NAME || "plug_id-ts-index";
+
 type PlugDeviceMap = {
   [plugId: string]: { on: string; off: string };
 };
@@ -68,11 +71,12 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         : PLUG_DEVICE_MAP[plugId].off;
 
     // ────────────────────────────────
-    // 3) Cooldown: check last action for this user
+    // 3) Cooldown: BOTH per-user AND per-plug
     // ────────────────────────────────
     const nowSeconds = Math.floor(Date.now() / 1000);
 
-    const query = new QueryCommand({
+    // A) last action for this user (your existing behavior)
+    const userQuery = new QueryCommand({
       TableName: TABLE_NAME,
       KeyConditionExpression: "user_id = :u",
       ExpressionAttributeValues: {
@@ -82,48 +86,85 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       ScanIndexForward: false, // latest first
     });
 
-    const queryRes = await ddb.send(query);
-    const lastItem = queryRes.Items?.[0];
+    // B) last action for this plug (NEW via GSI)
+    const plugQuery = new QueryCommand({
+      TableName: TABLE_NAME,
+      IndexName: PLUG_INDEX_NAME, // GSI required
+      KeyConditionExpression: "plug_id = :p",
+      ExpressionAttributeValues: {
+        ":p": { S: plugId },
+      },
+      Limit: 1,
+      ScanIndexForward: false, // latest first
+    });
 
-    if (lastItem?.ts?.N) {
-      const lastTs = parseInt(lastItem.ts.N, 10);
-      const diff = nowSeconds - lastTs;
+    const [userRes, plugRes] = await Promise.all([
+      ddb.send(userQuery),
+      ddb.send(plugQuery),
+    ]);
 
-      if (diff < COOLDOWN_SECONDS) {
-        const retryAfter = COOLDOWN_SECONDS - diff;
+    const lastUserItem = userRes.Items?.[0];
+    const lastPlugItem = plugRes.Items?.[0];
 
-        // Broadcast cooldown info, but don't break the HTTP flow if it fails
-        try {
-          await broadcastToAll({
-            type: "plug_action",
-            source: "plug-control",
-            ts: nowSeconds,
-            payload: {
-              plugId,
-              state, // requested state
-              userId,
-              cooldown: {
-                active: true,
-                retryAfter,
-                nextAllowedAt: nowSeconds + retryAfter,
-              },
-              status: 429,
-              message: `Cooldown active. Please wait ${retryAfter} seconds.`,
+    const lastUserTs = lastUserItem?.ts?.N ? parseInt(lastUserItem.ts.N, 10) : 0;
+    const lastPlugTs = lastPlugItem?.ts?.N ? parseInt(lastPlugItem.ts.N, 10) : 0;
+
+    const userDiff = lastUserTs ? nowSeconds - lastUserTs : Number.POSITIVE_INFINITY;
+    const plugDiff = lastPlugTs ? nowSeconds - lastPlugTs : Number.POSITIVE_INFINITY;
+
+    const retryAfterUser =
+      userDiff < COOLDOWN_SECONDS ? COOLDOWN_SECONDS - userDiff : 0;
+
+    const retryAfterPlug =
+      plugDiff < COOLDOWN_SECONDS ? COOLDOWN_SECONDS - plugDiff : 0;
+
+    const retryAfter = Math.max(retryAfterUser, retryAfterPlug);
+
+    if (retryAfter > 0) {
+      const reason =
+        retryAfterPlug > 0
+          ? `Plug cooldown active. Please wait ${retryAfter} seconds.`
+          : `User cooldown active. Please wait ${retryAfter} seconds.`;
+
+      // Broadcast cooldown info (same structure you already use)
+      try {
+        await broadcastToAll({
+          type: "plug_action",
+          source: "plug-control",
+          ts: nowSeconds,
+          payload: {
+            plugId,
+            state, // requested state
+            userId,
+            cooldown: {
+              active: true,
+              retryAfter,
+              // "nextAllowedAt" here is effectively the later of the two locks
+              nextAllowedAt: nowSeconds + retryAfter,
+              // optional extra detail (won't break existing clients)
+              user: { active: retryAfterUser > 0, retryAfter: retryAfterUser },
+              plug: { active: retryAfterPlug > 0, retryAfter: retryAfterPlug },
             },
-          });
-        } catch (e) {
-          console.error("WS broadcast (cooldown) failed:", e);
-        }
-
-        return jsonResponse(
-          429,
-          {
-            message: `Cooldown active. Please wait ${retryAfter} seconds.`,
-            retryAfter,
+            status: 429,
+            message: reason,
           },
-          { "Retry-After": retryAfter.toString() }
-        );
+        });
+      } catch (e) {
+        console.error("WS broadcast (cooldown) failed:", e);
       }
+
+      return jsonResponse(
+        429,
+        {
+          message: reason,
+          retryAfter,
+          cooldown: {
+            user: { active: retryAfterUser > 0, retryAfter: retryAfterUser },
+            plug: { active: retryAfterPlug > 0, retryAfter: retryAfterPlug },
+          },
+        },
+        { "Retry-After": retryAfter.toString() }
+      );
     }
 
     // ────────────────────────────────
@@ -158,7 +199,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         plug_id: { S: plugId },
         action: { S: state },
         vm_device: { S: deviceId },
-        vm_response: { S: vmText.slice(0, 500) }, // truncate if too long
+        vm_response: { S: vmText.slice(0, 500) },
       },
     });
 
@@ -194,7 +235,6 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       });
     } catch (e) {
       console.error("WS broadcast (success) failed:", e);
-      // don't change HTTP result
     }
 
     return jsonResponse(200, responseBody);
