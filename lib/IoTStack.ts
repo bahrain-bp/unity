@@ -30,7 +30,7 @@ export class IoTStack extends cdk.Stack {
     this.addDependency(wsStack);
 
     // ────────────────────────────────
-    // 0) Device list (3 devices × 2 sensors)
+    // 0) Device list (4 devices × 2 sensors)
     // ────────────────────────────────
     const devices: DeviceConfig[] = [
       {
@@ -39,11 +39,15 @@ export class IoTStack extends cdk.Stack {
       },
       {
         name: "pico-01",
-        sensors: ["temp_c", "humidity"],
+        sensors: ["distance_cm"],   // ultrasonic
       },
       {
         name: "pico-02",
-        sensors: ["temp_c", "humidity"],
+        sensors: ["distance_cm"],   // ultrasonic
+      },
+      {
+        name: "esp32-01",
+        sensors: ["distance_cm"],   // ultrasonic
       },
     ];
 

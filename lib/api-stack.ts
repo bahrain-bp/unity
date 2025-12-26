@@ -272,6 +272,8 @@ constructor(scope: Construct, id: string, props: APIStackProps) {
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
+    
+
     // ────────────────────────────────
     // Telemetry query: use IoTDeviceTelemetry table from DBStack
     // ────────────────────────────────
@@ -299,6 +301,47 @@ constructor(scope: Construct, id: string, props: APIStackProps) {
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
+    // ────────────────────────────────
+    // Alexa Telemetry Controller (new)
+    // ────────────────────────────────
+    const alexaTelemetryFn = new NodejsFunction(this, "AlexaTelemetryHandler", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/alexa-telemetry.ts"),
+      handler: "handler",
+      bundling: { target: "node18", minify: true, sourceMap: false },
+      environment: {
+        TELEMETRY_TABLE: iotTelemetryTable.tableName,
+
+        // TEMPORARY: hard-coded Basic Auth credentials
+        BASIC_USER: "alexa",
+        BASIC_PASS: "aL9Qx7P2mR4ZK8wE",
+      },
+    });
+
+    iotTelemetryTable.grantReadData(alexaTelemetryFn);
+
+    const alexaResource = api.root.addResource("alexa");
+
+    const publicMethodOptions: apigw.MethodOptions = {
+      authorizationType: apigw.AuthorizationType.NONE,
+      apiKeyRequired: false,
+    };
+
+    alexaResource.addResource("ht").addResource("latest")
+      .addMethod("GET", new apigw.LambdaIntegration(alexaTelemetryFn), publicMethodOptions);
+
+    alexaResource.addResource("parking").addResource("latest")
+      .addMethod("GET", new apigw.LambdaIntegration(alexaTelemetryFn), publicMethodOptions);
+
+    alexaResource.addResource("summary")
+      .addMethod("GET", new apigw.LambdaIntegration(alexaTelemetryFn), publicMethodOptions);
+
+    // Optional outputs
+    new cdk.CfnOutput(this, "AlexaHtLatestUrl", { value: api.url + "alexa/ht/latest" });
+    new cdk.CfnOutput(this, "AlexaParkingLatestUrl", { value: api.url + "alexa/parking/latest" });
+    new cdk.CfnOutput(this, "AlexaSummaryUrl", { value: api.url + "alexa/summary" });
+
+
     plugsResource.addCorsPreflight({
       allowOrigins: [
         "http://localhost:8080",
@@ -316,6 +359,42 @@ constructor(scope: Construct, id: string, props: APIStackProps) {
       allowMethods: ["OPTIONS", "GET"],
       allowHeaders: ["Content-Type", "Authorization"],
     });
+
+    // ────────────────────────────────
+    // WhatsApp Bot (Cloud API) — webhook
+    // ────────────────────────────────
+    const whatsappBotFn = new NodejsFunction(this, "WhatsAppBotHandler", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/whatsapp-bot.ts"),
+      handler: "handler",
+      bundling: { target: "node18", minify: true, sourceMap: false },
+      environment: {
+        TELEMETRY_TABLE: iotTelemetryTable.tableName,
+
+        // Extracted from your curl
+        WHATSAPP_TOKEN: "EAAK2o4y1wuoBQWx18PoK9ymtzOzZAuZBWaZBexdwkdrS60e2kseWiDbFzehshKCV9eIQObFgHje4bRAvJCM6lvn8WP3qQq3kVqakeEYKCzooAinFYillZALhknRIqcZBxgt0A6Y5PUW56hJv4RVsZBtWQJ1SQsjWibzRL4zHXCUesGryKYdmDVscQ8FzaNKfZCkdxbNOFaCfZA7UYOY5bFcgTmXUQCR0id2ZB9LG5VcURgIf2jXOejDWZCcCbUdO8ZAOfa8Uw5ZAIZBvkA51HyRQCKVC2",
+
+        PHONE_NUMBER_ID: "883880824813605",
+
+        // You choose this string (must match Meta webhook)
+        VERIFY_TOKEN: "parkingbot_verify",
+
+        // Optional but recommended
+        ALLOWLIST_E164: "+97338006448",
+      },
+    });
+
+    iotTelemetryTable.grantReadData(whatsappBotFn);
+
+
+    const whatsappResource = api.root.addResource("whatsapp");
+    const webhookResource = whatsappResource.addResource("webhook");
+
+    // Meta verification call (GET) + inbound message (POST)
+    webhookResource.addMethod("GET", new apigw.LambdaIntegration(whatsappBotFn), publicMethodOptions);
+    webhookResource.addMethod("POST", new apigw.LambdaIntegration(whatsappBotFn), publicMethodOptions);
+
+    new cdk.CfnOutput(this, "WhatsAppWebhookUrl", { value: api.url + "whatsapp/webhook" });
 
        // 8) Virtual Assistant API route (Picky)
       const virtualAssistantFn = bedrockStack.lambdaFunction;
