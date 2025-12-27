@@ -17,7 +17,6 @@ import VisitorFeedBack from "./pages/VisitorFeedback";
 import ErrorPage from "./pages/error";
 import ThankYouPage from "./pages/thank-you";
 import Users from "./pages/dashboard/Users";
-import IoT from "./pages/dashboard/IoT";
 import Footer from "./components/Footer";
 import { useAuth } from "./auth/AuthHook";
 import UploadUnity from "./pages/dashboard/UploadUnity";
@@ -60,36 +59,36 @@ function PublicOnlyRoute({ children }) {
 function App() {
   const { userId } = useAuth();
   useEffect(() => {
-  if (!userId) return; // don't register events until userId exists
+    if (!userId) return; // don't register events until userId exists
 
-  let lastHeartbeatSentAt = 0;
-  const HEARTBEAT_INTERVAL = 30_000; // 30 seconds
+    let lastHeartbeatSentAt = 0;
+    const HEARTBEAT_INTERVAL = 30_000; // 30 seconds
 
-  const maybeSendHeartbeat = () => {
-    const now = Date.now();
-    if (now - lastHeartbeatSentAt < HEARTBEAT_INTERVAL) return;
+    const maybeSendHeartbeat = () => {
+      const now = Date.now();
+      if (now - lastHeartbeatSentAt < HEARTBEAT_INTERVAL) return;
 
-    lastHeartbeatSentAt = now;
+      lastHeartbeatSentAt = now;
 
-    fetch(`${import.meta.env.VITE_IMAGE_API_URL}visitor/heartbeat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, timestamp: now }),
-    }).catch(() => {
-      // silently ignore network errors
-    });
-  };
+      fetch(`${import.meta.env.VITE_IMAGE_API_URL}visitor/heartbeat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, timestamp: now }),
+      }).catch(() => {
+        // silently ignore network errors
+      });
+    };
 
-  window.addEventListener("click", maybeSendHeartbeat);
-  window.addEventListener("scroll", maybeSendHeartbeat);
-  window.addEventListener("keydown", maybeSendHeartbeat);
+    window.addEventListener("click", maybeSendHeartbeat);
+    window.addEventListener("scroll", maybeSendHeartbeat);
+    window.addEventListener("keydown", maybeSendHeartbeat);
 
-  return () => {
-    window.removeEventListener("click", maybeSendHeartbeat);
-    window.removeEventListener("scroll", maybeSendHeartbeat);
-    window.removeEventListener("keydown", maybeSendHeartbeat);
-  };
-}, [userId]); // <- re-run when userId becomes available
+    return () => {
+      window.removeEventListener("click", maybeSendHeartbeat);
+      window.removeEventListener("scroll", maybeSendHeartbeat);
+      window.removeEventListener("keydown", maybeSendHeartbeat);
+    };
+  }, [userId]); // <- re-run when userId becomes available
   return (
     <>
       <Router>
@@ -135,15 +134,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          <Route
-            path="/dashboard"
-            element={
-              <AdminRoute>
-                <IoT />
-              </AdminRoute>
-            }
-          />
           <Route
             path="/dashboard/users"
             element={
@@ -177,9 +167,11 @@ function App() {
             }
           />
           <Route
-            path="/AdminDashboard"
+            path="/dashboard"
             element={
+              <AdminRoute>
                 <AdminDashboard />
+              </AdminRoute>
             }
           />
 
@@ -192,7 +184,6 @@ function App() {
               </>
             }
           />
-
 
           {/* Utility routes */}
           <Route
