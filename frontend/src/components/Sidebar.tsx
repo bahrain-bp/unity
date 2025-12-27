@@ -1,7 +1,7 @@
 "use client";
 
 // import { usePathname } from "next/navigation";
-import { OVERVIEW, USERS, USER, ED, USERADD } from "../assets/icons";
+import { OVERVIEW, USERS, USER, ED, USERADD, STAR } from "../assets/icons";
 import logo from "../assets/logo.svg";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthHook";
@@ -42,6 +42,11 @@ export default function Sidebar() {
       name: "Invite Visitor",
       route: "/InviteVisitor",
       icon: USERADD,
+    },
+    {
+      name: "Feedbacks",
+      route: "/dashboard/feedbacks",
+      icon: STAR,
     },
   ];
 
