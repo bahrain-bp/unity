@@ -32,6 +32,9 @@ public class PeccyDialogue : MonoBehaviour
     // Renderer to check if Peccy is visible
     private Renderer[] renderers;
 
+    [HideInInspector]
+    public bool chatUIOpen = false;
+
     void Awake()
     {
         renderers = GetComponentsInChildren<Renderer>(true);
@@ -89,14 +92,23 @@ public class PeccyDialogue : MonoBehaviour
             }
         }
 
-        // Assistant mode bubble appears whenever Peccy is visible 
+        // Assistant mode bubble appears whenever Peccy is visible,
+        // but NOT while chat UI is open
         if (introStarted && state == DialogueState.IdleAssistant)
         {
-            if (IsPeccyVisibleOnScreen())
-                bubble.Show("Need my Assistance? Let's Chat!", "Chat (C)");
-            else
+            if (chatUIOpen)
+            {
                 bubble.Hide();
+            }
+            else
+            {
+                if (IsPeccyVisibleOnScreen())
+                    bubble.Show("Need my Assistance? Let's Chat!", "Chat (C)");
+                else
+                    bubble.Hide();
+            }
         }
+
     }
 
     public void StartIntro()
@@ -171,6 +183,24 @@ public class PeccyDialogue : MonoBehaviour
             "Want a quick tour? I can guide you to the coolest spots in the office.",
             "Yes (Y)   |   No (N)"
         );
+    }
+
+    public void OnChatOpened()
+    {
+        chatUIOpen = true;
+        if (bubble != null) bubble.Hide();
+    }
+
+    public void OnChatClosed()
+    {
+        chatUIOpen = false;
+
+        if (bubble == null) return;
+
+        if (introStarted && state == DialogueState.IdleAssistant && IsPeccyVisibleOnScreen())
+            bubble.Show("Need my Assistance? Let's Chat!", "Chat (C)");
+        else
+            bubble.Hide();
     }
 
     private bool IsPeccyVisibleOnScreen()

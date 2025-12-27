@@ -7,15 +7,19 @@ using UnityEngine.InputSystem;
 public class ChatUIController : MonoBehaviour
 {
     [Header("UI Root")]
-    public GameObject chatPanel;              // ChatPanel (the one you disabled by default)
+    public GameObject chatPanel;              
 
     [Header("Input")]
-    public TMP_InputField inputField;         // ChatInput
-    public Button sendButton;                 // SendButton
-    public Button closeButton;                // CloseButton
+    public TMP_InputField inputField;         
+    public Button sendButton;                 
+    public Button closeButton;                
+
+    [Header("Peccy Integration")]
+    public PeccyDialogue peccyDialogue;
+    public ChatFocus chatFocus;
 
     [Header("Optional: Disable FPS Look While Chat Open")]
-    public Behaviour fpsLookScript;           // drag your mouse-look script here (or player controller look script)
+    public Behaviour fpsLookScript;           
 
     public bool IsOpen { get; private set; }
 
@@ -34,7 +38,7 @@ public class ChatUIController : MonoBehaviour
     {
         if (!IsOpen) return;
 
-        // ESC closes chat (optional but helpful)
+        // ESC closes chat (optional)
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             Close();
@@ -54,17 +58,21 @@ public class ChatUIController : MonoBehaviour
     {
         if (chatPanel == null) return;
 
+        // Disable FPS first so it doesn't fight the snap
+        if (fpsLookScript != null) fpsLookScript.enabled = false;
+
+        // Snap camera instantly to Peccy/chat anchor
+        if (chatFocus != null) chatFocus.SnapFocus();
+
+        // Now open UI + cursor
         chatPanel.SetActive(true);
         IsOpen = true;
 
-        // Enable cursor so UI is clickable (FPS normally locks it)
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // Disable FPS look so mouse doesn't rotate camera while clicking UI
-        if (fpsLookScript != null) fpsLookScript.enabled = false;
+        if (peccyDialogue != null) peccyDialogue.OnChatOpened();
 
-        // Focus input so user can type immediately
         if (inputField != null)
         {
             inputField.ActivateInputField();
@@ -79,11 +87,14 @@ public class ChatUIController : MonoBehaviour
         chatPanel.SetActive(false);
         IsOpen = false;
 
-        // Return to FPS mode
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         if (fpsLookScript != null) fpsLookScript.enabled = true;
+
+        // Restore bubble + stop focus
+        if (chatFocus != null) chatFocus.StopFocus();
+        if (peccyDialogue != null) peccyDialogue.OnChatClosed();
     }
 
     private void OnSendClicked()
