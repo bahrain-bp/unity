@@ -10,55 +10,108 @@ const client = new DynamoDBClient({});
 const ddb = DynamoDBDocumentClient.from(client);
 
 const tableName = process.env.TELEMETRY_TABLE!;
-const BUILD_MARKER = "telemetry-ingest-2025-12-27-06";
-
-// Distance threshold in cm for occupancy
 const DISTANCE_THRESHOLD_CM = 50;
 
+// TTL settings (DynamoDB TTL must be enabled on this attribute in the table)
+const TTL_ATTRIBUTE = "expires_at"; // Number (epoch seconds)
+const TTL_24H_SECONDS = 24 * 60 * 60;
+
+type ParkingStatus = "occupied" | "empty" | "unknown";
+
+const reservedKeys = new Set([
+  "device",
+  "clientId",
+  "sensor_id",
+  "sensor_type",
+  "ts",
+  "timestamp",
+  "topic",
+  "metrics",
+  "metric_keys",
+  "image_b64",
+  "status",
+]);
+
+const passthroughKeys = ["parking_space", "slot_id", "type"] as const;
+
+const norm = (s?: string) =>
+  typeof s === "string" ? s.trim().toLowerCase() : undefined;
+
 /**
- * Get the last saved status for (device + sensor_id).
- *
+ * ✅ Option A:
+ * - Keep numeric values in `metrics`
+ * - Keep string/boolean values in `attrs`
+ * - Allow DB write if either metrics OR attrs has content
+ */
+function extractMetricsAndAttrs(event: any): {
+  metrics: Record<string, number>;
+  attrs: Record<string, string | boolean>;
+} {
+  const metrics: Record<string, number> = {};
+  const attrs: Record<string, string | boolean> = {};
+
+  // Prefer event.metrics when present
+  if (event.metrics && typeof event.metrics === "object") {
+    for (const [k, v] of Object.entries(event.metrics)) {
+      if (typeof v === "number") metrics[k] = v;
+      else if (typeof v === "string" || typeof v === "boolean") attrs[k] = v;
+    }
+    return { metrics, attrs };
+  }
+
+  // Fallback: treat top-level numeric as metrics, string/boolean as attrs
+  for (const [k, v] of Object.entries(event)) {
+    if (reservedKeys.has(k)) continue;
+
+    if (typeof v === "number") metrics[k] = v;
+    else if (typeof v === "string" || typeof v === "boolean") attrs[k] = v;
+  }
+
+  return { metrics, attrs };
+}
+
+function deriveDistance(metrics: Record<string, number>): number | undefined {
+  if (typeof metrics.distance_cm === "number") return metrics.distance_cm;
+  if (typeof metrics.distance === "number") return metrics.distance;
+  return undefined;
+}
+
+function deriveParkingStatus(distance?: number): ParkingStatus {
+  if (typeof distance !== "number") return "unknown";
+  return distance < DISTANCE_THRESHOLD_CM ? "occupied" : "empty";
+}
+
+/**
+ * Get last status for (device + sensor_id)
  * Table: PK=device, SK=ts
- * We query newest items for the device, then pick the first that matches sensor_id.
- *
- * NOTE: We intentionally do NOT rely on FilterExpression+Limit=1,
- * and we also don't require sensor_type here (to avoid false "undefined" if old items
- * missed that attribute or ProjectionExpression returns incomplete data).
+ * Query newest items for device, scan until first matching sensor_id.
  */
 async function getLastStatusForDeviceSensor(
   device: string,
   sensorId: string,
   maxLookback = 200
 ): Promise<string | undefined> {
-  console.log("BUILD_MARKER:", BUILD_MARKER);
-  console.log("TABLE:", tableName);
-
   const resp = await ddb.send(
     new QueryCommand({
       TableName: tableName,
-      KeyConditionExpression: "#d = :dev",
-      ExpressionAttributeNames: {
-        "#d": "device",
-        "#sid": "sensor_id",
-        "#st": "status",
-        "#ts": "ts",
-      },
+      KeyConditionExpression: "device = :dev",
       ExpressionAttributeValues: {
         ":dev": device,
       },
-      ScanIndexForward: false, // newest first by ts
+      ScanIndexForward: false,
       Limit: Math.min(Math.max(maxLookback, 10), 200),
 
-      // Keep it small, but include what we need
-      ProjectionExpression: "#ts, #sid, #st",
+      // only fetch what we need
+      ProjectionExpression: "ts, sensor_id, #st",
+      ExpressionAttributeNames: {
+        "#st": "status",
+      },
     })
   );
 
   const items = (resp.Items || []) as any[];
-
   for (const it of items) {
     if (String(it?.sensor_id ?? "") !== sensorId) continue;
-
     const st = it?.status;
     return typeof st === "string" ? st : undefined;
   }
@@ -69,83 +122,52 @@ async function getLastStatusForDeviceSensor(
 export const handler = async (event: any) => {
   console.log("Raw event from IoT:", JSON.stringify(event));
 
-  // 1) Required fields
+  // Required fields
   const device = event.device || event.clientId;
   const sensorId = event.sensor_id;
   const sensorType = event.sensor_type;
 
-  // Always use server time for sort key
+  // Server time for sort key
   const ts = Math.floor(Date.now() / 1000);
-  // Optional: keep device/sensor timestamp separately
   const sensorTs = typeof event.ts === "number" ? event.ts : undefined;
 
   if (!device || !sensorId || !sensorType) {
-    console.warn("Missing required fields", {
-      device,
-      sensorId,
-      sensorType,
-      event,
-    });
+    console.warn("Missing required fields", { device, sensorId, sensorType, event });
     return;
   }
 
-  // 2) Metrics (numeric only)
-  let metrics: Record<string, number> = {};
+  // ✅ Metrics + Attrs (Option A)
+  const { metrics, attrs } = extractMetricsAndAttrs(event);
 
-  if (event.metrics && typeof event.metrics === "object") {
-    for (const [key, value] of Object.entries(event.metrics)) {
-      if (typeof value === "number") metrics[key] = value as number;
-    }
-  } else {
-    const reservedKeys = new Set([
-      "device",
-      "clientId",
-      "sensor_id",
-      "sensor_type",
-      "ts",
-      "timestamp",
-      "topic",
-      "metrics",
-      "metric_keys",
-      "image_b64",
-      "status", // don't treat status as numeric metric
-    ]);
-
-    for (const [key, value] of Object.entries(event)) {
-      if (reservedKeys.has(key)) continue;
-      if (typeof value === "number") metrics[key] = value as number;
-    }
-  }
-
-  // If no numeric metrics at all, just bail
-  if (Object.keys(metrics).length === 0) {
-    console.warn("No numeric metrics found in event", { event });
+  // ✅ allow saving if either exists
+  if (Object.keys(metrics).length === 0 && Object.keys(attrs).length === 0) {
+    console.warn("No metrics/attrs found in event", { event });
     return;
   }
 
-  // Optional: original status from device (for non-ultrasonic sensors)
   const statusFromEvent =
     typeof event.status === "string" ? event.status : undefined;
 
-  // Common extra fields
-  const passthroughKeys = ["parking_space", "slot_id", "type"];
-
-  // --------------------------------------------------------
-  // CASE 1: NON-ULTRASONIC SENSORS  (humidity, temp, etc.)
-  // --------------------------------------------------------
+  // -----------------------------
+  // CASE 1: NON-ULTRASONIC
+  // -----------------------------
   if (sensorType !== "ultrasonic") {
+    // metric_keys: prefer provided keys, else union of metrics+attrs keys
     const metricKeys =
       event.metric_keys && Array.isArray(event.metric_keys)
         ? event.metric_keys
-        : Object.keys(metrics);
+        : Array.from(
+            new Set([...Object.keys(metrics), ...Object.keys(attrs)])
+          );
 
     const item: any = {
       device,
-      ts, // server time
+      ts,
       sensor_ts: sensorTs,
       sensor_id: sensorId,
       sensor_type: sensorType,
-      metrics,
+      metrics,     // numbers
+      attrs,       // strings/bools (e.g., room_status: "AVAILABLE")
       metric_keys: metricKeys,
     };
 
@@ -155,13 +177,12 @@ export const handler = async (event: any) => {
       if (event[key] !== undefined) item[key] = event[key];
     }
 
-    await ddb.send(
-      new PutCommand({
-        TableName: tableName,
-        Item: item,
-      })
-    );
+    // ✅ TTL: only for dht11 items -> auto-delete ~24h after write
+    if (norm(sensorType) === "dht11") {
+      item[TTL_ATTRIBUTE] = ts + TTL_24H_SECONDS; // MUST be Number epoch seconds
+    }
 
+    await ddb.send(new PutCommand({ TableName: tableName, Item: item }));
     console.log("Wrote item (non-ultrasonic):", item);
 
     const telemetryEvent = {
@@ -173,6 +194,7 @@ export const handler = async (event: any) => {
         sensor_id: sensorId,
         sensor_type: sensorType,
         metrics,
+        attrs,
         metric_keys: metricKeys,
         ts,
         status: item.status,
@@ -191,38 +213,26 @@ export const handler = async (event: any) => {
     return { status: "ok", mode: "non-ultrasonic" };
   }
 
-  // --------------------------------------------------
-  // CASE 2: ULTRASONIC SENSORS  (parking logic)
-  // --------------------------------------------------
+  // -----------------------------
+  // CASE 2: ULTRASONIC
+  // -----------------------------
+  const distance = deriveDistance(metrics);
+  const parkingStatus = deriveParkingStatus(distance);
 
-  // 3) Derive parking status from distance
-  const distance =
-    typeof metrics.distance_cm === "number"
-      ? metrics.distance_cm
-      : typeof metrics.distance === "number"
-      ? metrics.distance
-      : undefined;
-
-  let parkingStatus: "occupied" | "empty" | "unknown" = "unknown";
-
-  if (typeof distance === "number") {
-    parkingStatus = distance < DISTANCE_THRESHOLD_CM ? "occupied" : "empty";
-  }
-
-  // Save parking status WITH metrics (numeric flag)
-  // 1 = occupied, 0 = empty, -1 = unknown
+  // Add numeric parking_status to metrics
   if (parkingStatus === "occupied") metrics.parking_status = 1;
   else if (parkingStatus === "empty") metrics.parking_status = 0;
   else metrics.parking_status = -1;
 
+  // Ensure metric_keys includes parking_status (and any attrs keys if you want)
   const metricKeys =
     event.metric_keys && Array.isArray(event.metric_keys)
       ? Array.from(new Set([...event.metric_keys, "parking_status"]))
-      : Object.keys(metrics);
+      : Array.from(
+          new Set([...Object.keys(metrics), ...Object.keys(attrs), "parking_status"])
+        );
 
-  // 4) Get last saved status for this *device + sensor_id*
-  let lastStatus: string | undefined = undefined;
-
+  let lastStatus: string | undefined;
   try {
     lastStatus = await getLastStatusForDeviceSensor(device, sensorId, 200);
   } catch (err) {
@@ -230,19 +240,12 @@ export const handler = async (event: any) => {
     lastStatus = undefined;
   }
 
-  // Normalize for safer comparisons
-  const norm = (s?: string) => (typeof s === "string" ? s.trim().toLowerCase() : undefined);
   const lastN = norm(lastStatus);
   const curN = norm(parkingStatus);
 
-  console.log("[ultrasonic] compare", {
-    device,
-    sensorId,
-    lastStatus,
-    parkingStatus,
-  });
+  console.log("[ultrasonic] compare", { device, sensorId, lastStatus, parkingStatus });
 
-  // 5) ALWAYS broadcast to WebSocket (even if status unchanged)
+  // Always broadcast
   const telemetryEvent = {
     type: "telemetry",
     source: "telemetry-ingest",
@@ -252,10 +255,10 @@ export const handler = async (event: any) => {
       sensor_id: sensorId,
       sensor_type: sensorType,
       metrics,
+      attrs,
       metric_keys: metricKeys,
       ts,
       status: parkingStatus,
-      // keep payload shape EXACT
       parking_space: event.parking_space,
       slot_id: event.slot_id,
       type: event.type,
@@ -268,7 +271,7 @@ export const handler = async (event: any) => {
     console.error("Failed to broadcast telemetry over WebSocket:", err);
   }
 
-  // 6) If status didn’t change, SKIP DB write (but we already broadcasted)
+  // Skip DB write if status unchanged
   if (lastN === curN) {
     console.log(
       `Status unchanged for device=${device}, sensor=${sensorId}. Last=${lastStatus}, current=${parkingStatus}. Skipping DB write (broadcasted).`
@@ -281,29 +284,24 @@ export const handler = async (event: any) => {
     };
   }
 
-  // 7) Build final item for DynamoDB (ONLY when status changed)
+  // Write only on change
   const item: any = {
     device,
-    ts, // server time
+    ts,
     sensor_ts: sensorTs,
     sensor_id: sensorId,
     sensor_type: sensorType,
     metrics,
+    attrs,
     metric_keys: metricKeys,
-    status: parkingStatus, // derived parking status
+    status: parkingStatus,
   };
 
   for (const key of passthroughKeys) {
     if (event[key] !== undefined) item[key] = event[key];
   }
 
-  await ddb.send(
-    new PutCommand({
-      TableName: tableName,
-      Item: item,
-    })
-  );
-
+  await ddb.send(new PutCommand({ TableName: tableName, Item: item }));
   console.log("Wrote item (ultrasonic status change):", item);
 
   return {

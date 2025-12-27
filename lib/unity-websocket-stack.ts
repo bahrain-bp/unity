@@ -30,6 +30,15 @@ export class UnityWebSocketStack extends cdk.Stack {
 
     const plugActionsTable = props.dbStack.plugActionsTable;
 
+    // ────────────────────────────────
+    // ✅ X-RAY HELPER
+    // ────────────────────────────────
+    const enableXRay = (fn: lambda.Function) => {
+      fn.role?.addManagedPolicy(
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AWSXRayDaemonWriteAccess")
+      );
+    };
+
     // 1) Connections table
     this.connectionsTable = new dynamodb.Table(this, "WsConnectionsTable", {
       partitionKey: { name: "connectionId", type: dynamodb.AttributeType.STRING },
@@ -46,7 +55,10 @@ export class UnityWebSocketStack extends cdk.Stack {
       environment: {
         CONNECTIONS_TABLE: this.connectionsTable.tableName,
       },
+      // ✅ X-Ray
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(connectFn);
 
     // 3) Lambda: $disconnect
     const disconnectFn = new NodejsFunction(this, "WsDisconnectHandler", {
@@ -57,7 +69,10 @@ export class UnityWebSocketStack extends cdk.Stack {
       environment: {
         CONNECTIONS_TABLE: this.connectionsTable.tableName,
       },
+      // ✅ X-Ray
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(disconnectFn);
 
     // 4) Lambda: $default (handles hello/requestSnapshot -> sends plug_snapshot)
     const defaultFn = new NodejsFunction(this, "WsDefaultHandler", {
@@ -73,7 +88,10 @@ export class UnityWebSocketStack extends cdk.Stack {
         PLUG_INDEX_NAME: "plug_id-ts-index",
         PLUG_IDS: JSON.stringify(["plug1", "plug2"]),
       },
+      // ✅ X-Ray
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(defaultFn);
 
     // Permissions for connections table
     this.connectionsTable.grantReadWriteData(connectFn);

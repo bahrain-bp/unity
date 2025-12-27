@@ -80,6 +80,7 @@ export class DBStack extends Stack {
       sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
+      timeToLiveAttribute: "expires_at",
     });
 
     new cdk.CfnOutput(this, "IoTDeviceTelemetryTableNameOutput", {
