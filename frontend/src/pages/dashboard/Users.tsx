@@ -1,5 +1,7 @@
 import DashboardLayout from "./DashboardLayout"
 import Table from "@mui/joy/Table"
+import Pagination from "@mui/material/Pagination"
+import Stack from "@mui/material/Stack"
 import { useState, useEffect } from "react"
 import { ADDUSER } from "../../assets/icons"
 import { GetUsers, CreateUser, UpdateUser, DeleteUser } from "../../services/Users"
@@ -12,10 +14,21 @@ import EditUserModal from "../../components/dashboard/EditUserModal"
 // Helper to transform Cognito user to our User interface
 const transformCognitoUser = (cognitoUser: any): User => {
   const emailAttr = cognitoUser.Attributes?.find((attr: any) => attr.Name === "email")
+  const raw = cognitoUser.UserStatus || "UNKNOWN";
+
+  const statusLabel =
+    raw === "CONFIRMED"
+      ? "Confirmed"
+      : raw === "FORCE_CHANGE_PASSWORD"
+      ? "Temp password"
+      : raw === "UNCONFIRMED"
+      ? "Unconfirmed"
+      : raw
+
   return {
     username: cognitoUser.Username || "",
     email: emailAttr?.Value || "",
-    status: cognitoUser.UserStatus === "CONFIRMED" ? "Verified" : "Unverified",
+    status: statusLabel,
   }
 }
 
@@ -29,6 +42,10 @@ const Users = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const [usersPerPage] = useState(9) // Show 10 users per page
 
   useEffect(() => {
     getUsers()
@@ -51,6 +68,17 @@ const Users = () => {
     }
   }
 
+  // Pagination logic
+  const indexOfLastUser = currentPage * usersPerPage
+  const indexOfFirstUser = indexOfLastUser - usersPerPage
+  const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser)
+  const totalPages = Math.ceil(users.length / usersPerPage)
+
+  // Handle page change from MUI Pagination
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setCurrentPage(value)
+  }
+
   const handleDeleteRequest = (user: User) => {
     setUserToDelete(user)
   }
@@ -65,6 +93,12 @@ const Users = () => {
       await DeleteUser(userToDelete.email)
       setUsers(users.filter(u => u.email !== userToDelete.email))
       setUserToDelete(null)
+
+      // Adjust current page if we deleted the last user on the current page
+      const newTotalPages = Math.ceil((users.length - 1) / usersPerPage)
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages)
+      }
     } catch (err: any) {
       console.error("Error deleting user:", err)
       setError(err.response?.data?.message || err.message || "Failed to delete user")
@@ -89,13 +123,11 @@ const Users = () => {
     setError(null)
 
     try {
-      await UpdateUser(userToEdit.email, { email: userData.email })
+      await UpdateUser(userToEdit.username, { email: userData.email })
 
       setUsers(
         users.map(u =>
-          u.email === userToEdit.email
-            ? { ...u, email: userData.email }
-            : u
+          u.username === userToEdit.username ? { ...u, email: userData.email } : u
         )
       )
 
@@ -125,6 +157,10 @@ const Users = () => {
       await CreateUser(userData)
       await getUsers()
       setShowAddModal(false)
+      
+      // Go to last page to see the new user
+      const newTotalPages = Math.ceil((users.length + 1) / usersPerPage)
+      setCurrentPage(newTotalPages)
     } catch (err: any) {
       console.error("Error creating user:", err)
       setError(err.response?.data?.message || err.message || "Failed to create user")
@@ -155,29 +191,53 @@ const Users = () => {
         {loading ? (
           <div style={{ padding: "2rem", textAlign: "center" }}>Loading users...</div>
         ) : (
-          <Table size="lg" aria-label="users table" stickyHeader>
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th style={{ width: "15rem" }}>Status</th>
-                <th style={{ width: "10rem" }}>Modify</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 ? (
+          <>
+            <Table size="lg" aria-label="users table" stickyHeader>
+              <thead>
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "center", padding: "2rem" }}>
-                    No users found. Click "Add New User" to create one.
-                  </td>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th style={{ width: "15rem" }}>Status</th>
+                  <th style={{ width: "10rem" }}>Modify</th>
                 </tr>
-              ) : (
-                users.map(user => (
-                  <UserRow key={user.email} user={user} onEdit={() => handleEditRequest(user)} onDelete={() => handleDeleteRequest(user)} />
-                ))
-              )}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {currentUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: "center", padding: "2rem" }}>
+                      {users.length === 0 
+                        ? 'No users found. Click "Add New User" to create one.'
+                        : 'No users on this page.'}
+                    </td>
+                  </tr>
+                ) : (
+                  currentUsers.map(user => (
+                    <UserRow 
+                      key={user.email} 
+                      user={user} 
+                      onEdit={() => handleEditRequest(user)} 
+                      onDelete={() => handleDeleteRequest(user)} 
+                    />
+                  ))
+                )}
+              </tbody>
+            </Table>
+
+            {/* MUI Pagination Component */}
+            {users.length > usersPerPage && (
+              <Stack spacing={2} alignItems="center" sx={{ padding: '2rem', borderTop: '1px solid #e0e0e0' }}>
+                <Pagination 
+                  count={totalPages} 
+                  page={currentPage} 
+                  onChange={handlePageChange}
+                  color="primary"
+                  shape="rounded"
+                  showFirstButton
+                  showLastButton
+                />
+              </Stack>
+            )}
+          </>
         )}
       </div>
 
