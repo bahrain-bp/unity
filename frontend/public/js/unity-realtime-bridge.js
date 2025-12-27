@@ -5,7 +5,8 @@ const PLUGS_ENDPOINT = `${API_BASE}/plugs`;
 const WS_URL = "wss://x7zgvke8me.execute-api.us-east-1.amazonaws.com/dev";
 
 // Show debug panel only on localhost (change if you want)
-const DEBUG = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+// const DEBUG = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+const DEBUG = false;
 
 // --------------------
 // Debug Panel (Browser)
