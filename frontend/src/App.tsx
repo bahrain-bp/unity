@@ -10,6 +10,7 @@ import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
+//import SmartPlugEnvironment from "./pages/SmartPlugEnvironment";
 import Chatbot from "./components/ChatBot";
 import VisitorArrival from "./pages/visitorArrival";
 import InviteVisitor from "./pages/dashboard/InviteVisitor";
@@ -20,6 +21,7 @@ import Users from "./pages/dashboard/Users";
 import Footer from "./components/Footer";
 import { useAuth } from "./auth/AuthHook";
 import UploadUnity from "./pages/dashboard/UploadUnity";
+import Parking from "./pages/dashboard/Parking";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import { useEffect } from "react";
 import FeedbackPage from "./pages/dashboard/Feedback";
@@ -156,6 +158,14 @@ function App() {
             element={
               <AdminRoute>
                 <UploadUnity />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/dashboard/parking"
+            element={
+              <AdminRoute>
+                <Parking />
               </AdminRoute>
             }
           />

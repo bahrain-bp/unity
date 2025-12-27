@@ -69,6 +69,34 @@ export default function Sidebar() {
     }
   }, [userId]);
 
+  const dashboard_pages = [
+    {
+      name: "Overview",
+      route: "/dashboard",
+      icon: OVERVIEW,
+    },
+    {
+      name: "Users",
+      route: "/dashboard/users",
+      icon: USERS,
+    },
+    {
+      name: "WebGL Files",
+      route: "/dashboard/upload-unity",
+      icon: ED,
+    },
+    {
+      name: "Visitor Arrival",
+      route: "/visitor-arrival",
+      icon: USER,
+    },
+    {
+      name: "Parking",
+      route: "/dashboard/parking",
+      icon: USERS, // leave it as USERS for now
+    },
+  ];
+
   return (
     <div className="sidebar">
       <Link to={"/"} className="sidebar__logo">

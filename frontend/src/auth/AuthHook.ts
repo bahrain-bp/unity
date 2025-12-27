@@ -103,7 +103,6 @@ export const useProvideAuth = (): UseAuth => {
         if (idToken) {
           localStorage.setItem("idToken", idToken);
         }
-
         // API REQUEST TO GET USERNAME, PROFILE IMAGE
 
         setEmail(user.signInDetails?.loginId || "");
@@ -149,6 +148,7 @@ export const useProvideAuth = (): UseAuth => {
         setUserRole(getPrimaryRole(groups));
         
         setIsAuthenticated(true);
+
         await saveIdToken();
 
         return { success: true, message: "Sign in successful" };
