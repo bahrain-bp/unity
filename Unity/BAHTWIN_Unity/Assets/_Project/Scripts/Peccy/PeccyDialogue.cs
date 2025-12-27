@@ -27,6 +27,8 @@ public class PeccyDialogue : MonoBehaviour
 
     private float ignoreInputUntilTime = 0f;
 
+    public ChatUIController chatUI;
+
     // Renderer to check if Peccy is visible
     private Renderer[] renderers;
 
@@ -34,15 +36,15 @@ public class PeccyDialogue : MonoBehaviour
     {
         renderers = GetComponentsInChildren<Renderer>(true);
 
-        nextAction  = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/n");
+        nextAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/n");
         enterAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/enter");
-        yesAction   = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/y");
-        chatAction  = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/c");
+        yesAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/y");
+        chatAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/c");
 
-        nextAction.performed  += OnNext;
+        nextAction.performed += OnNext;
         enterAction.performed += OnNext;
-        yesAction.performed   += OnYes;
-        chatAction.performed  += OnChat;
+        yesAction.performed += OnYes;
+        chatAction.performed += OnChat;
 
         nextAction.Enable();
         enterAction.Enable();
@@ -52,10 +54,10 @@ public class PeccyDialogue : MonoBehaviour
 
     void OnDestroy()
     {
-        nextAction.performed  -= OnNext;
+        nextAction.performed -= OnNext;
         enterAction.performed -= OnNext;
-        yesAction.performed   -= OnYes;
-        chatAction.performed  -= OnChat;
+        yesAction.performed -= OnYes;
+        chatAction.performed -= OnChat;
 
         nextAction.Disable();
         enterAction.Disable();
@@ -143,7 +145,10 @@ public class PeccyDialogue : MonoBehaviour
         if (state != DialogueState.IdleAssistant) return;
         if (!IsPeccyVisibleOnScreen()) return;
 
-        Debug.Log("Chat requested (C). Hook UI panel later.");
+        if (chatUI != null)
+            chatUI.Open();
+        else
+            Debug.LogWarning("ChatUI not assigned in PeccyDialogue.");
     }
 
     private void ChooseNo()
