@@ -1,23 +1,29 @@
 import os
 import boto3
+import time
+from datetime import datetime
 
 dynamodb = boto3.resource("dynamodb")
-table_name = os.environ.get("TABLE_NAME")
-table = dynamodb.Table(table_name)
+table = dynamodb.Table(os.environ["TABLE_NAME"])
 
 def handler(event, context):
-    print("Received event:", event)  # <--- this will show the full event
-    connection_id = event.get("requestContext", {}).get("connectionId")
-    print("Connection ID:", connection_id)
+    print("Received event:", event)
 
-    if connection_id:
-        table.put_item(Item={"ConnectionId": connection_id})
-        print("Stored connection in DynamoDB")
-        resp = table.get_item(Key={"ConnectionId": connection_id})
-        print(f"Table ARN: {table.table_arn}")
-        print("Stored item:", resp.get("Item"))
+    connection_id = event["requestContext"]["connectionId"]
+    now = int(time.time())
 
-    else:
-        print("No connection ID found!")
+    table.put_item(
+        Item={
+            "ConnectionId": connection_id,
+            "connectedAt": datetime.utcnow().isoformat(),
+            "lastSeen": now,
+            "ttl": now + 120  # expires after 2 minutes if no heartbeat
+        }
+    )
 
-    return {"statusCode": 200, "body": "Connected."}
+    print("Stored connection:", connection_id)
+
+    return {
+        "statusCode": 200,
+        "body": "Connected"
+    }

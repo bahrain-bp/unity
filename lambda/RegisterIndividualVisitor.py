@@ -2,12 +2,15 @@ import os
 import boto3
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import re
 import smtplib
 from email.mime.text import MIMEText
-from datetime import datetime
+from boto3.dynamodb.conditions import Key
 
+
+lambda_client = boto3.client("lambda")
+BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 
 GMAIL_USER = os.environ['GMAIL_USER']      # Your Gmail address
 GMAIL_PASS = os.environ['GMAIL_PASS']      # Gmail app password
@@ -15,13 +18,10 @@ GMAIL_PASS = os.environ['GMAIL_PASS']      # Gmail app password
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 
-BUCKET = os.environ['BUCKET_NAME']
 InviteTable = os.environ['InviteTable']
 InviteTable = dynamodb.Table(InviteTable)
 
 def handler(event, context):
-    if event["httpMethod"] == "OPTIONS":
-        return response(200, {"message": "CORS preflight"})
     
     try:
         body = json.loads(event["body"])
@@ -30,42 +30,63 @@ def handler(event, context):
         visitDateTime = body.get("visitDateTime")
 
         if not name or not email or not visitDateTime:
-            return response(404, {"error": "Required fields are missing"})
+            return response(400, {"error": "Required fields are missing"})
 
         if not is_valid_email(email):
-            return response(404, {"error": "invalid email address"})
+            return response(400, {"error": "invalid email address"})
 
-        # generate unique ID
-        invited_visitor_id = str(uuid.uuid4())
-        visit_dt = datetime.fromisoformat(visitDateTime)
         # Check if visit date is in the past
-        if visit_dt < datetime.utcnow():
+        bahrain_tz = timezone(timedelta(hours=3))
+        visit_dt = datetime.fromisoformat(visitDateTime)  # naive datetime
+        visit_dt = visit_dt.replace(tzinfo=bahrain_tz)    # now it is zone aware
+        now_bahrain = datetime.now(bahrain_tz)
+       
+        if visit_dt < now_bahrain:
             return response(400, {"error": "Visit date scheduled is invalid"})
         formatted_visit_dt = visit_dt.strftime("%A, %B %d, %Y at %I:%M %p") 
         visit_date = visit_dt.date().isoformat()  # YYYY-MM-DD
         visit_time = visit_dt.strftime("%H:%M")  # e.g., "10:30"
-        print("visit_dt",visit_dt)
-        print("visit_date"+visit_date)
-        print("visit_dt.isoformat()"+visit_dt.isoformat())
 
+        #Does teh visitor have a duplicate invitation in the same day
         if is_duplicate_visit(email, visit_date):
             return response(409, {"error": "This visitor is already registered for this date."
             })
         print("is duplicate function was executed. no duplicate")
 
+        # generate unique ID
+        visitorId  = str(uuid.uuid4())
         # Insert into DynamoDB
         InviteTable.put_item(
             Item={
-                "visitorId": invited_visitor_id,
+                "visitorId": visitorId ,
                 "name": name,
                 "email": email,
                 "visitDate": visit_date,
                 "visitTime": visit_time,
                 "status": "invited",
-                "createdAt": datetime.utcnow().isoformat()
+                "createdAt": now_bahrain.isoformat()
             }
         )
         print("DynamoDB put successflly")
+
+        # Count today's invitations
+        today_date = now_bahrain.date().isoformat()
+        total_today_invitations = count_today_invitations(today_date)
+
+        # Prepare dashboard payload
+        to_dashboard = {
+            "card": "today_invitations",
+            "data": {
+                "total": total_today_invitations
+            }
+        }
+
+        # Invoke the broadcast Lambda asynchronously
+        lambda_client.invoke(
+            FunctionName=BROADCAST_LAMBDA,
+            InvocationType="Event",  # async
+            Payload=json.dumps(to_dashboard)
+        )
 
         # send an invitation via email
         send_invitation_email(name, email, formatted_visit_dt)
@@ -97,65 +118,69 @@ def send_invitation_email(name, email, formatted_visit_dt):
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }}
         .container {{
             max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 40px auto;
+            padding: 25px;
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
             border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background-color: #f9f9f9;
+        }}
+        h2 {{
+            color: #333333;
+            text-align: center;
         }}
         .btn {{
             display: inline-block;
-            padding: 12px 20px;
+            padding: 14px 24px;
             margin-top: 20px;
             font-size: 16px;
-            color: white;
-            background-color: #007BFF;
+            color: #ffffff;
+            background-color: #ff7614; /* platform orange */
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        p {{
+            margin-bottom: 16px;
         }}
         .footer {{
             margin-top: 30px;
             font-size: 12px;
-            color: #777;
+            color: #777777;
+            text-align: center;
         }}
         </style>
         </head>
         <body>
         <div class="container">
 
+        <h2>Visitor Invitation</h2>
+
         <p>Dear {name},</p>
 
+        <p>We are pleased to invite you to visit <strong>AWS</strong> on <strong>{formatted_visit_dt}</strong>.</p>
+
         <p>
-        We are pleased to invite you to visit <strong>AWS</strong> on 
-        <strong>{formatted_visit_dt}</strong>.
+        During this visit, we would like to introduce you to 
+        <strong>BAHTWIN</strong>, a smart visitor management platform designed to enhance your experience by streamlining registration, reducing waiting times, and ensuring smooth entry.
         </p>
 
         <p>
-        As part of this visit, we would like to introduce you to 
-        <strong>BAHTWIN</strong>, a smart visitor management platform specifically designed 
-        to enhance the visitor experience by streamlining registration and facility visualization, reducing waiting 
-        time, and ensuring a smooth and secure entry process.
+        To familiarize yourself with the platform and explore the facility digitally, please access BAHTWIN using the link below:
         </p>
 
-        <p>
-        BAHTWIN leverages modern cloud technologies to provide an efficient, 
-        contactless, and user-friendly experience throughout your visit. 
-        To familiarize yourself with the platform and navigate the facility digitally, 
-        please access BAHTWIN using the link below:
-        </p>
-
-        <p>
-        <a href="https://localhost:5173" class="btn">
-            Access BAHTWIN Platform
-        </a>
+        <p style="text-align:center;">
+        <a href="http://localhost:5173" class="btn" style="color:#ffffff;">Access BAHTWIN Platform</a>
         </p>
 
         <p class="footer">
-        If you did not intend to visit AWS or received this email in error, 
-        please disregard this message.
+        If you did not intend to visit AWS or received this email in error, please disregard this message.
         </p>
 
         <p class="footer">
@@ -184,8 +209,6 @@ def send_invitation_email(name, email, formatted_visit_dt):
         print("Error sending email:", e)
         return False
 
-from boto3.dynamodb.conditions import Key
-
 def is_duplicate_visit(email, visit_date):
     response = InviteTable.query(
         IndexName='EmailVisitDateIndex',
@@ -193,6 +216,12 @@ def is_duplicate_visit(email, visit_date):
             Key('email').eq(email) & Key('visitDate').eq(visit_date)
     )
     return len(response.get('Items', [])) > 0
+
+def count_today_invitations(today_date):
+    response = InviteTable.scan(
+        FilterExpression=Key("visitDate").eq(today_date)
+    )
+    return response.get("Count", 0)
 
 #response handling function
 def response(status, body):

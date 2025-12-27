@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
-import axios from "axios";
 import { FaUpload } from "react-icons/fa";
 import "../../../sass/_visitorInvite.scss";
 import DashboardLayout from "./DashboardLayout";
+import { ImageClient } from "../../services/api";
 
 function VisitorTestPage() {
   const [mode, setMode] = useState<"single" | "bulk">("single");
@@ -32,8 +32,8 @@ function VisitorTestPage() {
         setMessage("Sending invitation...");
         setMessageType("processing");
 
-        const response = await axios.post(
-          "https://vljyjl7oae.execute-api.us-east-1.amazonaws.com/prod/admin/registerVisitorIndividual",
+        const response = await ImageClient.post(
+          "admin/registerVisitorIndividual",
           {
             name,
             email,
@@ -69,8 +69,8 @@ function VisitorTestPage() {
           reader.readAsDataURL(csvFile);
         });
 
-        const response = await axios.post(
-          "https://vljyjl7oae.execute-api.us-east-1.amazonaws.com/prod/admin/registerVisitorBulk",
+        const response = await ImageClient.post(
+          "/admin/registerVisitorBulk",
           { file: fileBase64 }
         );
 
