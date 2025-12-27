@@ -4,10 +4,14 @@ const API_BASE = "https://mixmh2ecul.execute-api.us-east-1.amazonaws.com/dev";
 const PLUGS_ENDPOINT = `${API_BASE}/plugs`;
 const WS_URL = "wss://x7zgvke8me.execute-api.us-east-1.amazonaws.com/dev";
 
+// Show debug panel only on localhost (change if you want)
+const DEBUG = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+
 // --------------------
 // Debug Panel (Browser)
 // --------------------
 function createWsDebugPanel() {
+  if (!DEBUG) return;
   if (document.getElementById("ws-debug-log")) return;
 
   const box = document.createElement("div");
@@ -30,8 +34,10 @@ function createWsDebugPanel() {
 }
 
 function wsDebug(text) {
+  if (!DEBUG) return;
   createWsDebugPanel();
   const box = document.getElementById("ws-debug-log");
+  if (!box) return;
   box.innerHTML += text + "<br/>";
   box.scrollTop = box.scrollHeight;
 }
@@ -51,6 +57,17 @@ function getIdToken() {
 }
 
 // ----------------------
+// Frontend event dispatcher (React pages can listen to this)
+// ----------------------
+function dispatchToFrontend(type, payload, ts) {
+  window.dispatchEvent(
+    new CustomEvent("realtime-message", {
+      detail: { type, payload, ts: ts || safeNowSeconds() },
+    })
+  );
+}
+
+// ----------------------
 // WebSocket setup
 // ----------------------
 let ws = null;
@@ -61,6 +78,7 @@ let wsRetryTimer = null;
 window.__SMART_PLUG_BRIDGE__ = window.__SMART_PLUG_BRIDGE__ || {
   inited: false,
   wsConnecting: false,
+  autoStarted: false,
 };
 
 function safeNowSeconds() {
@@ -101,59 +119,22 @@ function sendPlugStateToUnity(raw, msgTs) {
   }
 }
 
-function sendTelemetryToUnity(payload, msgTs) {
-  if (!payload) return;
-
-  // Only handle your DHT11 env sensor (optional filter)
-  if (payload.sensor_type !== "dht11") return;
-
-  const tempC = payload.metrics?.temp_c;
-  const humidity = payload.metrics?.humidity;
-
-  // If metrics are missing, don't spam Unity
-  if (tempC === undefined && humidity === undefined) return;
-
-  const normalized = {
-    device: payload.device || "unknown",
-    sensor_id: payload.sensor_id || "unknown",
-    sensor_type: payload.sensor_type || "unknown",
-    temp_c: typeof tempC === "number" ? tempC : 0,
-    humidity: typeof humidity === "number" ? humidity : 0,
-    ts: msgTs || payload.ts || safeNowSeconds(),
-    status: payload.status || "ok",
-  };
-
-  // ✅ IMPORTANT: this GameObject name must exist in Unity
-  // Create an empty GameObject called EXACTLY: EnvSensor_UI
-  const targetObj = "EnvSensor_UI";
-
-  console.log("[Bridge] Telemetry → Unity:", normalized);
-
-  try {
-    wsUnityInstance?.SendMessage(
-      targetObj,
-      "OnTelemetryJson",
-      JSON.stringify(normalized)
-    );
-  } catch (e) {
-    console.warn("[Bridge] Telemetry SendMessage failed:", e);
-  }
-}
-
+/**
+ * DHT11 telemetry → Unity
+ */
 function sendDht11TelemetryToUnity(payload, msgTs) {
   if (!payload) return;
 
-  // ✅ Only DHT11
+  // Only DHT11
   if (payload.sensor_type !== "dht11") return;
 
   const metrics = payload.metrics || {};
   const tempC = metrics.temp_c;
   const hum = metrics.humidity;
 
-  // ✅ Only send if BOTH exist (you can relax this if you want)
+  // Only send if BOTH exist (relax if you want)
   if (typeof tempC !== "number" || typeof hum !== "number") return;
 
-  // ✅ Flatten metrics for your C# TelemetryMsg class
   const normalized = {
     device: payload.device || "",
     sensor_id: payload.sensor_id || "",
@@ -164,8 +145,7 @@ function sendDht11TelemetryToUnity(payload, msgTs) {
     status: payload.status || "ok",
   };
 
-  // ✅ Choose the Unity GameObject name that has EnvTelemetryText attached
-  // Change this to YOUR actual object name in Unity
+  // GameObject in Unity must exist
   const targetObj = "EnvSensor_UI";
 
   console.log("[Bridge] DHT11 Telemetry → Unity:", normalized);
@@ -181,9 +161,13 @@ function sendDht11TelemetryToUnity(payload, msgTs) {
   }
 }
 
-
+/**
+ * Connect WS even if Unity isn't open.
+ * Unity can attach later via initSmartPlugBridge.
+ */
 function setupWebSocket(unityInstance) {
-  wsUnityInstance = unityInstance;
+  // Keep latest unity instance (can be null)
+  wsUnityInstance = unityInstance || wsUnityInstance;
 
   if (ws && wsReady) {
     console.log("[WS] already connected");
@@ -210,10 +194,10 @@ function setupWebSocket(unityInstance) {
 
     // Send BOTH action + type (covers all API Gateway routing configs)
     const hello = {
-      action: "hello",          // for routeSelectionExpression "$request.body.action"
-      type: "hello",            
-      client: "unity",
-      requestSnapshot: true,    // tells ws-default to send plug_snapshot
+      action: "hello", // for routeSelectionExpression "$request.body.action"
+      type: "hello",
+      client: "frontend", // not only unity now
+      requestSnapshot: true,
       ts: safeNowSeconds(),
     };
 
@@ -235,7 +219,8 @@ function setupWebSocket(unityInstance) {
     if (!wsRetryTimer) {
       wsRetryTimer = setTimeout(() => {
         wsRetryTimer = null;
-        setupWebSocket(unityInstance);
+        // reconnect using latest global unity instance
+        setupWebSocket(wsUnityInstance);
       }, 3000);
     }
   };
@@ -255,15 +240,20 @@ function setupWebSocket(unityInstance) {
       return;
     }
 
+    // Always dispatch for frontend pages
+    if (msg?.type) {
+      dispatchToFrontend(msg.type, msg.payload, msg.ts);
+    }
+
+    // Telemetry: { type:"telemetry", payload:{...}, ts }
     if (msg.type === "telemetry") {
       console.log("[WS] Telemetry:", msg);
 
-      // forward telemetry to Unity UI
+      // forward telemetry to Unity UI (if Unity attached)
       sendDht11TelemetryToUnity(msg.payload, msg.ts);
 
       return;
     }
-
 
     // Snapshot: { type:"plug_snapshot", payload:{ plugs:[...] } }
     if (msg.type === "plug_snapshot") {
@@ -313,11 +303,22 @@ function setupWebSocket(unityInstance) {
 }
 
 // ------------------------------------------------
+// Auto-start WS on page load (so normal React pages work)
+// ------------------------------------------------
+(function autoStart() {
+  if (window.__SMART_PLUG_BRIDGE__.autoStarted) return;
+  window.__SMART_PLUG_BRIDGE__.autoStarted = true;
+
+  console.log("[JS] Auto-starting WebSocket bridge (no Unity required)...");
+  setupWebSocket(null);
+})();
+
+// ------------------------------------------------
 // Unity → Backend HTTP (toggle plug)
 // ------------------------------------------------
 window.initSmartPlugBridge = function (unityInstance) {
   if (window.__SMART_PLUG_BRIDGE__.inited) {
-    console.warn("[JS] initSmartPlugBridge already called — reusing existing bridge");
+    console.warn("[JS] initSmartPlugBridge already called — attaching Unity instance");
     wsUnityInstance = unityInstance;
     setupWebSocket(unityInstance);
     return;
