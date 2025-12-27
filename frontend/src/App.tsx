@@ -22,6 +22,7 @@ import { useAuth } from "./auth/AuthHook";
 import UploadUnity from "./pages/dashboard/UploadUnity";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import { useEffect } from "react";
+import FeedbackPage from "./pages/dashboard/Feedback";
 
 // Protected Route Component for authenticated users
 function ProtectedRoute({ children }) {
@@ -139,6 +140,14 @@ function App() {
             element={
               <AdminRoute>
                 <Users />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/dashboard/feedbacks"
+            element={
+              <AdminRoute>
+                <FeedbackPage />
               </AdminRoute>
             }
           />

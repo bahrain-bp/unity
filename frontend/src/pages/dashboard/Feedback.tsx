@@ -3,7 +3,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FeedbackCard } from "../../components/FeedbackCard";
 import { FeedbackClient } from "../../services/api";
-import "../../sass/_feedbackA.scss";
+import "../../../sass/_feedbackA.scss";
+import DashboardLayout from "./DashboardLayout";
 
 export default function FeedbackPage() {
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
@@ -42,17 +43,14 @@ export default function FeedbackPage() {
 
   if (loading) {
     return (
-      <div className="feedback-page">
-        <h1 className="page-header">BAHTWIN Feedback</h1>
+      <DashboardLayout className="feedback-page" header="BAHTWIN Feedback">
         <p className="empty-state">Loading feedbacks...</p>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="feedback-page">
-      <h1 className="page-header">BAHTWIN Feedback</h1>
-
+    <DashboardLayout className="feedback-page" header="BAHTWIN Feedback">
       <div className="controls">
         <input
           type="text"
@@ -97,6 +95,6 @@ export default function FeedbackPage() {
           filteredFeedbacks.map((fb) => <FeedbackCard key={fb.id} feedback={fb} />)
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
