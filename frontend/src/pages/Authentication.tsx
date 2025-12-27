@@ -207,6 +207,8 @@ function Authentication() {
       setTimeout(() => {
         setShowVerification(false);
         setAuthMode(false);
+        setShowPass1(false);
+        setShowPass2(false);
         setError("");
         setMessage("");
         navigate("/auth");

@@ -1,13 +1,21 @@
 "use client";
 
 // import { usePathname } from "next/navigation";
-import { OVERVIEW, USERS, USER, ED } from "../assets/icons";
+import { OVERVIEW, USERS, USER, ED, USERADD } from "../assets/icons";
 import logo from "../assets/logo.svg";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/AuthHook";
+import { useEffect, useState } from "react";
+import { ImageClient } from "../services/api";
+import tmpUserImg from "../assets/user.png";
 
 export default function Sidebar() {
   const location = useLocation();
   const pathname = location.pathname;
+  const { email, userId } = useAuth();
+
+  const [userImg, setUserImg] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
 
   const dashboard_pages = [
     {
@@ -16,21 +24,45 @@ export default function Sidebar() {
       icon: OVERVIEW,
     },
     {
-      name: "Users",
-      route: "/dashboard/users",
-      icon: USERS,
-    },
-    {
       name: "WebGL Files",
       route: "/dashboard/upload-unity",
       icon: ED,
+    },
+    {
+      name: "Users",
+      route: "/dashboard/users",
+      icon: USERS,
     },
     {
       name: "Visitor Arrival",
       route: "/visitor-arrival",
       icon: USER,
     },
+    {
+      name: "Invite Visitor",
+      route: "/InviteVisitor",
+      icon: USERADD,
+    },
   ];
+
+  const getUserImg = async () => {
+    try {
+      const result = await ImageClient.get(`/visitor/me?userId=${userId}`);
+
+      if (result.status === 200) {
+        setUserImg(result.data.imageUrl);
+        setUsername(result.data.name);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      getUserImg();
+    }
+  }, [userId]);
 
   return (
     <div className="sidebar">
@@ -51,13 +83,11 @@ export default function Sidebar() {
         })}
       </div>
       <div className="sidebar__bottom">
-        <Link
-          to={"/account"}
-          className={pathname === "/account" ? "active" : ""}
-        >
-          {USER()}
-          <span>Account</span>
-        </Link>
+        <a className={pathname === "/account" ? "active" : ""}>
+          <img src={userImg ?? tmpUserImg} alt="profile picture" />
+
+          <span>{username ? username : email.replace(/@.*/, "")}</span>
+        </a>
       </div>
     </div>
   );
