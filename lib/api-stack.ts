@@ -31,6 +31,16 @@ export class APIStack extends cdk.Stack {
     // Ensure DBStack is created before APIStack
     this.addDependency(dbStack);
 
+    // ────────────────────────────────
+    // ✅ X-RAY HELPER (one place, apply to all lambdas)
+    // ────────────────────────────────
+    const enableXRay = (fn: lambda.Function) => {
+      // Allow Lambda to send traces to X-Ray
+      fn.role?.addManagedPolicy(
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AWSXRayDaemonWriteAccess")
+      );
+    };
+
     // DynamoDB Outputs (already present)
     new cdk.CfnOutput(this, "BahtwinTableName", {
       value: dbStack.table.tableName,
@@ -71,7 +81,9 @@ export class APIStack extends cdk.Stack {
         minify: true,
         sourceMap: false,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(postConfirmFn);
 
     postConfirmFn.addToRolePolicy(
       new iam.PolicyStatement({
@@ -139,14 +151,19 @@ export class APIStack extends cdk.Stack {
         TABLE_NAME: dbStack.table.tableName,
         USER_POOL_ID: userPool.userPoolId,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(helloFn);
 
     // ────────────────────────────────
     // 3. API Gateway + Cognito Authorizer
     // ────────────────────────────────
     const api = new apigw.RestApi(this, "UnityRestApi", {
       restApiName: "Unity Service",
-      deployOptions: { stageName: "dev" },
+      deployOptions: {
+        stageName: "dev",
+        tracingEnabled: true,
+      },
     });
 
     const authorizer = new apigw.CognitoUserPoolsAuthorizer(this, "UnityCognitoAuthorizer", {
@@ -173,7 +190,9 @@ export class APIStack extends cdk.Stack {
         minify: true,
         sourceMap: false,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(whoamiFn);
 
     const whoamiResource = api.root.addResource("whoami");
     whoamiResource.addMethod("GET", new apigw.LambdaIntegration(whoamiFn), {
@@ -195,7 +214,9 @@ export class APIStack extends cdk.Stack {
       environment: {
         USER_POOL_ID: userPool.userPoolId,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(setRoleFn);
 
     setRoleFn.addToRolePolicy(
       new iam.PolicyStatement({
@@ -215,7 +236,7 @@ export class APIStack extends cdk.Stack {
     });
 
     // ────────────────────────────────
-    // PlugActions: use table from DBStack
+    // PlugActions
     // ────────────────────────────────
     const plugActionsTable: dynamodb.Table = dbStack.plugActionsTable;
 
@@ -242,7 +263,9 @@ export class APIStack extends cdk.Stack {
         WS_CONNECTIONS_TABLE: wsStack.connectionsTable.tableName,
         WS_MANAGEMENT_ENDPOINT: wsStack.managementEndpoint,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(plugControlFn);
 
     plugActionsTable.grantReadWriteData(plugControlFn);
     wsStack.connectionsTable.grantReadData(plugControlFn);
@@ -263,7 +286,7 @@ export class APIStack extends cdk.Stack {
     });
 
     // ────────────────────────────────
-    // Telemetry query: use IoTDeviceTelemetry table from DBStack
+    // Telemetry query
     // ────────────────────────────────
     const iotTelemetryTable: dynamodb.Table = dbStack.iotTelemetryTable;
 
@@ -279,7 +302,9 @@ export class APIStack extends cdk.Stack {
       environment: {
         TELEMETRY_TABLE: iotTelemetryTable.tableName,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(telemetryQueryFn);
 
     iotTelemetryTable.grantReadData(telemetryQueryFn);
 
@@ -290,7 +315,7 @@ export class APIStack extends cdk.Stack {
     });
 
     // ────────────────────────────────
-    // Alexa Telemetry Controller 
+    // Alexa Telemetry Controller
     // ────────────────────────────────
     const alexaTelemetryFn = new NodejsFunction(this, "AlexaTelemetryHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -299,12 +324,12 @@ export class APIStack extends cdk.Stack {
       bundling: { target: "node18", minify: true, sourceMap: false },
       environment: {
         TELEMETRY_TABLE: iotTelemetryTable.tableName,
-
-        // TEMPORARY: hard-coded Basic Auth credentials
         BASIC_USER: "alexa",
         BASIC_PASS: "aL9Qx7P2mR4ZK8wE",
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(alexaTelemetryFn);
 
     iotTelemetryTable.grantReadData(alexaTelemetryFn);
 
@@ -361,7 +386,9 @@ export class APIStack extends cdk.Stack {
         VERIFY_TOKEN: "parkingbot_verify",
         ALLOWLIST_E164: "+97338006448",
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(whatsappBotFn);
 
     iotTelemetryTable.grantReadData(whatsappBotFn);
 
@@ -376,6 +403,13 @@ export class APIStack extends cdk.Stack {
     // ────────────────────────────────
     // Virtual Assistant API route (Bedrock)
     // ────────────────────────────────
+    // ✅ FIX: no addTracing() in CDK. Use escape hatch to enable tracing.
+    const bedrockCfnFn = bedrockStack.lambdaFunction.node.defaultChild as lambda.CfnFunction;
+    bedrockCfnFn.tracingConfig = { mode: "Active" };
+
+    // ✅ Ensure bedrock lambda can publish traces too
+    enableXRay(bedrockStack.lambdaFunction);
+
     const assistantResource = api.root.addResource("assistant");
 
     assistantResource.addCorsPreflight({
@@ -387,10 +421,7 @@ export class APIStack extends cdk.Stack {
 
     // ────────────────────────────────
     // Pre-Registration: Presigned Upload + Validate Image + Presigned Download
-    // (KEPT ONCE — DUPLICATE REMOVED)
     // ────────────────────────────────
-
-    // Generate presigned S3 upload URL
     const generatePresignedUrlFn = new NodejsFunction(this, "GeneratePresignedUrlHandler", {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(__dirname, "../lambda/generatePresignedUploadUrl.ts"),
@@ -398,14 +429,16 @@ export class APIStack extends cdk.Stack {
       environment: {
         BUCKET_NAME: preRegBucket.bucketName,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(generatePresignedUrlFn);
 
     preRegBucket.grantReadWrite(generatePresignedUrlFn);
 
     const uploadImageResource = api.root.addResource("upload-image");
 
     uploadImageResource.addCorsPreflight({
-      allowOrigins: ["*"], // replace "*" with your frontend URL in production
+      allowOrigins: ["*"],
       allowMethods: ["POST"],
     });
 
@@ -424,7 +457,9 @@ export class APIStack extends cdk.Stack {
         USER_MANAGEMENT_TABLE: userTable.tableName,
         COLLECTION_ID: "VisitorFaceCollection",
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(preRegisterCheckFn);
 
     preRegBucket.grantReadWrite(preRegisterCheckFn);
     userTable.grantReadWriteData(preRegisterCheckFn);
@@ -448,7 +483,9 @@ export class APIStack extends cdk.Stack {
       environment: {
         BUCKET_NAME: preRegBucket.bucketName,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(getImageFn);
 
     preRegBucket.grantRead(getImageFn);
 
@@ -489,14 +526,16 @@ export class APIStack extends cdk.Stack {
       handler: "handler",
       environment: {
         USER_POOL_ID: userPool.userPoolId,
-        ALLOWED_ORIGIN: "http://localhost:5173", 
+        ALLOWED_ORIGIN: "http://localhost:5173",
       },
       bundling: {
         target: "node18",
         minify: true,
         sourceMap: false,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(usersGetFn);
 
     usersGetFn.addToRolePolicy(
       new iam.PolicyStatement({
@@ -517,14 +556,16 @@ export class APIStack extends cdk.Stack {
       handler: "handler",
       environment: {
         USER_POOL_ID: userPool.userPoolId,
-        ALLOWED_ORIGIN: "http://localhost:5173", 
+        ALLOWED_ORIGIN: "http://localhost:5173",
       },
       bundling: {
         target: "node18",
         minify: true,
         sourceMap: false,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(usersCreateFn);
 
     usersCreateFn.addToRolePolicy(
       new iam.PolicyStatement({
@@ -545,14 +586,16 @@ export class APIStack extends cdk.Stack {
       handler: "handler",
       environment: {
         USER_POOL_ID: userPool.userPoolId,
-        ALLOWED_ORIGIN: "http://localhost:5173", 
+        ALLOWED_ORIGIN: "http://localhost:5173",
       },
       bundling: {
         target: "node18",
         minify: true,
         sourceMap: false,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(usersUpdateFn);
 
     usersUpdateFn.addToRolePolicy(
       new iam.PolicyStatement({
@@ -573,14 +616,16 @@ export class APIStack extends cdk.Stack {
       handler: "handler",
       environment: {
         USER_POOL_ID: userPool.userPoolId,
-        ALLOWED_ORIGIN: "http://localhost:5173", 
+        ALLOWED_ORIGIN: "http://localhost:5173",
       },
       bundling: {
         target: "node18",
         minify: true,
         sourceMap: false,
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(usersDeleteFn);
 
     usersDeleteFn.addToRolePolicy(
       new iam.PolicyStatement({
@@ -593,5 +638,41 @@ export class APIStack extends cdk.Stack {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
+
+    // ────────────────────────────────
+    // Analytics Dashboard (REAL DATA)
+    // ────────────────────────────────
+    const analyticsDashboardFn = new NodejsFunction(this, "AnalyticsDashboardHandler", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/analytics-dashboard.ts"),
+      handler: "handler",
+      bundling: { target: "node18", minify: true, sourceMap: false },
+      environment: {
+        PLUG_ACTIONS_TABLE: dbStack.plugActionsTable.tableName,
+        TELEMETRY_TABLE: dbStack.iotTelemetryTable.tableName,
+        PLUG_INDEX_NAME: "plug_id-ts-index",
+      },
+      tracing: lambda.Tracing.ACTIVE,
+    });
+    enableXRay(analyticsDashboardFn);
+
+    dbStack.plugActionsTable.grantReadData(analyticsDashboardFn);
+    dbStack.iotTelemetryTable.grantReadData(analyticsDashboardFn);
+
+    const analyticsResource = api.root.addResource("analytics");
+    const dashboardResource = analyticsResource.addResource("dashboard");
+
+    dashboardResource.addCorsPreflight({
+      allowOrigins: ["http://localhost:8080", "http://localhost:5173"],
+      allowMethods: ["OPTIONS", "GET"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    });
+
+    dashboardResource.addMethod("GET", new apigw.LambdaIntegration(analyticsDashboardFn), {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    });
+
+
   }
 }
