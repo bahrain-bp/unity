@@ -1,26 +1,42 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
-import { CognitoIdentityProviderClient, ListUsersCommand } from "@aws-sdk/client-cognito-identity-provider"
-import { isAdmin } from "./utils/auth"
-import { createResponse, createErrorResponse } from "./utils/cors"
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import {
+  CognitoIdentityProviderClient,
+  ListUsersCommand,
+} from "@aws-sdk/client-cognito-identity-provider";
+import { isAdmin } from "./utils/auth";
+import { jsonResponse } from "./http-response";
 
-const client = new CognitoIdentityProviderClient({})
+const client = new CognitoIdentityProviderClient({});
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  try {    
-    if (!isAdmin(event)) {
-      return createErrorResponse(403, "Access denied. Not an Admin.")
+export const handler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    // ✅ Handle CORS preflight
+    if (event.httpMethod === "OPTIONS") {
+      return jsonResponse(200, {});
     }
 
-    // List all users from Cognito
+    // ✅ Auth check (still returns CORS headers)
+    if (!isAdmin(event)) {
+      return jsonResponse(403, {
+        message: "Access denied. Not an Admin.",
+      });
+    }
+
     const command = new ListUsersCommand({
       UserPoolId: process.env.USER_POOL_ID,
-    })
-    
-    const result = await client.send(command)
-    
-    return createResponse(200, { users: result.Users || [] })
+    });
+
+    const result = await client.send(command);
+
+    return jsonResponse(200, {
+      users: result.Users || [],
+    });
   } catch (error: any) {
-    console.error("Error getting users:", error)
-    return createErrorResponse(500, "Failed to get users")
+    console.error("Error getting users:", error);
+    return jsonResponse(500, {
+      message: "Failed to get users",
+    });
   }
-}
+};
