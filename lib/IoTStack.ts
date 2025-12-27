@@ -49,6 +49,10 @@ export class IoTStack extends cdk.Stack {
         name: "esp32-01",
         sensors: ["distance_cm"],   // ultrasonic
       },
+      {
+        name: "esp32-02",
+        sensors: ["status"],   // pir sensor
+      },
     ];
 
     // ────────────────────────────────

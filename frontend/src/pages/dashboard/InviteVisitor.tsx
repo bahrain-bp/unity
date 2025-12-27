@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
-import axios from "axios";
 import { FaUpload } from "react-icons/fa";
 import "../../../sass/_visitorInvite.scss";
 import DashboardLayout from "./DashboardLayout";
+import { ImageClient } from "../../services/api";
 
 function VisitorTestPage() {
   const [mode, setMode] = useState<"single" | "bulk">("single");
@@ -32,8 +32,8 @@ function VisitorTestPage() {
         setMessage("Sending invitation...");
         setMessageType("processing");
 
-        const response = await axios.post(
-          "https://vljyjl7oae.execute-api.us-east-1.amazonaws.com/prod/admin/registerVisitorIndividual",
+        const response = await ImageClient.post(
+          "admin/registerVisitorIndividual",
           {
             name,
             email,
@@ -69,8 +69,8 @@ function VisitorTestPage() {
           reader.readAsDataURL(csvFile);
         });
 
-        const response = await axios.post(
-          "https://vljyjl7oae.execute-api.us-east-1.amazonaws.com/prod/admin/registerVisitorBulk",
+        const response = await ImageClient.post(
+          "/admin/registerVisitorBulk",
           { file: fileBase64 }
         );
 
@@ -177,26 +177,44 @@ function VisitorTestPage() {
           )}
 
           {mode === "bulk" && (
-            <>
-              <label className="auth__form--label">Upload CSV File</label>
-              <div
-                className="auth__form--upload"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv"
-                  style={{ display: "none" }}
-                  onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)}
-                />
-                <div className="upload-content">
-                  <FaUpload className="upload-icon" />
-                  <p>{csvFile ? csvFile.name : "Click to upload CSV"}</p>
-                </div>
-              </div>
-            </>
-          )}
+  <>
+    {/* CSV INFO */}
+    <div className="csv-info">
+      <p className="csv-info__title">CSV format requirements</p>
+
+      <ul>
+        <li><strong>name</strong> – Visitor full name</li>
+        <li><strong>email</strong> – Valid email address</li>
+        <li><strong>visitDate</strong> – MM/DD/YYYY</li>
+        <li><strong>visitTime</strong> – h:mm AM/PM</li>
+      </ul>
+
+      <pre className="csv-example">
+      name,email,visitDate,visitTime<br/>
+      Abby,lyhyvasa@denipl.net,12/22/2025,5:30 PM
+      </pre>
+    </div>
+
+    {/* UPLOAD */}
+    <label className="auth__form--label">Upload CSV File</label>
+    <div
+      className="auth__form--upload"
+      onClick={() => fileInputRef.current?.click()}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        style={{ display: "none" }}
+        onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)}
+      />
+      <div className="upload-content">
+        <FaUpload className="upload-icon" />
+        <p>{csvFile ? csvFile.name : "Click to upload CSV"}</p>
+      </div>
+    </div>
+  </>
+)}
 
           <button
             className="auth__button btn"
