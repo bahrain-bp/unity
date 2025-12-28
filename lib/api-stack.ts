@@ -18,6 +18,8 @@ interface APIStackProps extends cdk.StackProps {
 }
 
 export class APIStack extends cdk.Stack {
+  public readonly restApi!: apigw.RestApi;
+
   constructor(scope: Construct, id: string, props: APIStackProps) {
     super(scope, id, props);
 
@@ -32,7 +34,7 @@ export class APIStack extends cdk.Stack {
     this.addDependency(dbStack);
 
     // ────────────────────────────────
-    // ✅ X-RAY HELPER (one place, apply to all lambdas)
+    // X-RAY HELPER (one place, apply to all lambdas)
     // ────────────────────────────────
     const enableXRay = (fn: lambda.Function) => {
       // Allow Lambda to send traces to X-Ray
@@ -165,6 +167,8 @@ export class APIStack extends cdk.Stack {
         tracingEnabled: true,
       },
     });
+
+    this.restApi = api;
 
     const authorizer = new apigw.CognitoUserPoolsAuthorizer(this, "UnityCognitoAuthorizer", {
       cognitoUserPools: [userPool],
@@ -403,11 +407,10 @@ export class APIStack extends cdk.Stack {
     // ────────────────────────────────
     // Virtual Assistant API route (Bedrock)
     // ────────────────────────────────
-    // ✅ FIX: no addTracing() in CDK. Use escape hatch to enable tracing.
+    // no addTracing() in CDK. Use escape hatch to enable tracing.
     const bedrockCfnFn = bedrockStack.lambdaFunction.node.defaultChild as lambda.CfnFunction;
     bedrockCfnFn.tracingConfig = { mode: "Active" };
 
-    // ✅ Ensure bedrock lambda can publish traces too
     enableXRay(bedrockStack.lambdaFunction);
 
     const assistantResource = api.root.addResource("assistant");
@@ -672,7 +675,5 @@ export class APIStack extends cdk.Stack {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
-
-
   }
 }
