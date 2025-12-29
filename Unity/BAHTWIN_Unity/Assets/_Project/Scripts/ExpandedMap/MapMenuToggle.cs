@@ -3,76 +3,56 @@ using UnityEngine.InputSystem;
 
 public class MapMenuToggle : MonoBehaviour
 {
-    [Header("UI")]
-    public GameObject mapMenuRoot;
-
-    [Header("Player Control")]
+    [Header("References")]
+    public GameObject mapPanelRoot;
     public Behaviour playerLookScript;
+    public Behaviour playerMoveScript;
 
-    private InputAction toggleAction;
-    private bool isOpen;
-
-    void Awake()
+    void Start()
     {
-        // Create input action manually (New Input System safe)
-        toggleAction = new InputAction(
-            name: "ToggleMap",
-            type: InputActionType.Button,
-            binding: "<Keyboard>/m"
-        );
-
-        toggleAction.performed += _ => ToggleMenu();
-    }
-
-    void OnEnable()
-    {
-        toggleAction.Enable();
-        CloseMenu();
-    }
-
-    void OnDisable()
-    {
-        toggleAction.Disable();
-    }
-
-    void ToggleMenu()
-    {
-  if (!isOpen) OpenMenu();
-
-    }
-
-    void OpenMenu()
-    {
-        //mapMenuRoot.transform.SetAsLastSibling();
-
-        isOpen = true;
-
-        if (mapMenuRoot)
-            mapMenuRoot.SetActive(true);
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        if (playerLookScript)
-            playerLookScript.enabled = false;
-    }
-
-    void CloseMenu()
-    {
-        isOpen = false;
-
-        if (mapMenuRoot)
-            mapMenuRoot.SetActive(false);
+        // Ensure map is closed at start
+        mapPanelRoot.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        if (playerLookScript)
-            playerLookScript.enabled = true;
     }
-    public void CloseFromButton()
-{
-    CloseMenu();
-}
 
+    void Update()
+    {
+        // M key ONLY opens the map
+        if (Keyboard.current.mKey.wasPressedThisFrame)
+        {
+            OpenMap();
+        }
+    }
+
+    public void OpenMap()
+    {
+        // Already open → do nothing
+        if (mapPanelRoot.activeSelf)
+            return;
+
+        mapPanelRoot.SetActive(true);
+
+        if (playerLookScript) playerLookScript.enabled = false;
+        if (playerMoveScript) playerMoveScript.enabled = false;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void CloseMap()
+    {
+        // Already closed → do nothing
+        if (!mapPanelRoot.activeSelf)
+            return;
+
+        mapPanelRoot.SetActive(false);
+
+        if (playerLookScript) playerLookScript.enabled = true;
+        if (playerMoveScript) playerMoveScript.enabled = true;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
 }

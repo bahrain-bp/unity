@@ -27,6 +27,13 @@ public class RoomMenuUI : MonoBehaviour
     public Sprite selectedSprite;
 
     private RoomSO selectedRoom;
+    public RouteGuidanceController routeController;
+    [Header("Panel Control")]
+    public GameObject mapPanelRoot;
+    public MapMenuToggle mapToggle;
+
+
+
 
     private readonly List<GameObject> spawnedObjects = new();
     private readonly Dictionary<Button, RoomSO> buttonRoomMap = new();
@@ -162,4 +169,18 @@ public class RoomMenuUI : MonoBehaviour
     {
         return selectedRoom;
     }
+public void OnShowRouteClicked()
+{
+    if (routeController == null) return;
+
+    var room = GetSelectedRoom();
+    if (room == null) return;
+
+    routeController.SetDestination(room);
+
+    if (mapToggle != null)
+        mapToggle.CloseMap();
+}
+
+
 }
