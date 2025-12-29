@@ -9,8 +9,8 @@ import Landing from "./pages/Landing";
 import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
-import Environment from "./pages/Environment";
-//import SmartPlugEnvironment from "./pages/SmartPlugEnvironment";
+//import Environment from "./pages/Environment";
+import SmartPlugEnvironment from "./pages/SmartPlugEnvironment";
 import Chatbot from "./components/ChatBot";
 import VisitorArrival from "./pages/visitorArrival";
 import InviteVisitor from "./pages/dashboard/InviteVisitor";
@@ -133,7 +133,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <Navbar />
-                <Environment />
+                <SmartPlugEnvironment />
               </ProtectedRoute>
             }
           />

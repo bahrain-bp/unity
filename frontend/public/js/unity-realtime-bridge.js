@@ -425,3 +425,86 @@ function sendPirOccupancyToUnity(payload, msgTs) {
     console.warn("[Bridge] PIR SendMessage failed:", e);
   }
 }
+
+
+// ============================================================
+// Unity – Backend HTTP (Chat Assistant Bridge)
+// ============================================================
+
+// Store Unity WebGL instance ONLY for chat
+window.__CHAT_UNITY_INSTANCE__ = null;
+
+// Called once after Unity loads
+window.initChatBridge = function (unityInstance) {
+  window.__CHAT_UNITY_INSTANCE__ = unityInstance;
+  console.log("[ChatBridge] Unity instance registered");
+};
+
+// Chat assistant endpoint
+const ASSISTANT_ENDPOINT = `${API_BASE}/assistant`;
+
+// Unity calls:
+// AskPeccyAssistant(question, sessionId, unityObjectName)
+window.AskPeccyAssistant = async function (question, sessionId, unityObjectName) {
+  const unity = window.__CHAT_UNITY_INSTANCE__;
+  if (!unity) return;
+
+  const token = getIdToken();
+  if (!token) {
+    unity.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify({
+      answer: "You are not logged in. Please sign in first.",
+      sessionId: sessionId || null,
+      status: 401,
+      errorType: "AUTH"
+    }));
+    return;
+  }
+
+  let status = 0;
+  let responseBody = null;
+
+  try {
+    const requestBody = sessionId ? { question, sessionId } : { question };
+
+    const res = await fetch(ASSISTANT_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    status = res.status;
+
+    const text = await res.text();
+    try {
+      responseBody = JSON.parse(text);
+    } catch {
+      responseBody = { answer: text };
+    }
+  } catch (err) {
+    unity.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify({
+      answer: "Network error. Could not reach the assistant service.",
+      sessionId: sessionId || null,
+      status: 0,
+      errorType: "NETWORK"
+    }));
+    return;
+  }
+
+  // If backend returns an error format, surface it clearly
+  const answer =
+    responseBody?.answer ||
+    responseBody?.message ||
+    (status === 429 ? "Assistant is busy or quota is reached (HTTP 429)." : null) ||
+    (status >= 400 ? `Assistant error (HTTP ${status}).` : null) ||
+    "Sorry, I couldn’t generate a response.";
+
+  unity.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify({
+    answer,
+    sessionId: responseBody?.sessionId || sessionId || null,
+    status,
+    errorType: status === 429 ? "QUOTA_OR_THROTTLE" : (status >= 400 ? "BACKEND" : "OK")
+  }));
+};
