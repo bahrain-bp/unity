@@ -4,40 +4,58 @@ using UnityEngine.UI;
 
 public class ChatMessageItem : MonoBehaviour
 {
+    [Header("Refs")]
     public TMP_Text messageText;
-    public LayoutElement layoutElement;
-    public RectTransform rect;
-    public Image background;
+
+    [Tooltip("The Image on the Bubble object (not the root).")]
+    public Image bubbleBackground;
+
+    [Tooltip("Spacer objects with LayoutElement (FlexibleWidth).")]
+    public LayoutElement leftSpacer;
+    public LayoutElement rightSpacer;
+
+    [Header("Bubble Width Control")]
+    [Tooltip("LayoutElement on the Bubble object.")]
+    public LayoutElement bubbleLayout;
+    public float maxBubbleWidth = 520f;
+
+    [Header("Sprites")]
+    public Sprite botBubbleSprite;
+    public Sprite userBubbleSprite;
 
     void Awake()
     {
-        if (rect == null) rect = GetComponent<RectTransform>();
-        if (layoutElement == null) layoutElement = GetComponent<LayoutElement>();
-        if (messageText == null) messageText = GetComponentInChildren<TMP_Text>(true);
-        if (background == null) background = GetComponent<Image>();
+        if (!messageText) messageText = GetComponentInChildren<TMP_Text>(true);
     }
 
     public void Set(string text, bool isBot)
     {
-        if (messageText != null) messageText.text = text;
+        if (messageText) messageText.text = text;
 
-        if (rect == null) return;
+        // Limit bubble width so long text wraps
+        if (bubbleLayout) bubbleLayout.preferredWidth = maxBubbleWidth;
 
-        if (!isBot)
+        // Apply bubble sprite style
+        if (bubbleBackground)
         {
-            // USER on LEFT
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            if (messageText != null) messageText.alignment = TextAlignmentOptions.Left;
+            bubbleBackground.sprite = isBot ? botBubbleSprite : userBubbleSprite;
+            bubbleBackground.type = Image.Type.Sliced; // requires sprite borders set in Sprite Editor
+        }
+
+        // Align bubble using spacers
+        if (isBot)
+        {
+            if (leftSpacer) leftSpacer.flexibleWidth = 0f;
+            if (rightSpacer) rightSpacer.flexibleWidth = 1f;
+
+            if (messageText) messageText.alignment = TextAlignmentOptions.Left;
         }
         else
         {
-            // BOT on RIGHT
-            rect.anchorMin = new Vector2(1f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(1f, 1f);
-            if (messageText != null) messageText.alignment = TextAlignmentOptions.Right;
+            if (leftSpacer) leftSpacer.flexibleWidth = 1f;
+            if (rightSpacer) rightSpacer.flexibleWidth = 0f;
+
+            if (messageText) messageText.alignment = TextAlignmentOptions.Left;
         }
     }
 }
