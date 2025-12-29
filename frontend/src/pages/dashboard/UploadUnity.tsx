@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useRef, useState, useEffect } from "react";
 import type { ChangeEvent } from "react";
 import DashboardLayout from "./DashboardLayout";
@@ -27,6 +27,7 @@ function UploadUnity() {
   };
 
   useEffect(() => {
+    setMessage("test")
     if (!files || files.length === 0) {
       return;
     }

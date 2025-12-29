@@ -73,7 +73,7 @@ export default function FeedbackPage() {
 
         <DatePicker
           selected={startDate}
-          onChange={(date) => setStartDate(date)}
+          onChange={(date: any) => setStartDate(date)}
           placeholderText="Start Date"
           className="date-picker-input"
           dateFormat="MM/dd/yyyy"
@@ -81,7 +81,7 @@ export default function FeedbackPage() {
 
         <DatePicker
           selected={endDate}
-          onChange={(date) => setEndDate(date)}
+          onChange={(date: any) => setEndDate(date)}
           placeholderText="End Date"
           className="date-picker-input"
           dateFormat="MM/dd/yyyy"

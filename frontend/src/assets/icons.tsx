@@ -604,3 +604,16 @@ export const STAR = () => {
     </svg>
   );
 };
+export const PARKING = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M6 3h7a6 6 0 1 1 0 12h-3v6H6V3Zm4 4v4h3a2 2 0 0 0 0-4h-3Z"></path>
+    </svg>
+  );
+};

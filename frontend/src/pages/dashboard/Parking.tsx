@@ -118,7 +118,7 @@ const chunkRows = (arr: ParkingSlot[]) => [arr.slice(0, 6), arr.slice(6, 12), ar
 
 const Parking = () => {
   const [slots, setSlots] = useState<ParkingSlot[]>(() => makeInitialSlots())
-  const [loading, setLoading] = useState(false)
+  // const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [focus, setFocus] = useState<FocusFilter>("all")
@@ -339,9 +339,9 @@ const Parking = () => {
       </div>
 
       <div className="dashboard__box parking__visual">
-        {loading ? (
+        
           <div style={{ padding: "2rem", textAlign: "center" }}>Refreshing...</div>
-        ) : (
+      
           <div className="parkingLot">
             {rows.map((row, idx) => (
               <div key={idx} className="parkingLot__rowWrap">
@@ -413,7 +413,7 @@ const Parking = () => {
               </div>
             ))}
           </div>
-        )}
+        
       </div>
 
       {/* POPUP MODAL (LIVE) */}

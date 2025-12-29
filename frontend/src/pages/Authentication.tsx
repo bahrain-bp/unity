@@ -23,7 +23,7 @@ function Authentication() {
   const [authMode, setAuthMode] = useState<boolean>(true);
   // const [isSignedUp, setIsSignedUp] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
 
   const [error, setError] = useState("");
@@ -31,9 +31,10 @@ function Authentication() {
   const [message, setMessage] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [showVerification, setShowVerification] = useState(false);
-
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(false)
+  
   const navigate = useNavigate();
-  const { signUp, confirmSignUp, signIn } = useAuth();
+  const { signUp, confirmSignUp, signIn, changePassword } = useAuth();
 
   const [account, setAccount] = useState({
     email: "",
@@ -96,10 +97,10 @@ function Authentication() {
   const handleSubmit = async (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (authMode) {
-      if (userId) {
-        handleImageUpload(userId);
-      } else {
+      if (!userId) {
         handleSignup();
+      } else {
+        handleImageUpload(userId);
       }
     } else {
       handleSignIn();
@@ -111,22 +112,34 @@ function Authentication() {
     setMessage("");
     setLoading(true);
 
-    const result = await signIn(account.email, account.password);
-
+    if (needsPasswordChange) {
+    const result = await changePassword(account.password);
+    
     if (result.success) {
       navigate("/");
     } else {
       setError(result.message);
     }
+  } else {
+    const result = await signIn(account.email, account.password);
 
-    setLoading(false);
+    if (result.success) {
+      navigate("/");
+    } else if (result.message === "NEW_PASSWORD_REQUIRED") {
+      setNeedsPasswordChange(true);
+      setError("");
+      setMessage("Please set a new password");
+    } else {
+      setError(result.message);
+    }
+  }
+
+  setLoading(false);
   };
 
   const handleSignup = async () => {
     setError("");
     setMessage("");
-    setUserId(null);
-    // console.log("Signing Up...");
 
     if (account.password !== account.confirmPassword) {
       setError("Passwords do not match");
@@ -138,8 +151,8 @@ function Authentication() {
       return;
     }
 
-    if (name.length < 1) {
-      setError("Please enter your name");
+    if (username.length < 1) {
+      setError("Please enter a username");
       return;
     }
 
@@ -150,16 +163,16 @@ function Authentication() {
 
     setLoading(true);
     const result = await signUp(account.email, account.password);
-    // console.log(result);
+    console.log(result);
 
     if (result.success) {
       // setMessage(result.message);
-      // console.log("Signed Up");
       setUserId(result.userId ?? null);
       if (result.userId) {
         handleImageUpload(result.userId);
       }
       setError("");
+      localStorage.setItem("username", username);
       //setShowVerification(true);
     } else {
       setError(result.message);
@@ -169,27 +182,23 @@ function Authentication() {
   };
 
   const handleImageUpload = async (userId: string) => {
-    // console.log("Image approving....");
-
+    console.log(userId);
+    
     setLoading(true);
     try {
+      console.log(userId);
       await ImageClient.post("/visitor/register", {
         userId: userId,
-        name: name,
+        name: username,
         email: account.email,
         image_data: imageBase64,
       });
       setError("");
     } catch (err: any) {
-      setError(
-        err.response?.data?.error ||
-          "Something went wrong. Please try to upload another image"
-      );
+      setError(err.response?.data?.error || "Something went wrong. Please try to upload another image");
       setLoading(false);
-      // console.log("image error");
       return;
     }
-    // console.log("Image approved....");
     setLoading(false);
     setShowVerification(true);
   };
@@ -207,8 +216,6 @@ function Authentication() {
       setTimeout(() => {
         setShowVerification(false);
         setAuthMode(false);
-        setShowPass1(false);
-        setShowPass2(false);
         setError("");
         setMessage("");
         navigate("/auth");
@@ -320,7 +327,7 @@ function Authentication() {
                     className="auth__form--uploadPlaceholder"
                   >
                     {IMAGE()}
-                    <p><b>IMPORTANT: </b>Please upload a clear photo of yourself. This image is used for pre-registration for your visit and will be linked to your account. The same face cannot be used by another user.</p>
+                    <p>Upload your image here!</p>
                   </span>
                 )}
               </div>
@@ -328,18 +335,18 @@ function Authentication() {
           )}
           {authMode && (
             <>
-              <label htmlFor="name" className="auth__form--label">
-                Name
+              <label htmlFor="username" className="auth__form--label">
+                Username
               </label>
               <div className="auth__form--input">
                 {USER()}
                 <input
                   type="text"
                   className="auth__form--input"
-                  placeholder="Enter your name"
-                  id="name"
-                  name="name"
-                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your username"
+                  id="username"
+                  name="username"
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
             </>
@@ -360,7 +367,7 @@ function Authentication() {
           </div>
 
           <label htmlFor="password" className="auth__form--label">
-            Password
+            {needsPasswordChange ? "New Password" : "Password"}
           </label>
           <div className="auth__form--input">
             {LOCK()}
