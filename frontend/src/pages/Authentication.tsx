@@ -23,7 +23,7 @@ function Authentication() {
   const [authMode, setAuthMode] = useState<boolean>(true);
   // const [isSignedUp, setIsSignedUp] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
 
   const [error, setError] = useState("");
@@ -96,10 +96,10 @@ function Authentication() {
   const handleSubmit = async (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (authMode) {
-      if (!userId) {
-        handleSignup();
-      } else {
+      if (userId) {
         handleImageUpload(userId);
+      } else {
+        handleSignup();
       }
     } else {
       handleSignIn();
@@ -125,6 +125,8 @@ function Authentication() {
   const handleSignup = async () => {
     setError("");
     setMessage("");
+    setUserId(null);
+    // console.log("Signing Up...");
 
     if (account.password !== account.confirmPassword) {
       setError("Passwords do not match");
@@ -136,8 +138,8 @@ function Authentication() {
       return;
     }
 
-    if (username.length < 1) {
-      setError("Please enter a username");
+    if (name.length < 1) {
+      setError("Please enter your name");
       return;
     }
 
@@ -148,16 +150,16 @@ function Authentication() {
 
     setLoading(true);
     const result = await signUp(account.email, account.password);
-    console.log(result);
+    // console.log(result);
 
     if (result.success) {
       // setMessage(result.message);
+      // console.log("Signed Up");
       setUserId(result.userId ?? null);
       if (result.userId) {
         handleImageUpload(result.userId);
       }
       setError("");
-      localStorage.setItem("username", username);
       //setShowVerification(true);
     } else {
       setError(result.message);
@@ -167,23 +169,27 @@ function Authentication() {
   };
 
   const handleImageUpload = async (userId: string) => {
-    console.log(userId);
-    
+    // console.log("Image approving....");
+
     setLoading(true);
     try {
-      console.log(userId);
       await ImageClient.post("/visitor/register", {
         userId: userId,
-        name: username,
+        name: name,
         email: account.email,
         image_data: imageBase64,
       });
       setError("");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Something went wrong. Please try to upload another image");
+      setError(
+        err.response?.data?.error ||
+          "Something went wrong. Please try to upload another image"
+      );
       setLoading(false);
+      // console.log("image error");
       return;
     }
+    // console.log("Image approved....");
     setLoading(false);
     setShowVerification(true);
   };
@@ -201,6 +207,8 @@ function Authentication() {
       setTimeout(() => {
         setShowVerification(false);
         setAuthMode(false);
+        setShowPass1(false);
+        setShowPass2(false);
         setError("");
         setMessage("");
         navigate("/auth");
@@ -312,7 +320,7 @@ function Authentication() {
                     className="auth__form--uploadPlaceholder"
                   >
                     {IMAGE()}
-                    <p>Upload your image here!</p>
+                    <p><b>IMPORTANT: </b>Please upload a clear photo of yourself. This image is used for pre-registration for your visit and will be linked to your account. The same face cannot be used by another user.</p>
                   </span>
                 )}
               </div>
@@ -320,18 +328,18 @@ function Authentication() {
           )}
           {authMode && (
             <>
-              <label htmlFor="username" className="auth__form--label">
-                Username
+              <label htmlFor="name" className="auth__form--label">
+                Name
               </label>
               <div className="auth__form--input">
                 {USER()}
                 <input
                   type="text"
                   className="auth__form--input"
-                  placeholder="Enter your username"
-                  id="username"
-                  name="username"
-                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your name"
+                  id="name"
+                  name="name"
+                  onChange={(e) => setName(e.target.value)}
                 />
               </div>
             </>

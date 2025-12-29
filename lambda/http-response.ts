@@ -1,5 +1,3 @@
-// lambda/http-response.ts
-
 const ALLOWED_ORIGIN =
   process.env.ALLOWED_ORIGIN || "http://localhost:5173";
 
