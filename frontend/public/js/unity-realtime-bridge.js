@@ -252,6 +252,7 @@ function setupWebSocket(unityInstance) {
 
       // forward telemetry to Unity UI (if Unity attached)
       sendDht11TelemetryToUnity(msg.payload, msg.ts);
+      sendPirOccupancyToUnity(msg.payload, msg.ts);
 
       return;
     }
@@ -384,3 +385,43 @@ window.initSmartPlugBridge = function (unityInstance) {
 
   console.log("[JS] Unity Realtime Bridge Ready");
 };
+
+
+/**
+ * PIR occupancy telemetry → Unity
+ * Expects payload like:
+ * { sensor_type:"pir", attrs:{ room_status:"OCCUPIED" } }
+ */
+function sendPirOccupancyToUnity(payload, msgTs) {
+  if (!payload) return;
+
+  // Only PIR
+  if (payload.sensor_type !== "pir") return;
+
+  const roomStatus = payload.attrs?.room_status;
+  if (typeof roomStatus !== "string" || roomStatus.length === 0) return;
+
+  const normalized = {
+    device: payload.device || "",
+    sensor_id: payload.sensor_id || "",
+    sensor_type: payload.sensor_type || "pir",
+    state: roomStatus, // "OCCUPIED" / "EMPTY"
+    ts: payload.ts || msgTs || safeNowSeconds(),
+    status: payload.status || "ok",
+  };
+
+  // GameObject in Unity must exist (choose your name)
+  const targetObj = "Occupancy_UI";
+
+  console.log("[Bridge] PIR Occupancy → Unity:", normalized);
+
+  try {
+    wsUnityInstance?.SendMessage(
+      targetObj,
+      "OnOccupancyJson",
+      JSON.stringify(normalized)
+    );
+  } catch (e) {
+    console.warn("[Bridge] PIR SendMessage failed:", e);
+  }
+}
