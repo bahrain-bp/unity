@@ -401,46 +401,26 @@ const ASSISTANT_ENDPOINT = `${API_BASE}/assistant`;
 
 // Unity calls:
 // AskPeccyAssistant(question, sessionId, unityObjectName)
-window.AskPeccyAssistant = async function (
-  question,
-  sessionId,
-  unityObjectName
-) {
-  console.log("[ChatBridge] AskPeccyAssistant:", {
-    question,
-    sessionId,
-    unityObjectName,
-  });
-
+window.AskPeccyAssistant = async function (question, sessionId, unityObjectName) {
   const unity = window.__CHAT_UNITY_INSTANCE__;
-  if (!unity) {
-    console.warn("[ChatBridge] Unity instance not ready");
-    return;
-  }
+  if (!unity) return;
 
   const token = getIdToken();
   if (!token) {
-    // Not authenticated
-    const payload = {
+    unity.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify({
       answer: "You are not logged in. Please sign in first.",
       sessionId: sessionId || null,
       status: 401,
-    };
-
-    unity.SendMessage(
-      unityObjectName,
-      "OnAssistantResponseJson",
-      JSON.stringify(payload)
-    );
+      errorType: "AUTH"
+    }));
     return;
   }
 
+  let status = 0;
   let responseBody = null;
 
   try {
-    const requestBody = sessionId
-      ? { question, sessionId }
-      : { question };
+    const requestBody = sessionId ? { question, sessionId } : { question };
 
     const res = await fetch(ASSISTANT_ENDPOINT, {
       method: "POST",
@@ -451,6 +431,8 @@ window.AskPeccyAssistant = async function (
       body: JSON.stringify(requestBody),
     });
 
+    status = res.status;
+
     const text = await res.text();
     try {
       responseBody = JSON.parse(text);
@@ -458,27 +440,27 @@ window.AskPeccyAssistant = async function (
       responseBody = { answer: text };
     }
   } catch (err) {
-    console.error("[ChatBridge] Request failed:", err);
-    responseBody = {
-      answer: "Sorry, something went wrong while contacting the assistant.",
+    unity.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify({
+      answer: "Network error. Could not reach the assistant service.",
       sessionId: sessionId || null,
-    };
+      status: 0,
+      errorType: "NETWORK"
+    }));
+    return;
   }
 
-  // Normalize response for Unity
-  const payload = {
-    answer:
-      responseBody?.answer ||
-      "Sorry, I couldn’t generate a response.",
-    sessionId:
-      responseBody?.sessionId || sessionId || null,
-  };
+  // If backend returns an error format, surface it clearly
+  const answer =
+    responseBody?.answer ||
+    responseBody?.message ||
+    (status === 429 ? "Assistant is busy or quota is reached (HTTP 429)." : null) ||
+    (status >= 400 ? `Assistant error (HTTP ${status}).` : null) ||
+    "Sorry, I couldn’t generate a response.";
 
-  console.log("[ChatBridge] Sending to Unity:", payload);
-
-  unity.SendMessage(
-    unityObjectName,
-    "OnAssistantResponseJson",
-    JSON.stringify(payload)
-  );
+  unity.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify({
+    answer,
+    sessionId: responseBody?.sessionId || sessionId || null,
+    status,
+    errorType: status === 429 ? "QUOTA_OR_THROTTLE" : (status >= 400 ? "BACKEND" : "OK")
+  }));
 };

@@ -29,6 +29,12 @@ public class SmartPlugController : MonoBehaviour
     [Header("Label (optional)")]
     public TextMeshPro label;                  // drag your TextMeshPro here
 
+    [Header("Interaction (Proximity + Key)")]
+    public Transform player;                   // assign Main Camera / FPS Controller transform
+    public float interactDistance = 2f;
+    public KeyCode interactKey = KeyCode.F;
+    public bool allowMouseClick = true;        // keep mouse click toggle too
+
     // --- state ---
     private bool isOn;
     private bool isBusy;
@@ -65,18 +71,42 @@ public class SmartPlugController : MonoBehaviour
                 }
             }
         }
+
+        // --- Proximity + F key interaction ---
+        if (player != null && !isBusy && localCooldownRemaining <= 0f)
+        {
+            float distance = Vector3.Distance(player.position, transform.position);
+
+            // optional: show hint when close
+            if (label != null && distance <= interactDistance)
+            {
+                label.text = $"{plugDisplayName} : Press [F]";
+            }
+            else if (label != null && localCooldownRemaining <= 0f)
+            {
+                // if not close, keep normal state label
+                label.text = $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
+            }
+
+            if (distance <= interactDistance && Input.GetKeyDown(interactKey))
+            {
+                Debug.Log($"[SmartPlug] {interactKey} pressed near {deviceId}");
+                OnClick();
+            }
+        }
     }
 
-    // Call this from Button / OnMouseDown
+    // Call this from Button / OnMouseDown / Proximity Key
     public void OnClick()
     {
         if (isBusy) return;
+        if (localCooldownRemaining > 0f) return;
 
         bool desired = !isOn;
         string desiredState = desired ? "on" : "off";
 
         isBusy = true;
-        Debug.Log($"[SmartPlug] Click → deviceId={deviceId}, desired={desiredState}");
+        Debug.Log($"[SmartPlug] Toggle → deviceId={deviceId}, desired={desiredState}");
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         // Call the JS global function window.ToggleSmartPlug(deviceId, state)
@@ -89,6 +119,7 @@ public class SmartPlugController : MonoBehaviour
 
     private void OnMouseDown()
     {
+        if (!allowMouseClick) return;
         OnClick();
     }
 
@@ -138,8 +169,7 @@ public class SmartPlugController : MonoBehaviour
 
                 if (label != null)
                 {
-                    label.text =
-                        $"{plugDisplayName} : COOLDOWN {payload.retryAfter}s";
+                    label.text = $"{plugDisplayName} : COOLDOWN {payload.retryAfter}s";
                 }
             }
 
@@ -148,11 +178,7 @@ public class SmartPlugController : MonoBehaviour
         }
 
         // Normal success
-        bool newState = string.Equals(
-            payload.state,
-            "on",
-            StringComparison.OrdinalIgnoreCase
-        );
+        bool newState = string.Equals(payload.state, "on", StringComparison.OrdinalIgnoreCase);
 
         isOn = newState;
         isBusy = false;
