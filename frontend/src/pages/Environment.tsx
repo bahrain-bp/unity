@@ -67,6 +67,9 @@ export default function Environment() {
     bridgeScript.src = "/js/unity-realtime-bridge.js";
     document.body.appendChild(bridgeScript);
 
+    // ─────────────────────────────────────────────
+    // Cleanup (user leaves page)
+    // ─────────────────────────────────────────────
     return () => {
       if (loaderScript.parentNode) {
         loaderScript.parentNode.removeChild(loaderScript);

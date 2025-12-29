@@ -1,24 +1,27 @@
-import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import "../../sass/_feedback.scss";
 
 const ErrorPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Read message from state (if passed via navigate)
-  const message = location.state?.message;
-
-  let displayText = "Something went wrong.";
-
-  if (message === "invalid-link") displayText = "This link is invalid.";
-  else if (message === "link-expired") displayText = "This link has expired.";
-  else if (message === "server-error") displayText = "Unable to connect to the server.";
-  else if (message === "Visitor not allowed") displayText = "You are not allowed to access this feedback.";
-  else if (message === "Feedback already submitted") displayText = "You have already submitted feedback.";
+  // Show exactly what the server returned
+  const serverMessage = location.state?.message;
 
   return (
-    <div className="error-page">
+    <div className="feedback1-page">
+      <div className="auth">
+        <h2>Error</h2>
+        <p className="subtitle">{serverMessage || "Oops! Something went wrong."}</p>
 
-      <p>{displayText}</p>
+        <button
+          className="auth__button"
+          style={{ display: "block", margin: "2rem auto 0" }}
+          onClick={() => navigate("/")}
+        >
+          Return to Home
+        </button>
+      </div>
     </div>
   );
 };

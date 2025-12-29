@@ -1,0 +1,153 @@
+.dashboard_IoT {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+/* Top 4 KPI boxes */
+.box1, .box2, .box3, .box4 {
+  min-height: 120px;
+}
+
+/* Full width chart */
+.box5 {
+  grid-column: 1 / -1;
+  min-height: 300px;
+}
+
+/* Bottom row as grid */
+.bottom-row {
+  display: grid;
+  gap: 1.5rem;
+  grid-column: 1 / -1;
+
+  /* Layout: box7 = 1 fraction, box8 & box9 = remaining width equally */
+  grid-template-columns: 1fr 1.5fr 1.5fr;
+}
+
+/* Bottom row boxes height */
+.box7, .box8, .box9 {
+  height: 180px; /* same height as top boxes */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Box8 & Box9 scrollable */
+.box8, .box9 {
+  overflow-y: auto;
+}
+
+/* Box styling */
+.box {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Orange side border */
+.orange-theme {
+  border-left: 4px solid #ff7614;
+}
+
+/* Users graph styling */
+.users-graph-theme {
+  width: 100%;
+}
+
+.users-today-theme {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+  overflow: hidden; // prevents layout crashes
+}
+
+.card-value {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.card-bottom-row {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.card-delta-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem; // slightly bigger
+  font-weight: 500;
+  flex-wrap: wrap; // allows wrapping if container is small
+}
+
+.card-delta-footer.positive {
+  color: #10b981;
+}
+
+.card-delta-footer.negative {
+  color: #ef4444;
+}
+
+.delta-text {
+  margin-right: 0.25rem;
+}
+
+.footer-text {
+  color: #6b7280;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+}
+
+.status-dot.online {
+  background-color: #10b981;
+}
+
+.status-dot.offline {
+  background-color: #ef4444;
+}
+
+/* Specific bottom box7 override */
+.box7 {
+  justify-content: flex-start; // aligns UsersToday content at top
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .dashboard {
+    grid-template-columns: 1fr; // stack everything vertically
+  }
+
+  .box5 {
+    min-height: 250px;
+  }
+
+  .bottom-row {
+    grid-template-columns: 1fr; // stack bottom row vertically
+  }
+
+  .box7, .box8, .box9 {
+    height: 150px;
+  }
+}
