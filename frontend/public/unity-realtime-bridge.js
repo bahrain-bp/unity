@@ -382,3 +382,103 @@ window.initSmartPlugBridge = function (unityInstance) {
 
   console.log("[JS] Unity Realtime Bridge Ready");
 };
+
+// ============================================================
+// Unity – Backend HTTP (Chat Assistant Bridge)
+// ============================================================
+
+// Store Unity WebGL instance ONLY for chat
+window.__CHAT_UNITY_INSTANCE__ = null;
+
+// Called once after Unity loads
+window.initChatBridge = function (unityInstance) {
+  window.__CHAT_UNITY_INSTANCE__ = unityInstance;
+  console.log("[ChatBridge] Unity instance registered");
+};
+
+// Chat assistant endpoint
+const ASSISTANT_ENDPOINT = `${API_BASE}/assistant`;
+
+// Unity calls:
+// AskPeccyAssistant(question, sessionId, unityObjectName)
+window.AskPeccyAssistant = async function (
+  question,
+  sessionId,
+  unityObjectName
+) {
+  console.log("[ChatBridge] AskPeccyAssistant:", {
+    question,
+    sessionId,
+    unityObjectName,
+  });
+
+  const unity = window.__CHAT_UNITY_INSTANCE__;
+  if (!unity) {
+    console.warn("[ChatBridge] Unity instance not ready");
+    return;
+  }
+
+  const token = getIdToken();
+  if (!token) {
+    // Not authenticated
+    const payload = {
+      answer: "You are not logged in. Please sign in first.",
+      sessionId: sessionId || null,
+      status: 401,
+    };
+
+    unity.SendMessage(
+      unityObjectName,
+      "OnAssistantResponseJson",
+      JSON.stringify(payload)
+    );
+    return;
+  }
+
+  let responseBody = null;
+
+  try {
+    const requestBody = sessionId
+      ? { question, sessionId }
+      : { question };
+
+    const res = await fetch(ASSISTANT_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const text = await res.text();
+    try {
+      responseBody = JSON.parse(text);
+    } catch {
+      responseBody = { answer: text };
+    }
+  } catch (err) {
+    console.error("[ChatBridge] Request failed:", err);
+    responseBody = {
+      answer: "Sorry, something went wrong while contacting the assistant.",
+      sessionId: sessionId || null,
+    };
+  }
+
+  // Normalize response for Unity
+  const payload = {
+    answer:
+      responseBody?.answer ||
+      "Sorry, I couldn’t generate a response.",
+    sessionId:
+      responseBody?.sessionId || sessionId || null,
+  };
+
+  console.log("[ChatBridge] Sending to Unity:", payload);
+
+  unity.SendMessage(
+    unityObjectName,
+    "OnAssistantResponseJson",
+    JSON.stringify(payload)
+  );
+};
