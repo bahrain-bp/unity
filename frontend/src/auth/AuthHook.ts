@@ -62,6 +62,7 @@ export const useProvideAuth = (): UseAuth => {
   const clearIdToken = () => {
     localStorage.removeItem("idToken");
     localStorage.removeItem("username");
+    localStorage.removeItem("userId");
   };
 
   // Helper function to extract groups from token
@@ -140,6 +141,7 @@ export const useProvideAuth = (): UseAuth => {
       if (result.isSignedIn) {
         setEmail(email);
         const user = await getCurrentUser();
+        localStorage.setItem("userId", user.userId);
         setUserId(user.userId);
         
         // Get user groups after sign in
