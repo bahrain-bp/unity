@@ -10,6 +10,7 @@ import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
+//import SmartPlugEnvironment from "./pages/SmartPlugEnvironment";
 import Chatbot from "./components/ChatBot";
 import VisitorArrival from "./pages/visitorArrival";
 import InviteVisitor from "./pages/dashboard/InviteVisitor";
@@ -21,6 +22,10 @@ import Footer from "./components/Footer";
 import { useAuth } from "./auth/AuthHook";
 import UploadUnity from "./pages/dashboard/UploadUnity";
 import Analytics from "./pages/dashboard/Analytics";
+import Parking from "./pages/dashboard/Parking";
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import { useEffect } from "react";
+import FeedbackPage from "./pages/dashboard/Feedback";
 
 // Protected Route Component for authenticated users
 function ProtectedRoute({ children }) {
@@ -56,6 +61,38 @@ function PublicOnlyRoute({ children }) {
 }
 
 function App() {
+  const { userId } = useAuth();
+  useEffect(() => {
+    if (!userId) return; // don't register events until userId exists
+
+    let lastHeartbeatSentAt = 0;
+    const HEARTBEAT_INTERVAL = 30_000; // 30 seconds
+
+    const maybeSendHeartbeat = () => {
+      const now = Date.now();
+      if (now - lastHeartbeatSentAt < HEARTBEAT_INTERVAL) return;
+
+      lastHeartbeatSentAt = now;
+
+      fetch(`${import.meta.env.VITE_IMAGE_API_URL}visitor/heartbeat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, timestamp: now }),
+      }).catch(() => {
+        // silently ignore network errors
+      });
+    };
+
+    window.addEventListener("click", maybeSendHeartbeat);
+    window.addEventListener("scroll", maybeSendHeartbeat);
+    window.addEventListener("keydown", maybeSendHeartbeat);
+
+    return () => {
+      window.removeEventListener("click", maybeSendHeartbeat);
+      window.removeEventListener("scroll", maybeSendHeartbeat);
+      window.removeEventListener("keydown", maybeSendHeartbeat);
+    };
+  }, [userId]); // <- re-run when userId becomes available
   return (
     <>
       <Router>
@@ -120,10 +157,26 @@ function App() {
             }
           />
           <Route
+            path="/dashboard/feedbacks"
+            element={
+              <AdminRoute>
+                <FeedbackPage />
+              </AdminRoute>
+            }
+          />
+          <Route
             path="/dashboard/upload-unity"
             element={
               <AdminRoute>
                 <UploadUnity />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/dashboard/parking"
+            element={
+              <AdminRoute>
+                <Parking />
               </AdminRoute>
             }
           />
@@ -141,6 +194,14 @@ function App() {
               <>
                 <VisitorArrival />
               </>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
             }
           />
 

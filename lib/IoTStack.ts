@@ -30,25 +30,27 @@ export class IoTStack extends cdk.Stack {
     this.addDependency(wsStack);
 
     // ────────────────────────────────
-    // 0) Device list (3 devices × 2 sensors)
+    //  X-RAY HELPER
+    // ────────────────────────────────
+    const enableXRay = (fn: lambda.Function) => {
+      fn.role?.addManagedPolicy(
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AWSXRayDaemonWriteAccess")
+      );
+    };
+
+    // ────────────────────────────────
+    // 0) Device list
     // ────────────────────────────────
     const devices: DeviceConfig[] = [
-      {
-        name: "pi3-01",
-        sensors: ["temp_c", "humidity"],
-      },
-      {
-        name: "pico-01",
-        sensors: ["temp_c", "humidity"],
-      },
-      {
-        name: "pico-02",
-        sensors: ["temp_c", "humidity"],
-      },
+      { name: "pi3-01", sensors: ["temp_c", "humidity"] },
+      { name: "pico-01", sensors: ["distance_cm"] },
+      { name: "pico-02", sensors: ["distance_cm"] },
+      { name: "esp32-01", sensors: ["distance_cm"] },
+      { name: "esp32-02", sensors: ["status"] }, // pir sensor
     ];
 
     // ────────────────────────────────
-    // 1) IoT Things (one per device)
+    // 1) IoT Things
     // ────────────────────────────────
     const thingMap: Record<string, iot.CfnThing> = {};
 
@@ -60,7 +62,7 @@ export class IoTStack extends cdk.Stack {
     }
 
     // ────────────────────────────────
-    // 2) Shared IoT Policy for all devices
+    // 2) Shared IoT Policy
     // ────────────────────────────────
     const iotPolicy = new iot.CfnPolicy(this, "DeviceTelemetryPolicy", {
       policyName: "DeviceTelemetryPolicy",
@@ -70,16 +72,12 @@ export class IoTStack extends cdk.Stack {
           {
             Effect: "Allow",
             Action: ["iot:Connect"],
-            Resource: [
-              `arn:aws:iot:${this.region}:${this.account}:client/\${iot:ClientId}`,
-            ],
+            Resource: [`arn:aws:iot:${this.region}:${this.account}:client/\${iot:ClientId}`],
           },
           {
             Effect: "Allow",
             Action: ["iot:Publish", "iot:Receive"],
-            Resource: [
-              `arn:aws:iot:${this.region}:${this.account}:topic/devices/\${iot:ClientId}/*`,
-            ],
+            Resource: [`arn:aws:iot:${this.region}:${this.account}:topic/devices/\${iot:ClientId}/*`],
           },
           {
             Effect: "Allow",
@@ -119,9 +117,14 @@ export class IoTStack extends cdk.Stack {
         WS_CONNECTIONS_TABLE: wsStack.connectionsTable.tableName,
         WS_MANAGEMENT_ENDPOINT: wsStack.managementEndpoint,
       },
+      // ✅ X-Ray: enable tracing for this lambda
+      tracing: lambda.Tracing.ACTIVE,
     });
 
-    telemetryTable.grantWriteData(telemetryIngestFn);
+    // ✅ X-Ray: allow publishing traces
+    enableXRay(telemetryIngestFn);
+
+    telemetryTable.grantReadWriteData(telemetryIngestFn);
     wsStack.connectionsTable.grantReadData(telemetryIngestFn);
 
     // Allow managing WebSocket connections

@@ -1,7 +1,6 @@
 import os
 import boto3
 import base64
-import uuid
 import json
 from datetime import datetime
 
@@ -13,6 +12,8 @@ BUCKET = os.environ['BUCKET_NAME']
 COLLECTION = os.environ['COLLECTION_ID']
 USER_TABLE = os.environ['USER_TABLE']
 USER_TABLE = dynamodb.Table(USER_TABLE)
+lambda_client = boto3.client('lambda')
+BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 
 def PreRegisterCheck(event, context):
     if event["httpMethod"] == "OPTIONS":
@@ -24,7 +25,6 @@ def PreRegisterCheck(event, context):
         userId = body.get("userId")
         name = body.get("name")
         email = body.get("email")
-
 
         if not image_data:
             return response(400, {"error": "No image provided"})
@@ -40,6 +40,27 @@ def PreRegisterCheck(event, context):
         face_details = detect_response.get("FaceDetails", [])
         if not face_details:
             return response(400, {"error": "No face detected. Please upload another image."})
+        
+        if len(face_details) > 1:
+            return response(400, {
+            "error": "Multiple faces detected. Please upload an image with only one face."
+        })
+        # Search for existing face in the collection
+        match_response = rekog.search_faces_by_image(
+            CollectionId=COLLECTION,
+            Image={'Bytes': image_bytes},
+            FaceMatchThreshold=95,  # strict threshold
+            MaxFaces=1
+        )
+        matches = match_response.get("FaceMatches", [])
+        # If a strong match exists → user already registered
+        if matches:
+            similarity = matches[0]["Similarity"]
+
+            if similarity >= 95:
+                return response(409, {  # 409 Conflict is appropriate here
+                    "error": "User already registered."
+                })
 
         # Face detected → upload image to S3
         key = f"pre-reg/{userId}.jpg"
@@ -72,30 +93,42 @@ def background_index_face(image_bytes, key, name, email, userId):
             DetectionAttributes=[]
         )
         face_records = index_response.get("FaceRecords", [])
-        if not face_records:
-            return response(400, {"error": "Face could not be indexed. Please upload another image."})
-
-        faceId = face_records[0]["Face"]["FaceId"]
-
-        # Store visitor info in DynamoDB
-        USER_TABLE.put_item(
-            Item={
-                "userId": userId,
-                "s3Key": key,
-                "registeredAt": datetime.utcnow().isoformat(),
-                "name": name,
-                "email": email,
-                "faceId": faceId,
-                "passedRegistration": False
+        if face_records:
+            faceId = face_records[0]["Face"]["FaceId"]
+            
+            # Store visitor info in DynamoDB
+            USER_TABLE.put_item(
+                Item={
+                    "userId": userId,
+                    "s3Key": key,
+                    "registeredAt":datetime.utcnow().isoformat(),
+                    "name": name,
+                    "email": email,
+                    "faceId": faceId,
+                    "role":"Visitor"
+                }
+            )
+            #update total visitors number for the dashboard
+            response = USER_TABLE.scan(Select="COUNT")
+            total_visitors = response["Count"]
+            
+            to_dashboard1 = {
+                "card": "total_bahtwin_visitors",
+                "data": {
+                    "total_visitors": total_visitors
+                }
             }
-        )
-
-        # Respond after Dynamo write to ensure GET can find the record
-        return response(200, {"message": "Registration was successfull."})
+            # Invoke the broadcast Lambda asynchronously
+            lambda_client.invoke(
+                FunctionName=BROADCAST_LAMBDA,
+                InvocationType="Event",  # async
+                Payload=json.dumps(to_dashboard1)
+            )
+        else:
+            print(f"Face could not be indexed for S3 key: {key}")
 
     except Exception as e:
-        print("ERROR:", str(e))
-        return response(500, {"error": "Internal server error"})
+        print("Error in background indexing:", str(e))
 
 def response(status, body):
     return {

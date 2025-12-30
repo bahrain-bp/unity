@@ -834,6 +834,7 @@ PlayerSettings:
     Android: CROSS_PLATFORM_INPUT
     Standalone: CROSS_PLATFORM_INPUT
     WebGL: CROSS_PLATFORM_INPUT
+    Windows Store Apps: 
     iPhone: CROSS_PLATFORM_INPUT
   additionalCompilerArguments: {}
   platformArchitecture: {}

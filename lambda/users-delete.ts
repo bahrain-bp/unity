@@ -1,38 +1,46 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda"
-import { CognitoIdentityProviderClient, AdminDeleteUserCommand } from "@aws-sdk/client-cognito-identity-provider"
-import { isAdmin } from "./utils/auth"
-import { createResponse, createErrorResponse } from "./utils/cors"
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import {
+  CognitoIdentityProviderClient,
+  AdminDeleteUserCommand,
+} from "@aws-sdk/client-cognito-identity-provider";
+import { isAdmin } from "./utils/auth";
+import { jsonResponse } from "./http-response";
 
-const client = new CognitoIdentityProviderClient({})
+const client = new CognitoIdentityProviderClient({});
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const handler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
   try {
-    // Check if user is admin
+    if (event.httpMethod === "OPTIONS") {
+      return jsonResponse(200, {});
+    }
+
     if (!isAdmin(event)) {
-      return createErrorResponse(403, "Access denied. Admin role required.")
+      return jsonResponse(403, {
+        message: "Access denied. Admin role required.",
+      });
     }
 
-    // Get userId from path parameters
-    const userId = event.pathParameters?.userId
+    const userId = event.pathParameters?.userId;
     if (!userId) {
-      return createErrorResponse(400, "User ID is required")
+      return jsonResponse(400, { message: "User ID is required" });
     }
 
-    // Create input for AdminDeleteUserCommand
     const input = {
       UserPoolId: process.env.USER_POOL_ID,
-      Username: userId  // This will be the email since we use email as username
-    }
+      Username: userId, 
+    };
 
-    const command = new AdminDeleteUserCommand(input)
-    await client.send(command)
-    
-    return createResponse(200, { 
+    const command = new AdminDeleteUserCommand(input);
+    await client.send(command);
+
+    return jsonResponse(200, {
       message: "User deleted successfully",
-      userId: userId
-    })
+      userId,
+    });
   } catch (error: any) {
-    console.error("Error deleting user:", error)
-    return createErrorResponse(500, "Failed to delete user")
+    console.error("Error deleting user:", error);
+    return jsonResponse(500, { message: "Failed to delete user" });
   }
-}
+};

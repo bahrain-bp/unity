@@ -10,6 +10,13 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as apigwv2 from "@aws-cdk/aws-apigatewayv2-alpha";
 import * as integrations from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 
+// import DBStack to can pass it in
+import { DBStack } from "./DBstack";
+
+export interface UnityWebSocketStackProps extends cdk.StackProps {
+  dbStack: DBStack;
+}
+
 export class UnityWebSocketStack extends cdk.Stack {
   public readonly connectionsTable: dynamodb.Table;
   public readonly webSocketApi: apigwv2.WebSocketApi;
@@ -18,8 +25,19 @@ export class UnityWebSocketStack extends cdk.Stack {
   // Convenience: HTTPS management endpoint for other Lambdas
   public readonly managementEndpoint: string;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: UnityWebSocketStackProps) {
     super(scope, id, props);
+
+    const plugActionsTable = props.dbStack.plugActionsTable;
+
+    // ────────────────────────────────
+    // ✅ X-RAY HELPER
+    // ────────────────────────────────
+    const enableXRay = (fn: lambda.Function) => {
+      fn.role?.addManagedPolicy(
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AWSXRayDaemonWriteAccess")
+      );
+    };
 
     // 1) Connections table
     this.connectionsTable = new dynamodb.Table(this, "WsConnectionsTable", {
@@ -28,7 +46,7 @@ export class UnityWebSocketStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY, // change to RETAIN in prod
     });
 
-    // 2) Lambda: $connect
+    // 2) Lambda: $connect  (ONLY save connection)
     const connectFn = new NodejsFunction(this, "WsConnectHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/ws-connect.ts"),
@@ -37,7 +55,10 @@ export class UnityWebSocketStack extends cdk.Stack {
       environment: {
         CONNECTIONS_TABLE: this.connectionsTable.tableName,
       },
+      // ✅ X-Ray
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(connectFn);
 
     // 3) Lambda: $disconnect
     const disconnectFn = new NodejsFunction(this, "WsDisconnectHandler", {
@@ -48,9 +69,12 @@ export class UnityWebSocketStack extends cdk.Stack {
       environment: {
         CONNECTIONS_TABLE: this.connectionsTable.tableName,
       },
+      // ✅ X-Ray
+      tracing: lambda.Tracing.ACTIVE,
     });
+    enableXRay(disconnectFn);
 
-    // 4) Lambda: default route (optional, for messages from clients)
+    // 4) Lambda: $default (handles hello/requestSnapshot -> sends plug_snapshot)
     const defaultFn = new NodejsFunction(this, "WsDefaultHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/ws-default.ts"),
@@ -58,12 +82,24 @@ export class UnityWebSocketStack extends cdk.Stack {
       bundling: { target: "node18", minify: true, sourceMap: false },
       environment: {
         CONNECTIONS_TABLE: this.connectionsTable.tableName,
-      },
-    });
 
+        // snapshot inputs (used by ws-default.ts)
+        PLUG_ACTIONS_TABLE: plugActionsTable.tableName,
+        PLUG_INDEX_NAME: "plug_id-ts-index",
+        PLUG_IDS: JSON.stringify(["plug1", "plug2"]),
+      },
+      // ✅ X-Ray
+      tracing: lambda.Tracing.ACTIVE,
+    });
+    enableXRay(defaultFn);
+
+    // Permissions for connections table
     this.connectionsTable.grantReadWriteData(connectFn);
     this.connectionsTable.grantReadWriteData(disconnectFn);
     this.connectionsTable.grantReadWriteData(defaultFn);
+
+    // defaultFn needs to read PlugActions to compute snapshot
+    plugActionsTable.grantReadData(defaultFn);
 
     // 5) WebSocket API
     this.webSocketApi = new apigwv2.WebSocketApi(this, "UnityWebSocketApi", {
@@ -108,7 +144,7 @@ export class UnityWebSocketStack extends cdk.Stack {
       description: "HTTPS endpoint for ApiGatewayManagementApi client",
     });
 
-    // 7) Allow broadcasting Lambdas (later) to use the management API
+    // 7) Allow lambdas to use the management API (postToConnection)
     const mgmtPolicy = new iam.PolicyStatement({
       actions: ["execute-api:ManageConnections"],
       resources: [

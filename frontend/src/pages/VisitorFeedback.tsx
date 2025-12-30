@@ -1,83 +1,99 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "../../sass/_feedback.scss";
 import { useNavigate } from "react-router-dom";
 import { FeedbackClient } from "../services/api";
 
 const Feedback = () => {
+  // Visitor info
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+
+  // Feedback fields
   const [purpose, setPurpose] = useState("");
   const [checkInTime, setCheckInTime] = useState("");
-  const [systemRating, setSystemRating] = useState(null);
   const [faster, setFaster] = useState("");
   const [digitalPref, setDigitalPref] = useState("");
-  const [faceHelp, setFaceHelp] = useState(null);
-  const [overallRating, setOverallRating] = useState(null);
+  const [faceHelp, setFaceHelp] = useState(0);
+  const [overallRating, setOverallRating] = useState(0);
   const [commentText, setCommentText] = useState("");
-  const [showError, setShowError] = useState(false);
+
+  // State handling
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(true);
   const [visitorValid, setVisitorValid] = useState(false);
+  const [showError, setShowError] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Extract token from URL
     const params = new URLSearchParams(window.location.search);
     const t = params.get("token");
+
     if (!t) {
-      navigate("/error?message=invalid-link");
+      navigate("/error", { state: { message: "invalid-link" } });
       return;
     }
+
     setToken(t);
 
-    // Validate visitor
     const fetchVisitor = async () => {
       try {
-        const response = await FeedbackClient.get(
-          "/getVisitorInfo",
-          { headers: { Authorization: `Bearer ${t}` } }
-        );
-        setName(response.data.name);
-        setEmail(response.data.email);
+        const res = await FeedbackClient.get("/getVisitorInfo", {
+          headers: { Authorization: `Bearer ${t}` },
+        });
+
+        setName(res.data.name);
+        setEmail(res.data.email);
         setVisitorValid(true);
-      } catch (err) {
-  console.error(err);
+      } catch (err: any) {
+        const serverMessage =
+          err.response?.data?.error || "Server error occurred";
 
-  if (err.response) {
-    const { status, data } = err.response;
-
-    if (status === 401) {
-      navigate("/error", { state: { message: "Visitor not allowed" } });
-    } else if (status === 403) {
-      if (data && data.error === "Token already used") {
-        navigate("/error", { state: { message: "Feedback already submitted" } });
-      } else {
-        navigate("/error", { state: { message: "Link invalid" } });
+        navigate("/error", { state: { message: serverMessage } });
+      } finally {
+        setLoading(false);
       }
-    } else {
-      navigate("/error", { state: { message: "Server error" } });
-    }
-  } else {
-    navigate("/error", { state: { message: "Server error" } });
-  }
-} finally {
-  setLoading(false);
-}
     };
 
     fetchVisitor();
   }, [navigate]);
 
-  if (loading) return <div>Validating your link...</div>;
+  /* ===============================
+     LOADING STATE (FIXED)
+     =============================== */
+  if (loading) {
+    return (
+      <div className="feedback1-page">
+        <h1 className="page-header">BAHTWIN Visitor Feedback</h1>
+        <p className="empty-state">Validating your link…</p>
+      </div>
+    );
+  }
+
   if (!visitorValid) return null;
 
-  const handleSubmit = async (e) => {
+  /* ===============================
+     SUBMIT HANDLER
+     =============================== */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!systemRating || !faster || !digitalPref || !faceHelp || !overallRating) {
+    const requiredFields = [
+      purpose,
+      checkInTime,
+      faster,
+      digitalPref,
+      faceHelp,
+      overallRating,
+    ];
+
+    const hasEmpty = requiredFields.some(
+      (field) => !field || field === 0
+    );
+
+    if (hasEmpty) {
       setShowError(true);
-      setTimeout(() => setShowError(false), 5000);
+      setTimeout(() => setShowError(false), 4000);
       return;
     }
 
@@ -86,7 +102,6 @@ const Feedback = () => {
       email,
       purpose,
       checkInTime,
-      systemRating,
       faster,
       digitalPref,
       faceHelp,
@@ -95,50 +110,94 @@ const Feedback = () => {
     };
 
     try {
-      await FeedbackClient.post(
-        "/submitFeedback",
-        payload,
-        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
-      );
-      navigate("/thank-you"); // Redirect to thank-you page
-    } catch (err) {
-      console.error(err);
-      if (err.response && err.response.status === 403) {
-        navigate("/error?message=link-expired");
+      await FeedbackClient.post("/submitFeedback", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      navigate("/thank-you");
+    } catch (err: any) {
+      if (err.response) {
+        const { status, data } = err.response;
+
+        if (status === 401) {
+          navigate("/error", { state: { message: "Visitor not allowed" } });
+        } else if (status === 403) {
+          if (data?.error === "Token already used") {
+            navigate("/error", {
+              state: { message: "Feedback already submitted" },
+            });
+          } else {
+            navigate("/error", { state: { message: "Link invalid" } });
+          }
+        } else if (status >= 400 && status < 500) {
+          navigate("/error", {
+            state: { message: data?.error || "Invalid request" },
+          });
+        } else {
+          navigate("/error", { state: { message: "Server error" } });
+        }
       } else {
-        navigate("/error?message=server-error");
+        navigate("/error", { state: { message: "Server error" } });
       }
     }
   };
 
+  /* ===============================
+     STAR COMPONENT
+     =============================== */
+  const StarRating = ({ value, setValue }: any) => (
+    <div className="stars">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span
+          key={star}
+          className={star <= value ? "active" : ""}
+          onClick={() => setValue(star)}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
+
+  /* ===============================
+     MAIN UI
+     =============================== */
   return (
-    <div className="feedback-page">
-      <div className="container">
-        <h2>Leave Your Feedback</h2>
+    <div className="feedback1-page">
+
+      <div className="auth">
+        <h2>Visitor Feedback</h2>
+        <p className="subtitle">
+          Your feedback helps us improve the BAHTWIN experience.
+        </p>
 
         <form onSubmit={handleSubmit}>
-          {/* Name and Email */}
-          <input type="text" value={name} readOnly />
-          <input type="email" value={email} readOnly />
+          <div className="row">
+            <input type="text" value={name} readOnly />
+            <input type="email" value={email} readOnly />
+          </div>
 
-          {/* Purpose */}
           <div className="form-group">
-            <label>Purpose of your visit:</label>
+            <label>Purpose of visit</label>
             <select value={purpose} onChange={(e) => setPurpose(e.target.value)}>
-              <option value="">Select...</option>
-              <option value="meeting">Meeting a Host</option>
+              <option value="">Select</option>
+              <option value="meeting">Meeting</option>
               <option value="interview">Interview</option>
               <option value="training">Training</option>
-              <option value="maintenance">Maintenance / Contractor</option>
               <option value="other">Other</option>
             </select>
           </div>
 
-          {/* Check-in Time */}
           <div className="form-group">
-            <label>How long did check-in take?</label>
-            <select value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)}>
-              <option value="">Select...</option>
+            <label>Check-in duration</label>
+            <select
+              value={checkInTime}
+              onChange={(e) => setCheckInTime(e.target.value)}
+            >
+              <option value="">Select</option>
               <option value="less1">Less than 1 minute</option>
               <option value="1to2">1–2 minutes</option>
               <option value="3to5">3–5 minutes</option>
@@ -146,73 +205,66 @@ const Feedback = () => {
             </select>
           </div>
 
-          {/* System Rating */}
           <div className="form-group">
-            <label>Rate your experience with the digital system:</label>
-            <div className="radio-group">
-              {[1, 2, 3, 4, 5].map((num) => (
-                <label key={num}>
-                  <input type="radio" value={num} checked={systemRating === num} onChange={() => setSystemRating(num)} /> {num}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Faster */}
-          <div className="form-group">
-            <label>Did the system make your visit faster?</label>
-            <div className="radio-group">
-              {["yes", "somewhat", "no"].map((val) => (
-                <label key={val}>
-                  <input type="radio" value={val} checked={faster === val} onChange={() => setFaster(val)} /> {val.charAt(0).toUpperCase() + val.slice(1)}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Digital Preference */}
-          <div className="form-group">
-            <label>Do you prefer digital check-in?</label>
-            <select value={digitalPref} onChange={(e) => setDigitalPref(e.target.value)}>
-              <option value="">Select...</option>
-              <option value="prefer_digital">Yes, digital is better</option>
-              <option value="prefer_manual">No, manual is better</option>
-              <option value="no_preference">No preference</option>
+            <label>Which registration method do you prefer?</label>
+            <select
+              value={digitalPref}
+              onChange={(e) => setDigitalPref(e.target.value)}
+            >
+              <option value="">Select</option>
+              <option value="face-recognition">
+                Pre-registration via face recognition
+              </option>
+              <option value="manual-reception">
+                Manual registration at reception
+              </option>
             </select>
           </div>
 
-          {/* Face Help */}
           <div className="form-group">
-            <label>How helpful was the face recognition system?</label>
-            <div className="radio-group">
-              {[1, 2, 3, 4, 5].map((num) => (
-                <label key={num}>
-                  <input type="radio" value={num} checked={faceHelp === num} onChange={() => setFaceHelp(num)} /> {num}
-                </label>
+            <label>Did BAHTWIN make your visit faster or smoother?</label>
+            <div className="pill-group">
+              {["yes", "somewhat", "no"].map((v) => (
+                <button
+                  type="button"
+                  key={v}
+                  className={faster === v ? "active" : ""}
+                  onClick={() => setFaster(v)}
+                >
+                  {v}
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Overall Satisfaction */}
           <div className="form-group">
-            <label>Overall satisfaction:</label>
-            <div className="radio-group">
-              {[1, 2, 3, 4, 5].map((num) => (
-                <label key={num}>
-                  <input type="radio" value={num} checked={overallRating === num} onChange={() => setOverallRating(num)} /> {num}
-                </label>
-              ))}
+            <label>Face recognition usefulness</label>
+            <StarRating value={faceHelp} setValue={setFaceHelp} />
+          </div>
+
+          <div className="form-group">
+            <label>Overall satisfaction</label>
+            <StarRating value={overallRating} setValue={setOverallRating} />
+          </div>
+
+          <div className="form-group">
+            <label>Additional comments</label>
+            <textarea
+              placeholder="Tell us how we can improve…"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+            />
+          </div>
+
+          {showError && (
+            <div className="error">
+              Please complete all required fields
             </div>
-          </div>
+          )}
 
-          {/* Comment */}
-          <div className="form-group">
-            <label>Add a Comment:</label>
-            <textarea placeholder="What can we improve?" value={commentText} onChange={(e) => setCommentText(e.target.value)} />
-          </div>
-
-          <button type="submit">Submit</button>
-          {showError && <div className="error">Please complete all required fields!</div>}
+          <button type="submit" className="auth__button">
+            Submit Feedback
+          </button>
         </form>
       </div>
     </div>

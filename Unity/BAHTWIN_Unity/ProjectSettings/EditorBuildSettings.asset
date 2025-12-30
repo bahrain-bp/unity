@@ -6,10 +6,10 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Arcapita.unity
+    path: Assets/_Project/Scenes/Arcapita.unity
     guid: edc7fc979f337f149aa98dba77cf4f28
   - enabled: 1
-    path: Assets/Scenes/BAHTWIN_FloorPlan.unity
+    path: Assets/_Project/Scenes/BAHTWIN_FloorPlan.unity
     guid: 24c15af259eee4a4089574d3a192c21c
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: bd0ec367060550d47ba81a578e7ff53f, type: 2}

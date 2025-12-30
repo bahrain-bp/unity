@@ -8,13 +8,15 @@ import * as path from 'path';
 
 interface VisitorFeedbackStackProps extends cdk.StackProps {
   userTable: dynamodb.Table; // pass the table from another stack
+  broadcastLambda: lambda.IFunction;
 }
 
 export class VisitorFeedbackStack extends cdk.Stack{
     userTable: dynamodb.Table;
+    broadcastLambda: lambda.Function;
     constructor(scope: Construct, id: string, props: VisitorFeedbackStackProps){
         super(scope,id,props);
-        const userTable = props.userTable; // reference from the other stack
+         const { userTable, broadcastLambda } = props;
 
   
     // Visitor Feedback Table
@@ -71,7 +73,8 @@ const commonEnv = {
   FEEDBACK_TABLE: feedbackTable.tableName,
   VISITOR_TABLE: userTable.tableName,
   FEEDBACK_SECRET: 'secret',
-  used_tokens_table: usedTokensTable.tableName
+  used_tokens_table: usedTokensTable.tableName,
+  BROADCAST_LAMBDA: broadcastLambda.functionArn,
 };
 
      // Lambda to get user info
@@ -105,6 +108,24 @@ const getFeedbackLambda = createPythonLambda(
     usedTokensTable.grantReadWriteData(getVisitorInfoLambda);
     usedTokensTable.grantReadWriteData(submitFeedbackLambda);
 
+    const submitFeedbackrRole = submitFeedbackLambda.role!;
+    broadcastLambda.grantInvoke(submitFeedbackrRole);
+
+
+    const LoadFeedback = new lambda.Function(this, 'LoadFeedback',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'LoadFeedback.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment:{
+        FEEDBACK_TABLE: feedbackTable.tableName,
+      },
+      timeout:cdk.Duration.seconds(30),
+      functionName: 'LoadFeedback', 
+      logRetention: logs.RetentionDays.ONE_DAY,
+    });
+    feedbackTable.grantReadData(LoadFeedback);
+
+
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'FeedbackApi', {
@@ -124,7 +145,15 @@ const getFeedbackLambda = createPythonLambda(
     new apigateway.LambdaIntegration(submitFeedbackLambda, { proxy: true })
     );
 
-    const getFeedbackResource = api.root.addResource('getFeedback');
+  
+    const adminResource = api.root.addResource('admin');
+    const load_feedbackResource = adminResource.addResource('loadFeedback')
+    load_feedbackResource.addMethod(
+    'POST',
+    new apigateway.LambdaIntegration(LoadFeedback, { proxy: true })
+    );
+
+    const getFeedbackResource = adminResource.addResource('getFeedback');
     getFeedbackResource.addMethod(
     'GET',
     new apigateway.LambdaIntegration(getFeedbackLambda, { proxy: true })
@@ -166,6 +195,7 @@ const addCorsOptions = (apiResource: apigateway.IResource) => {
 addCorsOptions(getVisitorInfoResource);
 addCorsOptions(submitFeedbackResource);
 addCorsOptions(getFeedbackResource);
+addCorsOptions(load_feedbackResource);
 
 
 

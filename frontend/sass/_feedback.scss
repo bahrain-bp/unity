@@ -1,105 +1,193 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
 
-/* =============================
-   FEEDBACK PAGE ONLY
-============================= */
-.feedback-page {
-  font-family: "Inter", sans-serif;
-  width: 100%;
+/* Page background */
+.feedback1-page {
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
-  color: #000;
+  flex-direction: column;   /* stack header + message */
+  justify-content: center;  /* center vertically */
+  align-items: center;      /* center horizontally */
+  font-family: "Inter", sans-serif;
+  margin-bottom: 2.5rem;
+  background: radial-gradient(circle at top, rgba(255, 142, 60, 0.15), transparent 60%);
+  padding: 1rem;
+  box-sizing: border-box;
+}
 
-  .container {
-    background-color: rgba(#ff8e3c, 0.55);
-    padding: 2rem;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 700px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  }
+/* Header */
+.feedback1-page .page-header {
+  font-size: 1.8rem; /* match form h2 */
+  font-weight: 600;
+  color: #1f2937;
+  text-align: center;
+  margin-bottom: 0.5rem; /* small spacing to message */
+  font-family: "Inter", sans-serif;
+}
 
-  h2 {
-    text-align: center;
-    margin-bottom: 1.75rem;
-    font-weight: 700;
-    color: #1a1a1a;
-  }
+/* Loading message */
+.feedback1-page .empty-state {
+  text-align: center;
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0; /* remove extra padding/margins that push it away */
+  padding: 0;
+}
 
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-  }
+/* Main card */
+.feedback1-page .auth {
+  background: #ffffff;
+  width: 100%;
+  max-width: 600px;
+  padding: 2.5rem 3rem;
+  border-radius: 22px;
+  border: 2px solid #1a1a1a;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-top: 2.5rem;
+}
 
-  input[type="text"],
-  input[type="email"],
-  select,
-  textarea {
-    width: 100%;
-    padding: 0.85rem;
-    border-radius: 10px;
-    border: none;
-    background-color: #fff4ec;
-    font-size: 1rem;
-    color: #1a1a1a;
-    outline: none;
-    box-shadow: inset 0 0 4px rgba(80, 80, 80, 0.25);
-    font-family: inherit;
+.feedback1-page .auth:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
 
-    &:focus {
-      box-shadow: 0 0 0 2px rgba(255, 142, 60, 0.6);
-    }
-  }
+.feedback1-page .auth form {
+  width: 100%;
+}
 
-  textarea {
-    resize: vertical;
-    min-height: 110px;
-  }
+/* Header */
+.feedback-page1 .auth h2 {
+  
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 0.25rem;
+  transition: color 0.3s ease;
+}
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+.feedback1-page .auth h2:hover {
+  color: #ff8c42;
+}
 
-    label {
-      font-weight: 600;
-      color: #1a1a1a;
-    }
-  }
+.feedback1-page .subtitle {
+  text-align: center;
+  color: #555;
+  margin-bottom: 2rem;
+}
 
-  .radio-group {
-    display: flex;
-    gap: 1.2rem;
-    flex-wrap: wrap;
+/* Layout helpers */
+.feedback1-page .row {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
 
-    input[type="radio"] {
-      accent-color: #1a1a1a;
-    }
-  }
+/* Inputs */
+.feedback1-page input,
+.feedback1-page select,
+.feedback1-page textarea {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1.5px solid #ddd;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
 
-  button {
-    padding: 0.85rem 1.4rem;
-    background-color: #ff8e3c;
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: 0.25s ease;
-    width: fit-content;
+.feedback1-page input:focus,
+.feedback1-page select:focus,
+.feedback1-page textarea:focus {
+  border-color: #ff8c42;
+  box-shadow: 0 0 8px rgba(255, 140, 66, 0.3);
+  outline: none;
+}
 
-    &:hover {
-      background-color: #ff7a14;
-      color: #000;
-    }
-  }
+.feedback1-page textarea {
+  min-height: 120px;
+  resize: vertical;
+}
 
-  .error {
-    color: #ef4444;
-    letter-spacing: 1px;
-    font-weight: 500;
-    margin-top: 0.5rem;
-  }
+/* Groups */
+.feedback1-page .form-group {
+  margin-bottom: 1.4rem;
+  margin-top: 1.4rem;
+}
+
+.feedback1-page label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+/* Stars */
+.feedback1-page .stars {
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.feedback1-page .stars span {
+  color: #ccc;
+  margin-right: 6px;
+  transition: 0.2s, transform 0.2s ease;
+}
+
+.feedback1-page .stars span:hover {
+  transform: scale(1.3);
+}
+
+.feedback1-page .stars span.active {
+  color: #ff8c42;
+}
+
+/* Pills */
+.feedback1-page .pill-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.feedback1-page .pill-group button {
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  border: 1.5px solid #1a1a1a;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.feedback1-page .pill-group button:hover {
+  transform: scale(1.05);
+  background: #ffe6d6;
+}
+
+.feedback1-page .pill-group button.active {
+  background: #ff8c42;
+  color: #fff;
+  border-color: #ff8c42;
+}
+
+/* Submit */
+.feedback1-page .submit-btn {
+  display: block;
+  margin: 2rem auto 0;
+  padding: 0.75rem 2.5rem;
+  border-radius: 999px;
+  border: none;
+  background: #ff8c42;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.25s, transform 0.2s ease;
+}
+
+.feedback1-page .submit-btn:hover {
+  background: #ff7a14;
+  transform: scale(1.05);
+}
+
+/* Error */
+.feedback1-page .error {
+  text-align: center;
+  color: #e11d48;
+  margin-top: 1rem;
 }

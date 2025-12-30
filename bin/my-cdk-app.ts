@@ -22,7 +22,10 @@ const env = {
 const dbStack = new DBStack(app, "Unity-DBStack", { env });
 
 // 2) WebSocket stack
-const wsStack = new UnityWebSocketStack(app, "UnityWebSocketStack", { env });
+const wsStack = new UnityWebSocketStack(app, "UnityWebSocketStack", {
+  env,
+  dbStack,
+});
 
 // 3) IoT stack (Things + policy + rule + ingest Lambda + WS broadcast)
 const iotStack = new IoTStack(app, "Unity-IoTStack", {
@@ -64,17 +67,18 @@ new APIStack(app, "Unity-APIStack", {
 });
 
 
-// const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
-//   env: {
-//     account: process.env.CDK_DEFAULT_ACCOUNT,
-//     region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
-//   },
-// });
+const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+  },
+});
 
+new VisitorFeedbackStack(app, 'VisitorFeedbackStack', {
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION || 'us-east-1' },
+  userTable: FRStack.userTable, 
+  broadcastLambda: FRStack.broadcastLambda
+});
 
-// new VisitorFeedbackStack(app, 'VisitorFeedbackStack', {
-//   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION || 'us-east-1' },
-//   userTable: FRStack.userTable, 
-// });
  
 //new FrontendDeploymentStack(app, "Unity-FrontendDeploymentStack");
