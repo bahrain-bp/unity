@@ -11,6 +11,9 @@ interface LoadDashboardResponse {
   data: ActiveUsersData;
 }
 
+const wsAPI = import.meta.env.VITE_WS_API;
+const wsToken = import.meta.env.VITE_WS_TOKEN;
+
 export default function ActiveUsersNow() {
   const [activeUsers, setActiveUsers] = useState<ActiveUsersData>({
     count: 0,

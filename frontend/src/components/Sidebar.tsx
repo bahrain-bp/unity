@@ -63,6 +63,11 @@ export default function Sidebar() {
       icon: USERADD,
     },
     {
+      name: "Feedbacks",
+      route: "/dashboard/feedbacks",
+      icon: STAR,
+    },
+    {
       name: "Parking",
       route: "/dashboard/parking",
       icon: USERS, // leave it as USERS for now
