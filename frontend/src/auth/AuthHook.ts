@@ -70,12 +70,14 @@ export const useProvideAuth = (): UseAuth => {
   const getUserGroups = async (): Promise<string[]> => {
     try {
       const session = await fetchAuthSession();
-      const groups = session.tokens?.accessToken?.payload["cognito:groups"];
-      
-      if (groups && Array.isArray(groups)) {
-        return groups;
-      }
-      return [];
+      const groupsRaw = session.tokens?.accessToken?.payload["cognito:groups"];
+
+      const groups: string[] = Array.isArray(groupsRaw)
+        ? groupsRaw.filter((g): g is string => typeof g === "string")
+        : [];
+
+      return groups;
+
     } catch (error) {
       console.error("Error fetching user groups:", error);
       return [];

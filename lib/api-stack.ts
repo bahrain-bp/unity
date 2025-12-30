@@ -511,6 +511,7 @@ getImageResource.addMethod(
     handler: "handler",
     environment: {
       USER_POOL_ID: userPool.userPoolId,
+      ALLOWED_ORIGIN: "http://127.0.0.1:5173"
     },
     bundling: {
       target: "node18",

@@ -43,9 +43,9 @@ const Users = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
 
-  // Pagination states
+
   const [currentPage, setCurrentPage] = useState(1)
-  const [usersPerPage] = useState(9) // Show 10 users per page
+  const [usersPerPage] = useState(9) 
 
   useEffect(() => {
     getUsers()
@@ -68,13 +68,13 @@ const Users = () => {
     }
   }
 
-  // Pagination logic
+
   const indexOfLastUser = currentPage * usersPerPage
   const indexOfFirstUser = indexOfLastUser - usersPerPage
   const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser)
   const totalPages = Math.ceil(users.length / usersPerPage)
 
-  // Handle page change from MUI Pagination
+
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value)
   }
@@ -90,11 +90,10 @@ const Users = () => {
     setError(null)
 
     try {
-      await DeleteUser(userToDelete.email)
-      setUsers(users.filter(u => u.email !== userToDelete.email))
+      await DeleteUser(userToDelete.username)
+      setUsers(users.filter(u => u.username !== userToDelete.username))
       setUserToDelete(null)
 
-      // Adjust current page if we deleted the last user on the current page
       const newTotalPages = Math.ceil((users.length - 1) / usersPerPage)
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(newTotalPages)
@@ -157,10 +156,6 @@ const Users = () => {
       await CreateUser(userData)
       await getUsers()
       setShowAddModal(false)
-      
-      // Go to last page to see the new user
-      const newTotalPages = Math.ceil((users.length + 1) / usersPerPage)
-      setCurrentPage(newTotalPages)
     } catch (err: any) {
       console.error("Error creating user:", err)
       setError(err.response?.data?.message || err.message || "Failed to create user")
@@ -213,7 +208,7 @@ const Users = () => {
                 ) : (
                   currentUsers.map(user => (
                     <UserRow 
-                      key={user.email} 
+                      key={user.username} 
                       user={user} 
                       onEdit={() => handleEditRequest(user)} 
                       onDelete={() => handleDeleteRequest(user)} 
@@ -223,7 +218,6 @@ const Users = () => {
               </tbody>
             </Table>
 
-            {/* MUI Pagination Component */}
             {users.length > usersPerPage && (
               <Stack spacing={2} alignItems="center" sx={{ padding: '2rem', borderTop: '1px solid #e0e0e0' }}>
                 <Pagination 

@@ -17,10 +17,10 @@ import VisitorFeedBack from "./pages/VisitorFeedback";
 import ErrorPage from "./pages/error";
 import ThankYouPage from "./pages/thank-you";
 import Users from "./pages/dashboard/Users";
-import IoT from "./pages/dashboard/IoT";
 import Footer from "./components/Footer";
 import { useAuth } from "./auth/AuthHook";
 import UploadUnity from "./pages/dashboard/UploadUnity";
+import Analytics from "./pages/dashboard/Analytics";
 
 // Protected Route Component for authenticated users
 function ProtectedRoute({ children }) {
@@ -103,13 +103,14 @@ function App() {
           />
 
           <Route
-            path="/dashboard"
+            path="/dashboard/analytics"
             element={
               <AdminRoute>
-                <IoT />
+                <Analytics />
               </AdminRoute>
             }
           />
+
           <Route
             path="/dashboard/users"
             element={
