@@ -6,7 +6,7 @@ export default function SmartPlugEnvironment() {
   useEffect(() => {
     // --- Load Unity loader for YOUR test build ---
     const loaderScript = document.createElement("script");
-    loaderScript.src = "/smartplug-test/Downloads.loader.js";
+    loaderScript.src = "/smartplug-test/bahtwin.loader.js";
 
     loaderScript.onload = () => {
       const w = window as any;
@@ -15,9 +15,9 @@ export default function SmartPlugEnvironment() {
         w
           .createUnityInstance(canvasRef.current, {
             arguments: [],
-            dataUrl: "/smartplug-test/Downloads.data",
-            frameworkUrl: "/smartplug-test/Downloads.framework.js",
-            codeUrl: "/smartplug-test/Downloads.wasm",
+            dataUrl: "/smartplug-test/bahtwin.data.unityweb",
+            frameworkUrl: "/smartplug-test/bahtwin.framework.js.unityweb",
+            codeUrl: "/smartplug-test/bahtwin.wasm.unityweb",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "DefaultCompany",
             productName: "SmartPlugTest",
@@ -35,6 +35,14 @@ export default function SmartPlugEnvironment() {
               console.warn(
                 "[SmartPlugTest] initSmartPlugBridge not found. Is /js/unity-realtime-bridge.js loaded?"
               );
+            }
+
+            // Chat bridge 
+            if (w.initChatBridge) {
+              console.log("Initializing Chat bridge…");
+              w.initChatBridge(instance);
+            } else {
+              console.warn("initChatBridge not found. Is unity-realtime-bridge.js loaded?");
             }
           })
           .catch((err: any) => {
