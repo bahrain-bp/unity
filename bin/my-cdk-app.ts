@@ -10,7 +10,7 @@ import { VisitorFeedbackStack } from "../lib/VisitorFeedbackStack";
 
 import { IoTStack } from "../lib/IoTStack";
 import { UnityWebSocketStack } from "../lib/unity-websocket-stack";
-import { FileUploadApiStack } from '../lib/BuildUploadStack';
+import { BuildUploadStack } from "../lib/BuildUploadStack"; 
 
 const app = new cdk.App();
 
@@ -57,12 +57,16 @@ indexStack.addDependency(openSearchStack);
 bedrockStack.addDependency(indexStack);
 
 // 5) Frontend deployment
-const frontendStack = new FrontendDeploymentStack(app, 'Unity-FrontendDeploymentStack', {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION,
-  },
-});
+const frontendStack = new FrontendDeploymentStack(
+  app,
+  "Unity-FrontendDeploymentStack",
+  {
+    env: {
+      account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: process.env.CDK_DEFAULT_REGION || "us-east-1",
+    },
+  }
+);
 
 // 6) API stack (Cognito + API Gateway + Lambdas)
 new APIStack(app, "Unity-APIStack", {
@@ -90,11 +94,10 @@ new APIStack(app, "Unity-APIStack", {
 //new FrontendDeploymentStack(app, "Unity-FrontendDeploymentStack");
 
 // Build Upload Stack
-const uploadStack = new FileUploadApiStack(app, 'FileUploadApiStack', {
+new BuildUploadStack(app, "Unity-BuildUploadStack", {
   frontendBucketName: frontendStack.frontendBucket.bucketName,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION,
+    region: process.env.CDK_DEFAULT_REGION || "us-east-1",
   },
 });
-uploadStack.addDependency(frontendStack);

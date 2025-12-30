@@ -12,13 +12,28 @@ export class FrontendDeploymentStack extends Stack {
     super(scope, id, props);
 
     // S3 bucket for frontend hosting (private, secure)
+
     this.frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      enforceSSL: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-      serverAccessLogsPrefix: 'accesslogs/',
-    });
+  blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+  enforceSSL: true,
+  removalPolicy: RemovalPolicy.DESTROY,
+  serverAccessLogsPrefix: 'accesslogs/',
+   // autoDeleteObjects: true,
+
+   //added cors configuration
+  cors: [
+    {
+      allowedMethods: [
+        s3.HttpMethods.PUT,
+        s3.HttpMethods.POST,
+      ],
+      allowedOrigins: ['*'],   // OK for now
+      allowedHeaders: ['*'],
+      exposedHeaders: ['ETag'],
+      maxAge: 3000,
+    },
+  ],
+});
 
     // CloudFront distribution with OAC
     const distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
@@ -47,6 +62,7 @@ export class FrontendDeploymentStack extends Stack {
       distribution,
       distributionPaths: ['/*'],
     });
+
 
     // Output CloudFront URL
     new CfnOutput(this, "FrontendURL", {

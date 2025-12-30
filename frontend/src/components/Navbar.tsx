@@ -63,7 +63,7 @@ function Navbar() {
               </div>
             </div>
           ) : (
-            <a href={"/auth"}>Register</a>
+            <Link to={"/auth"}>Register</Link>
           )}
           <span className="navbar__drawer--toggle" onClick={toggleDrawer(true)}>
             {MENU()}
@@ -98,7 +98,7 @@ function Navbar() {
               </div>
             </div>
           ) : (
-            <a href={"/auth"}>Register</a>
+            <Link to={"/auth"}>Register</Link>
           )}
         </div>
       </Drawer>

@@ -1,143 +1,131 @@
+// uploadBuildHandler.ts
+
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import * as multipart from 'parse-multipart-data';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import {
+  CloudFrontClient,
+  CreateInvalidationCommand,
+} from '@aws-sdk/client-cloudfront';
 
 const s3Client = new S3Client({});
-const BUCKET_NAME = process.env.BUCKET_NAME!;
-const UPLOAD_DIRECTORY = process.env.UPLOAD_DIRECTORY || 'uploads';
-const MAX_FILES = 4;
+const cfClient = new CloudFrontClient({});
 
-interface UploadedFile {
-  filename: string;
-  s3Key: string;
-  size: number;
-  contentType: string;
-}
+const BUCKET_NAME = process.env.BUCKET_NAME!;
+const UPLOAD_DIRECTORY = process.env.UPLOAD_DIRECTORY || 'unity';
+const MAX_FILES = parseInt(process.env.MAX_FILES || '4');
+const URL_EXPIRATION = parseInt(process.env.URL_EXPIRATION_SECONDS || '3600');
+const DISTRIBUTION_ID = process.env.CLOUDFRONT_DISTRIBUTION_ID!;
 
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    // Validate request
-    if (!event.body) {
-      return {
-        statusCode: 400,
-        headers: getCorsHeaders(),
-        body: JSON.stringify({ error: 'No request body' }),
-      };
-    }
+    if (!event.body) return errorResponse(400, 'Missing body');
 
-    // Get content type and boundary
-    const contentType = event.headers['content-type'] || event.headers['Content-Type'];
-    if (!contentType || !contentType.includes('multipart/form-data')) {
-      return {
-        statusCode: 400,
-        headers: getCorsHeaders(),
-        body: JSON.stringify({ error: 'Content-Type must be multipart/form-data' }),
-      };
-    }
+    const body = JSON.parse(event.body);
+    const files = body.files;
 
-    // Extract boundary
-    const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
-    if (!boundaryMatch) {
-      return {
-        statusCode: 400,
-        headers: getCorsHeaders(),
-        body: JSON.stringify({ error: 'No boundary found in Content-Type' }),
-      };
-    }
-    const boundary = boundaryMatch[1] || boundaryMatch[2];
-
-    // Parse multipart data
-    const buffer = Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8');
-    const parts = multipart.parse(buffer, boundary);
-
-    // Filter only file parts (should have filename)
-    const files = parts.filter(part => part.filename);
-
-    // Validate number of files
-    if (files.length === 0) {
-      return {
-        statusCode: 400,
-        headers: getCorsHeaders(),
-        body: JSON.stringify({ error: 'No files provided' }),
-      };
+    if (!Array.isArray(files) || files.length === 0) {
+      return errorResponse(400, 'files[] is required and cannot be empty');
     }
 
     if (files.length > MAX_FILES) {
-      return {
-        statusCode: 400,
-        headers: getCorsHeaders(),
-        body: JSON.stringify({ 
-          error: `Maximum ${MAX_FILES} files allowed, received ${files.length}` 
-        }),
-      };
+      return errorResponse(400, `Max ${MAX_FILES} files allowed`);
     }
 
-    // Upload files to S3
-    const uploadedFiles: UploadedFile[] = [];
     const timestamp = Date.now();
+    const results = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const filename = file.filename || `file_${i}`;
-      const sanitizedFilename = sanitizeFilename(filename);
-      const s3Key = `${UPLOAD_DIRECTORY}/${timestamp}_${sanitizedFilename}`;
+    // Generate presigned URLs (no file upload here)
+    for (const f of files) {
+      if (!f.filename) {
+        return errorResponse(400, 'Each file must have a filename');
+      }
 
-      // Upload to S3
-      const uploadCommand = new PutObjectCommand({
+      const sanitized = sanitize(f.filename);
+      const key = `${UPLOAD_DIRECTORY}/${sanitized}`;
+
+      const command = new PutObjectCommand({
         Bucket: BUCKET_NAME,
-        Key: s3Key,
-        Body: file.data,
-        ContentType: file.type || 'application/octet-stream',
+        Key: key,
+        ContentType: f.contentType || 'application/octet-stream',
+        Metadata: {
+          original: f.filename,
+          uploaded: timestamp.toString(),
+        },
       });
 
-      await s3Client.send(uploadCommand);
+      const uploadUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: URL_EXPIRATION,
+      });
 
-      uploadedFiles.push({
-        filename: sanitizedFilename,
-        s3Key: s3Key,
-        size: file.data.length,
-        contentType: file.type || 'application/octet-stream',
+      results.push({
+        filename: sanitized,
+        key,
+        uploadUrl,
+        method: 'PUT',
+        headers: {
+          'Content-Type': f.contentType || 'application/octet-stream',
+        },
       });
     }
 
-    // Return success response
-    return {
-      statusCode: 200,
-      headers: getCorsHeaders(),
-      body: JSON.stringify({
-        message: 'Files uploaded successfully',
-        files: uploadedFiles,
-        count: uploadedFiles.length,
-      }),
-    };
+    // 🚀 NEW: CloudFront Invalidation
+    if (DISTRIBUTION_ID) {
+      try {
+        await invalidateCloudFront(DISTRIBUTION_ID);
+        console.log('CloudFront invalidation triggered');
+      } catch (err) {
+        console.error('Failed to invalidate CloudFront:', err);
+      }
+    } else {
+      console.warn('CLOUDFRONT_DISTRIBUTION_ID not provided, skipping invalidation');
+    }
 
-  } catch (error) {
-    console.error('Error uploading files:', error);
-    return {
-      statusCode: 500,
-      headers: getCorsHeaders(),
-      body: JSON.stringify({ 
-        error: 'Failed to upload files',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-    };
+    return successResponse({
+      urls: results,
+      expiresIn: URL_EXPIRATION,
+      invalidation: true,
+    });
+  } catch (e: any) {
+    return errorResponse(500, e.message || 'Internal error');
   }
 };
 
-function sanitizeFilename(filename: string): string {
-  // Remove any path components and dangerous characters
-  return filename
-    .replace(/^.*[\\\/]/, '') // Remove path
-    .replace(/[^a-zA-Z0-9._-]/g, '_'); // Replace special chars
-}
+// --- Helpers --------------------------------------------------
 
-function getCorsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': '*', // Restrict this in production
-    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key',
-    'Access-Control-Allow-Methods': 'POST,OPTIONS',
-    'Content-Type': 'application/json',
-  };
-}
+const invalidateCloudFront = async (distributionId: string) => {
+  const command = new CreateInvalidationCommand({
+    DistributionId: distributionId,
+    InvalidationBatch: {
+      CallerReference: Date.now().toString(),
+      Paths: {
+        Quantity: 1,
+        Items: ['/unity/*'], // invalidate everything in /unity/
+      },
+    },
+  });
+
+  return cfClient.send(command);
+};
+
+const sanitize = (name: string) =>
+  name.replace(/^.*[\\\/]/, '').replace(/[^a-zA-Z0-9._-]/g, '_');
+
+const cors = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+const successResponse = (body: any) => ({
+  statusCode: 200,
+  headers: cors,
+  body: JSON.stringify(body),
+});
+
+const errorResponse = (status: number, msg: string) => ({
+  statusCode: status,
+  headers: cors,
+  body: JSON.stringify({ error: msg }),
+});
