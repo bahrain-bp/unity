@@ -5,6 +5,17 @@ using UnityEngine.InputSystem;
 
 public class RegistrationZoneTrigger : MonoBehaviour
 {
+    [Header("Speech Bubble Fade (No changes to SpeechBubbleUI)")]
+    public CanvasGroup speechBubbleGroup;   // drag SpeechBubble root CanvasGroup here
+    public float bubbleFadeIn = 0.25f;
+    public float bubbleFadeOut = 0.25f;
+
+    [Header("Post-Flash Badge Moment")]
+    [TextArea] public string badgeLine = "Here is your visitor badge please wear at all times when visiting.";
+    public float afterFlashDelay = 1f;
+
+    public BadgePickupInteractable badgePickup; // assign in inspector
+
     [Header("Access Control")]
     public RegistrationAccessGate accessGate;
 
@@ -20,20 +31,20 @@ public class RegistrationZoneTrigger : MonoBehaviour
     [Header("Replay (Already Registered)")]
     [TextArea] public string replayLine = "Press F to go through the registration process again.";
     public string replayOptions = "F (Interact)";
-    public BadgeHUD badgeHud;                  // drag your BadgeHUD script object here
-    public string interactActionName = "Interact"; // must exist in Input Actions (bind to F)
+    public BadgeHUD badgeHud;
+    public string interactActionName = "Interact";
 
     [Header("Bottom UI (Player reply)")]
     public GameObject bottomPanel;
-    public CanvasGroup bottomCanvasGroup; // add CanvasGroup to BottomPanel
+    public CanvasGroup bottomCanvasGroup;
     public TMP_Text bottomText;
 
     [Header("Bottom UI Animation")]
     public float bottomFadeInSeconds = 0.25f;
-    public float bottomFadeOutSeconds = 0.8f;      // slower fade-out
+    public float bottomFadeOutSeconds = 0.8f;
     public float typewriterSecondsPerChar = 0.03f;
     public float afterTypewriterDelay = 0.15f;
-    public float holdReplySeconds = 2f;            // keep reply visible
+    public float holdReplySeconds = 2f;
     public float afterThankYouDelay = 0.25f;
 
     [Header("Player")]
@@ -65,12 +76,20 @@ public class RegistrationZoneTrigger : MonoBehaviour
     private InputAction interactAction;
 
     private Coroutine waitReplayRoutine;
+    private Coroutine bubbleFadeRoutine;
 
     private void Awake()
     {
         HideBottomInstant();
 
-        if (speechBubble != null) speechBubble.Hide();
+        // IMPORTANT: Don't call speechBubble.Hide() here if it disables the GameObject.
+        // We fade using CanvasGroup, so we need the object active.
+        if (speechBubbleGroup != null)
+        {
+            speechBubbleGroup.alpha = 0f;
+            speechBubbleGroup.interactable = false;
+            speechBubbleGroup.blocksRaycasts = false;
+        }
 
         if (flashCanvasGroup != null)
         {
@@ -94,7 +113,6 @@ public class RegistrationZoneTrigger : MonoBehaviour
         lookAction = map.FindAction(lookActionName, true);
         nextAction = map.FindAction(nextActionName, true);
 
-        // NEW: Interact (F)
         if (!string.IsNullOrEmpty(interactActionName))
             interactAction = map.FindAction(interactActionName, false);
     }
@@ -106,22 +124,19 @@ public class RegistrationZoneTrigger : MonoBehaviour
 
         playerInside = true;
 
-        // If VisitorSession isn't ready yet, show message and stop.
         if (VisitorSession.Instance == null || !VisitorSession.Instance.IsLoaded)
         {
-            if (speechBubble != null) speechBubble.Show("System not ready (VisitorSession missing).", "");
+            ShowBubbleFaded("System not ready (VisitorSession missing).", "");
             return;
         }
 
         var profile = VisitorSession.Instance.Profile;
 
-        // If already registered: show replay prompt, wait for F (do NOT snap yet)
         if (profile != null && profile.passedRegistration)
         {
             accessGate?.SetRegistrationPassed(true);
 
-            if (speechBubble != null)
-                speechBubble.Show(replayLine, replayOptions);
+            ShowBubbleFaded(replayLine, replayOptions);
 
             if (waitReplayRoutine != null) StopCoroutine(waitReplayRoutine);
             waitReplayRoutine = StartCoroutine(WaitForReplayPressed());
@@ -129,7 +144,6 @@ public class RegistrationZoneTrigger : MonoBehaviour
             return;
         }
 
-        // Normal (not registered): start flow immediately
         StartCoroutine(Flow(isReplay: false));
     }
 
@@ -145,24 +159,19 @@ public class RegistrationZoneTrigger : MonoBehaviour
             waitReplayRoutine = null;
         }
 
-        // Optional: hide prompt when leaving
-        if (!running && speechBubble != null)
-            speechBubble.Hide();
+        if (!running)
+            HideBubbleFaded();
     }
 
     private IEnumerator WaitForReplayPressed()
     {
-        // Prefer Interact, fallback to Next if you didn't add Interact yet
         InputAction a = interactAction != null ? interactAction : nextAction;
 
         while (playerInside && !running)
         {
             if (a != null && a.WasPressedThisFrame())
             {
-                // Snap ONLY after F pressed
                 SnapPlayerToPoint();
-
-                // Start replay flow (hide badge during replay)
                 yield return Flow(isReplay: true);
                 yield break;
             }
@@ -175,65 +184,62 @@ public class RegistrationZoneTrigger : MonoBehaviour
     {
         running = true;
 
-        // During replay, hide badge temporarily
         if (isReplay && badgeHud != null)
             badgeHud.SetForceHidden(true);
 
-        // Lock doors/wall while registration is in progress
         accessGate?.SetRegistrationPassed(false);
 
-        // Normal flow snaps immediately. Replay flow already snapped after F, but snapping again is harmless.
         if (!isReplay)
             SnapPlayerToPoint();
 
-        // Lock movement, keep look
         if (moveAction != null) moveAction.Disable();
         if (lookAction != null) lookAction.Enable();
         if (nextAction != null) nextAction.Enable();
 
-        // Step 1: receptionist asks for name
-        if (speechBubble != null)
-            speechBubble.Show(firstLine, firstOptions);
-
-        // Wait for Next (N)
+        ShowBubbleFaded(firstLine, firstOptions);
         yield return WaitForNextPressed();
 
-        // Step 2: use already-loaded profile from VisitorSession
         var profile = VisitorSession.Instance.Profile;
         if (profile == null)
         {
-            if (speechBubble != null) speechBubble.Show("Sorry, I could not load your data.", "");
+            ShowBubbleFaded("Sorry, I could not load your data.", "");
             EndRegistration();
             yield break;
         }
 
-        // Step 3: show bottom reply with fade + typewriter
         yield return ShowBottomReplyAnimated($"You: {profile.userName}");
 
         if (holdReplySeconds > 0f)
             yield return new WaitForSeconds(holdReplySeconds);
 
-        // Step 4: receptionist continues
-        if (speechBubble != null)
-            speechBubble.Show(afterNameLine, afterNameOptions);
+        ShowBubbleFaded(afterNameLine, afterNameOptions);
 
         if (afterThankYouDelay > 0f)
             yield return new WaitForSeconds(afterThankYouDelay);
 
-        // Step 5: fade bottom out slowly
-        yield return FadeCanvasGroup(bottomCanvasGroup, 1f, 0f, bottomFadeOutSeconds);
+        yield return FadeCanvasGroup(bottomCanvasGroup, bottomCanvasGroup != null ? bottomCanvasGroup.alpha : 1f, 0f, bottomFadeOutSeconds);
         if (bottomPanel != null) bottomPanel.SetActive(false);
 
-        // Step 6: wait until player looks at camera target, then flash
         yield return WaitUntilLookingAtTarget();
         yield return FlashScreen();
 
-        // Replay finished: show badge again and keep access open
+        if (afterFlashDelay > 0f)
+            yield return new WaitForSeconds(afterFlashDelay);
+
+        ShowBubbleFaded(badgeLine, "");
+
+        if (badgePickup != null)
+        {
+            badgePickup.BeginShow();
+            yield return badgePickup.WaitUntilPickedUp();
+        }
+
         if (isReplay && badgeHud != null)
             badgeHud.SetForceHidden(false);
 
         accessGate?.SetRegistrationPassed(true);
 
+        HideBubbleFaded();
         EndRegistration();
     }
 
@@ -318,6 +324,38 @@ public class RegistrationZoneTrigger : MonoBehaviour
         }
 
         cg.alpha = to;
+    }
+
+    private void ShowBubbleFaded(string line, string options)
+    {
+        if (speechBubble != null)
+            speechBubble.Show(line, options);
+
+        FadeBubble(true);
+    }
+
+    private void HideBubbleFaded()
+    {
+        FadeBubble(false);
+        // We intentionally do NOT call speechBubble.Hide() because many prefabs disable the object,
+        // which would break fading. The CanvasGroup alpha=0 is enough.
+    }
+
+    private void FadeBubble(bool show)
+    {
+        if (speechBubbleGroup == null) return;
+
+        if (bubbleFadeRoutine != null)
+            StopCoroutine(bubbleFadeRoutine);
+
+        float from = speechBubbleGroup.alpha;
+        float to = show ? 1f : 0f;
+        float dur = show ? bubbleFadeIn : bubbleFadeOut;
+
+        speechBubbleGroup.interactable = show;
+        speechBubbleGroup.blocksRaycasts = show;
+
+        bubbleFadeRoutine = StartCoroutine(FadeCanvasGroup(speechBubbleGroup, from, to, dur));
     }
 
     private void HideBottomInstant()

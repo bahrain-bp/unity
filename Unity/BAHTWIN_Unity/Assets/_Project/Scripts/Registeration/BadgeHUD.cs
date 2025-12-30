@@ -8,7 +8,6 @@ public class BadgeHUD : MonoBehaviour
     public Image photoImage;
     public TMP_Text nameText;
 
-    // NEW: lets other scripts temporarily hide the badge even if the profile says passedRegistration=true
     private bool forceHidden;
 
     private void Start()
@@ -17,11 +16,9 @@ public class BadgeHUD : MonoBehaviour
 
         if (VisitorSession.Instance != null)
         {
-            // if already loaded
             if (VisitorSession.Instance.IsLoaded)
                 Apply(VisitorSession.Instance.Profile);
 
-            // subscribe for later
             VisitorSession.Instance.OnProfileLoaded += Apply;
         }
     }
@@ -40,8 +37,10 @@ public class BadgeHUD : MonoBehaviour
             return;
         }
 
-        // show only if earned AND not forced hidden
-        bool show = p.passedRegistration && !forceHidden;
+        bool picked = VisitorSession.Instance != null &&
+                      (VisitorSession.Instance.HasPickedUpBadge || p.passedRegistration);
+
+        bool show = p.passedRegistration && picked && !forceHidden;
 
         if (root != null) root.SetActive(show);
         if (!show) return;

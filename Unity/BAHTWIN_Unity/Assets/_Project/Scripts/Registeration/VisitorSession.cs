@@ -20,6 +20,8 @@ public class VisitorSession : MonoBehaviour
 
     public event Action<VisitorBadgeResponse> OnProfileLoaded;
 
+    public bool HasPickedUpBadge { get; private set; }
+
     private void Awake()
     {
         if (Instance != null) { Destroy(gameObject); return; }
@@ -92,6 +94,63 @@ public class VisitorSession : MonoBehaviour
         }
 
         IsLoaded = true;
+        OnProfileLoaded?.Invoke(Profile);
+    }
+
+    public void SetPickedUpBadgeLocal(bool picked)
+    {
+        HasPickedUpBadge = picked;
+        OnProfileLoaded?.Invoke(Profile);
+    }
+
+    public void SetPassedRegistrationLocal(bool passed)
+    {
+        if (Profile == null) return;
+
+        Profile.passedRegistration = passed;
+
+        if (accessGate != null)
+            accessGate.SetRegistrationPassed(passed);
+
+        OnProfileLoaded?.Invoke(Profile);
+    }
+
+    public IEnumerator SetPassedRegistrationBackend(bool passed)
+    {
+        if (userIdProvider == null || api == null || Profile == null) yield break;
+
+        string userId = userIdProvider.GetUserId();
+        string token = userIdProvider.GetIdToken();
+
+        VisitorBadgeResponse updated = null;
+        string err = null;
+
+        yield return api.SetPassedRegistration(
+            userId, passed, token,
+            ok => updated = ok,
+            e => err = e
+        );
+
+        if (updated == null)
+        {
+            Debug.LogError("[VisitorSession] Failed to update passedRegistration: " + err);
+            yield break;
+        }
+
+        // If backend echoes something unexpected, DO NOT overwrite local flow state.
+        if (updated.passedRegistration != passed)
+        {
+            Debug.LogWarning("[VisitorSession] Backend returned passedRegistration=" + updated.passedRegistration +
+                             " after setting " + passed + ". Keeping local state " + passed + ".");
+            SetPassedRegistrationLocal(passed);
+            yield break;
+        }
+
+        Profile = updated;
+
+        if (accessGate != null)
+            accessGate.SetRegistrationPassed(Profile.passedRegistration);
+
         OnProfileLoaded?.Invoke(Profile);
     }
 }
