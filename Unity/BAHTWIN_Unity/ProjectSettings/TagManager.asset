@@ -3,7 +3,11 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - Elevator
+  - ElevatorNumericButton
+  - ElevatorButtonOpen
+  - ElevatorGoButton
   layers:
   - Default
   - TransparentFX
@@ -25,7 +29,7 @@ TagManager:
   - 
   - 
   - 
-  - 
+  - Minimap
   - 
   - 
   - 

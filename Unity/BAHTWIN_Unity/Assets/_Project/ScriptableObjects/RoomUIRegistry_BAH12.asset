@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd670dcd1c5db4f7bbb2a8da62d179a8, type: 3}
+  m_Name: RoomUIRegistry_BAH12
+  m_EditorClassIdentifier: Assembly-CSharp::RoomUIRegistry
+  entries:
+  - room: {fileID: 11400000, guid: ccb1297dd8df4c24284496925b40836a, type: 2}
+    category: 1
+    displayNameOverride: Conference Room 02.504
+  - room: {fileID: 11400000, guid: 65ded14d8b86e6c41aac38ba55dc3802, type: 2}
+    category: 1
+    displayNameOverride: Conference Room 02.505
+  - room: {fileID: 11400000, guid: d963ab5804de8d64bbb1d6a19e1f589e, type: 2}
+    category: 1
+    displayNameOverride: Conference Room 02.506
+  - room: {fileID: 11400000, guid: 51ab43128e2004b5db4de0075cac8131, type: 2}
+    category: 7
+    displayNameOverride: Copy Room
+  - room: {fileID: 11400000, guid: 79eee247af23e4db9bafac9c619f939e, type: 2}
+    category: 4
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 15c83db5ad40b41569e11b88a45fc105, type: 2}
+    category: 4
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: a7c7dc03d6f074453903faa33f8f7dde, type: 2}
+    category: 4
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: c5df41f93efa5418994f3903154df1d3, type: 2}
+    category: 6
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 553241f924e5de74888c1fefed50f2e9, type: 2}
+    category: 7
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 386668d9e2ee60e4390a1abb70258b67, type: 2}
+    category: 7
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 810aa7a96c341644fb1ccd8e7975c06d, type: 2}
+    category: 2
+    displayNameOverride: Interview Room 02.502
+  - room: {fileID: 11400000, guid: 8c11ed31e76d27143ba870eec6b78f53, type: 2}
+    category: 2
+    displayNameOverride: Interview Room 02.503
+  - room: {fileID: 11400000, guid: 9c4932144094a884bb92d3dd3633ead9, type: 2}
+    category: 7
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: e3d9ee203dbab4f30a0861b5c55c021c, type: 2}
+    category: 7
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 577629eaa99b242729f64723d8ac5e97, type: 2}
+    category: 6
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 19f8ef645f39e47c6a3aafa915257181, type: 2}
+    category: 7
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 62c50416536cc496cacf14491e784a34, type: 2}
+    category: 3
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: f92967e20ef524e9ebaac842dba33985, type: 2}
+    category: 3
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 30299b488a39c421cbfe97c54b2339fc, type: 2}
+    category: 5
+    displayNameOverride: Phone Room 02.612
+  - room: {fileID: 11400000, guid: f70df129dba4374458ba4d2994c4931a, type: 2}
+    category: 5
+    displayNameOverride: Phone Room 02.613
+  - room: {fileID: 11400000, guid: a26d80de5bfd647a98b3dd4c30fd2476, type: 2}
+    category: 7
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 7251ec7bc1ed0734dbb723b97d70d938, type: 2}
+    category: 7
+    displayNameOverride: Quiet Room 02.804
+  - room: {fileID: 11400000, guid: 2cbbe8796b76f4bf1ba17f695ade4ce5, type: 2}
+    category: 7
+    displayNameOverride: 
+  - room: {fileID: 11400000, guid: 49b81679c02528345ae6fe81524aa55f, type: 2}
+    category: 0
+    displayNameOverride: Training Room 02.500
+  - room: {fileID: 11400000, guid: 5ba6a1060f7ca33498d0033b9476142f, type: 2}
+    category: 0
+    displayNameOverride: Training Room 02.501

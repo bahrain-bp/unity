@@ -17,39 +17,6 @@ export default function Sidebar() {
   const [userImg, setUserImg] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
 
-  const dashboard_pages = [
-    {
-      name: "Overview",
-      route: "/dashboard",
-      icon: OVERVIEW,
-    },
-    {
-      name: "WebGL Files",
-      route: "/dashboard/upload-unity",
-      icon: ED,
-    },
-    {
-      name: "Users",
-      route: "/dashboard/users",
-      icon: USERS,
-    },
-    {
-      name: "Visitor Arrival",
-      route: "/visitor-arrival",
-      icon: USER,
-    },
-    {
-      name: "Invite Visitor",
-      route: "/InviteVisitor",
-      icon: USERADD,
-    },
-    {
-      name: "Feedbacks",
-      route: "/dashboard/feedbacks",
-      icon: STAR,
-    },
-  ];
-
   const getUserImg = async () => {
     try {
       const result = await ImageClient.get(`/visitor/me?userId=${userId}`);
@@ -68,6 +35,39 @@ export default function Sidebar() {
       getUserImg();
     }
   }, [userId]);
+
+  const dashboard_pages = [
+    {
+      name: "Overview",
+      route: "/dashboard",
+      icon: OVERVIEW,
+    },
+    {
+      name: "Users",
+      route: "/dashboard/users",
+      icon: USERS,
+    },
+    {
+      name: "WebGL Files",
+      route: "/dashboard/upload-unity",
+      icon: ED,
+    },
+    {
+      name: "Visitor Arrival",
+      route: "/visitor-arrival",
+      icon: USER,
+    },
+    {
+      name: "Invite Visitor",
+      route: "/InviteVisitor",
+      icon: USERADD,
+    },
+    {
+      name: "Parking",
+      route: "/dashboard/parking",
+      icon: USERS, // leave it as USERS for now
+    },
+  ];
 
   return (
     <div className="sidebar">
