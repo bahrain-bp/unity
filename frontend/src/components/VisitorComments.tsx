@@ -11,6 +11,9 @@ interface LoadDashboardResponse {
   data: Comment[];
 }
 
+const wsAPI = import.meta.env.VITE_WS_API;
+const wsToken = import.meta.env.VITE_WS_TOKEN;
+
 export default function VisitorComments() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [connected, setConnected] = useState<boolean>(false);
@@ -36,9 +39,7 @@ export default function VisitorComments() {
     fetchComments();
 
     // Open WebSocket for real-time comments
-    const ws = new WebSocket(
-      "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
-    );
+    const ws = new WebSocket(`${wsAPI}?token=${wsToken}`);
 
     ws.onopen = () => setConnected(true);
 

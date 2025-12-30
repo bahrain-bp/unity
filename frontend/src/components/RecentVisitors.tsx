@@ -12,6 +12,9 @@ interface LoadDashboardResponse {
   data: Visitor[];
 }
 
+const wsAPI = import.meta.env.VITE_WS_API;
+const wsToken = import.meta.env.VITE_WS_TOKEN;
+
 export default function RecentVisitors() {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [connected, setConnected] = useState<boolean>(false);
@@ -37,9 +40,7 @@ export default function RecentVisitors() {
     fetchRecentVisitors();
 
     // Open WebSocket for real-time updates
-    const ws = new WebSocket(
-      "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
-    );
+    const ws = new WebSocket(`${wsAPI}?token=${wsToken}`);
 
     ws.onopen = () => setConnected(true);
 

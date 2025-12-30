@@ -52,9 +52,7 @@ def handler(event, context):
         "data": []
     }
 
-    # -------------------------
     # Recent Visitors
-    # -------------------------
     if component == "RecentVisitors":
         response_checked_in = InviteTable.scan(
             FilterExpression=Attr("checked_in").eq("yes")
@@ -75,9 +73,7 @@ def handler(event, context):
                 for v in sorted_items[:5]
             ]
 
-    # -------------------------
     # Today Invitations Count
-    # -------------------------
     elif component == "today_invitations":
         bahrain_tz = timezone(timedelta(hours=3))
         today_date = datetime.now(bahrain_tz).date().isoformat()
@@ -92,9 +88,7 @@ def handler(event, context):
             {"total": total_today}
         ]
 
-    # -------------------------
-    # Total BAHTWIN Visitors
-    # -------------------------
+    # Total BAHTWIN Users
     elif component == "total_bahtwin_visitors":
         response_count = userTable.scan(Select="COUNT")
         total_visitors = response_count.get("Count", 0)
@@ -103,32 +97,28 @@ def handler(event, context):
             {"total_visitors": total_visitors}
         ]
 
-    # -------------------------
     # Website Activity (Heartbeat)
-    # -------------------------
     elif component in ("active_users_now", "users_today", "users_last_6_hours"):
         now_utc = datetime.now(timezone.utc)
         timestamp = int(now_utc.timestamp())
+        bahrain_now = now_utc + timedelta(seconds=BAHRAIN_OFFSET_SECONDS)
+        bahrain_date = bahrain_now.date()
+        yesterday_date = bahrain_date - timedelta(days=1)
+        today_daily_pk = f"DAY#{bahrain_date.isoformat()}"
+        yesterday_daily_pk = f"DAY#{yesterday_date.isoformat()}"
 
         last6_hours_cutoff = timestamp - LAST_6_HOURS_SECONDS
         active_cutoff = timestamp - ACTIVE_WINDOW_SECONDS
-        today_cutoff = get_bahrain_day_start_utc_seconds(now_utc)
-        yesterday_start = today_cutoff - 24 * 60 * 60
-        yesterday_end = today_cutoff - 1
 
         response_last6 = WebsiteActivityTable.query(
             KeyConditionExpression=Key("pk").eq("WEBSITE")
             & Key("sk").gte(str(last6_hours_cutoff))
         )
         response_today = WebsiteActivityTable.query(
-            KeyConditionExpression=Key("pk").eq("WEBSITE")
-            & Key("sk").gte(str(today_cutoff))
+            KeyConditionExpression=Key("pk").eq(today_daily_pk)
         )
         response_yesterday = WebsiteActivityTable.query(
-            KeyConditionExpression=Key("pk").eq("WEBSITE")
-            & Key("sk").between(
-                str(yesterday_start), f"{yesterday_end}#\uffff"
-            )
+            KeyConditionExpression=Key("pk").eq(yesterday_daily_pk)
         )
 
         active_users = set()
@@ -148,12 +138,12 @@ def handler(event, context):
             hourly_buckets.setdefault(bucket, set()).add(user)
 
         for item in response_today.get("Items", []):
-            user = item.get("userId")
+            user = item.get("sk")
             if user:
                 users_today.add(user)
 
         for item in response_yesterday.get("Items", []):
-            user = item.get("userId")
+            user = item.get("sk")
             if user:
                 users_yesterday.add(user)
 
@@ -164,13 +154,15 @@ def handler(event, context):
 
         users_today_count = len(users_today)
         users_yesterday_count = len(users_yesterday)
-        if users_yesterday_count > 0:
+        if users_yesterday_count == 0 and users_today_count > 0:
+            users_today_change_pct = 100
+        elif users_yesterday_count == 0 and users_today_count == 0:
+            users_today_change_pct = 0
+        else:
             users_today_change_pct = (
                 (users_today_count - users_yesterday_count)
                 / users_yesterday_count
             ) * 100
-        else:
-            users_today_change_pct = 0
 
         if component == "active_users_now":
             card_payload["data"] = [
@@ -189,12 +181,10 @@ def handler(event, context):
             card_payload["data"] = [
                 {"series": users_last_6_hours}
             ]
-    # -------------------------
     # Unknown component
-    # -------------------------
     else:
         return response(400, {"error": "Unknown component"})
-  
+
     return response(200, card_payload)
 
 
@@ -209,5 +199,3 @@ def response(status, body):
         },
         "body": json.dumps(body)
     }
-
-

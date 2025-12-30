@@ -1,19 +1,25 @@
 .dashboard_IoT {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  gap: 1.5rem;   /* <-- this is the row & column gap */
   padding: 1.5rem;
 }
 
 /* Top 4 KPI boxes */
 .box1, .box2, .box3, .box4 {
-  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* top content stays top, value at bottom */
+  padding: 0.8rem 1rem;           /* smaller padding */
+  box-sizing: border-box;
 }
+
 
 /* Full width chart */
 .box5 {
   grid-column: 1 / -1;
   min-height: 300px;
+  margin-top: 0; /* remove any default top margin */
 }
 
 /* Bottom row as grid */
@@ -55,6 +61,8 @@
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   }
 }
+
+
 
 /* Orange side border */
 .orange-theme {
@@ -132,6 +140,7 @@
 .box7 {
   justify-content: flex-start; // aligns UsersToday content at top
 }
+
 
 /* Responsive design */
 @media (max-width: 1024px) {

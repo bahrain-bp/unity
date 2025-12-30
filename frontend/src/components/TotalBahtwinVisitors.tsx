@@ -7,6 +7,8 @@ interface TotalVisitorsResponse {
   card: string;
   data: { total_visitors: number }[];
 }
+const wsAPI = import.meta.env.VITE_WS_API;
+const wsToken = import.meta.env.VITE_WS_TOKEN;
 
 export default function TotalBahtwinVisitors() {
   const [totalVisitors, setTotalVisitors] = useState<number>(0);
@@ -35,9 +37,7 @@ export default function TotalBahtwinVisitors() {
   useEffect(() => {
     fetchTotalVisitors();
 
-    const ws = new WebSocket(
-      "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
-    );
+    const ws = new WebSocket(`${wsAPI}?token=${wsToken}`);
 
     ws.onopen = () => setConnected(true);
 

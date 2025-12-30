@@ -14,6 +14,9 @@ interface LoadDashboardResponse {
   data: AvgFeedbackData[];
 }
 
+const wsAPI = import.meta.env.VITE_WS_API;
+const wsToken = import.meta.env.VITE_WS_TOKEN;
+
 export default function AvgFeedbackScore() {
   const [feedback, setFeedback] = useState<AvgFeedbackData>({
     avg_score: 0,
@@ -41,9 +44,7 @@ export default function AvgFeedbackScore() {
   useEffect(() => {
     fetchFeedback();
 
-    const ws = new WebSocket(
-      "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
-    );
+    const ws = new WebSocket(`${wsAPI}?token=${wsToken}`);
 
     ws.onopen = () => setConnected(true);
 

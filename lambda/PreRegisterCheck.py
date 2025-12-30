@@ -55,11 +55,23 @@ def PreRegisterCheck(event, context):
         matches = match_response.get("FaceMatches", [])
         # If a strong match exists → user already registered
         if matches:
+            match = matches[0]
+            face_id = match['Face']['FaceId']
+            print(face_id)
+            # Query by faceId using the GSI
+            db_response = USER_TABLE.query(
+                IndexName='FaceIdIndex',  # the name of the GSI
+                KeyConditionExpression=boto3.dynamodb.conditions.Key('faceId').eq(face_id)
+                )
+            items = db_response.get('Items', [])
+            if items:
+                visitor = items[0]  # usually one match
+                print(visitor)
             similarity = matches[0]["Similarity"]
 
             if similarity >= 95:
                 return response(409, {  # 409 Conflict is appropriate here
-                    "error": "User already registered."
+                    "error": "The user in the uploaded picture already registered"
                 })
 
         # Face detected → upload image to S3

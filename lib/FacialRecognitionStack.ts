@@ -175,6 +175,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       functionName: 'connect-lambda', 
         environment: {
           TABLE_NAME: connection.tableName,
+          WS_TOKEN: "YZ0CLr6sRvWwTjPAccFHj6JdHY6HetrDq39ogV75TDDqijQsYJkO1LDgqYERCbLS"
         },
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
       });
