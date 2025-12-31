@@ -31,7 +31,7 @@ function Authentication() {
   const [message, setMessage] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [showVerification, setShowVerification] = useState(false);
-  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(false)
   
   const navigate = useNavigate();
   const { signUp, confirmSignUp, signIn, changePassword } = useAuth();

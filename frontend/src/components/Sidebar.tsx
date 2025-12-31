@@ -1,7 +1,7 @@
 "use client";
 
 // import { usePathname } from "next/navigation";
-import { OVERVIEW, USERS, USER, ED, USERADD, STAR, PARKING } from "../assets/icons";
+import { OVERVIEW, USERS, USER, ED, USERADD, STAR, ANALYTICS } from "../assets/icons";
 import logo from "../assets/logo.svg";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthHook";
@@ -26,7 +26,7 @@ export default function Sidebar() {
         setUsername(result.data.name);
       }
     } catch (err) {
-      return err;
+      console.error(err);
     }
   };
 
@@ -63,15 +63,15 @@ export default function Sidebar() {
       icon: USERADD,
     },
     {
-      name: "Feedback",
-      route: "/dashboard/feedbacks",
-      icon: STAR,
-    },
-    {
       name: "Parking",
       route: "/dashboard/parking",
-      icon: PARKING,
+      icon: USERS, // leave it as USERS for now
     },
+    {
+      name: "Analytics",
+      route: "/dashboard/analytics",
+      icon: ANALYTICS
+    }
   ];
 
   return (

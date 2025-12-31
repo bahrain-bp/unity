@@ -76,7 +76,7 @@ public class SmartPlugController : MonoBehaviour
         string desiredState = desired ? "on" : "off";
 
         isBusy = true;
-        Debug.Log($"[SmartPlug] Click → deviceId={deviceId}, desired={desiredState}");
+        //Debug.Log($"[SmartPlug] Click → deviceId={deviceId}, desired={desiredState}");
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         // Call the JS global function window.ToggleSmartPlug(deviceId, state)
@@ -96,7 +96,7 @@ public class SmartPlugController : MonoBehaviour
     // unityInstance.SendMessage("SmartPlug_<deviceId>", "OnDeviceStateJson", json)
     public void OnDeviceStateJson(string json)
     {
-        Debug.Log($"[SmartPlug] OnDeviceStateJson({deviceId}) raw: {json}");
+        //Debug.Log($"[SmartPlug] OnDeviceStateJson({deviceId}) raw: {json}");
 
         PlugStatePayload payload;
         try
@@ -131,7 +131,7 @@ public class SmartPlugController : MonoBehaviour
 
             if (payload.status == 429 && payload.retryAfter > 0)
             {
-                Debug.Log($"[SmartPlug] Cooldown, retry after {payload.retryAfter} seconds");
+                //Debug.Log($"[SmartPlug] Cooldown, retry after {payload.retryAfter} seconds");
 
                 // start per-plug countdown
                 localCooldownRemaining = payload.retryAfter;
@@ -174,7 +174,7 @@ public class SmartPlugController : MonoBehaviour
             label.text = $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
         }
 
-        Debug.Log($"[SmartPlug] {deviceId} -> {(isOn ? "ON" : "OFF")}");
+        //Debug.Log($"[SmartPlug] {deviceId} -> {(isOn ? "ON" : "OFF")}");
     }
 
     // Editor-only helper
