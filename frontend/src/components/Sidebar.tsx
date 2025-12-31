@@ -1,7 +1,16 @@
 "use client";
 
 // import { usePathname } from "next/navigation";
-import { OVERVIEW, USERS, USER, ED, USERADD, STAR, ANALYTICS } from "../assets/icons";
+import {
+  OVERVIEW,
+  USERS,
+  USER,
+  ED,
+  USERADD,
+  STAR,
+  ANALYTICS,
+  PARKING,
+} from "../assets/icons";
 import logo from "../assets/logo.svg";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthHook";
@@ -43,6 +52,11 @@ export default function Sidebar() {
       icon: OVERVIEW,
     },
     {
+      name: "Analytics",
+      route: "/dashboard/analytics",
+      icon: ANALYTICS,
+    },
+    {
       name: "Users",
       route: "/dashboard/users",
       icon: USERS,
@@ -51,6 +65,11 @@ export default function Sidebar() {
       name: "WebGL Files",
       route: "/dashboard/upload-unity",
       icon: ED,
+    },
+    {
+      name: "Feedback",
+      route: "/dashboard/feedbacks",
+      icon: STAR,
     },
     {
       name: "Visitor Arrival",
@@ -65,13 +84,8 @@ export default function Sidebar() {
     {
       name: "Parking",
       route: "/dashboard/parking",
-      icon: USERS, // leave it as USERS for now
+      icon: PARKING,
     },
-    {
-      name: "Analytics",
-      route: "/dashboard/analytics",
-      icon: ANALYTICS
-    }
   ];
 
   return (
