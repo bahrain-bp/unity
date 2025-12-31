@@ -1,12 +1,20 @@
-using System.Collections;
+﻿using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class RegistrationZoneTrigger : MonoBehaviour
 {
+    [Header("Peccy (Enable only after passedRegistration)")]
+    public GameObject peccyRoot;          // drag Peccy root here
+    public bool hidePeccyOnStart = true;  // keep true
+
+    [Header("Speech Bubble Typewriter (optional)")]
+    public TMP_Text bubbleText;
+    public float bubbleTypeSecondsPerChar = 0.02f;
+
     [Header("Speech Bubble Fade (No changes to SpeechBubbleUI)")]
-    public CanvasGroup speechBubbleGroup;   // drag SpeechBubble root CanvasGroup here
+    public CanvasGroup speechBubbleGroup;
     public float bubbleFadeIn = 0.25f;
     public float bubbleFadeOut = 0.25f;
 
@@ -14,7 +22,7 @@ public class RegistrationZoneTrigger : MonoBehaviour
     [TextArea] public string badgeLine = "Here is your visitor badge please wear at all times when visiting.";
     public float afterFlashDelay = 1f;
 
-    public BadgePickupInteractable badgePickup; // assign in inspector
+    public BadgePickupInteractable badgePickup;
 
     [Header("Access Control")]
     public RegistrationAccessGate accessGate;
@@ -82,8 +90,6 @@ public class RegistrationZoneTrigger : MonoBehaviour
     {
         HideBottomInstant();
 
-        // IMPORTANT: Don't call speechBubble.Hide() here if it disables the GameObject.
-        // We fade using CanvasGroup, so we need the object active.
         if (speechBubbleGroup != null)
         {
             speechBubbleGroup.alpha = 0f;
@@ -97,11 +103,29 @@ public class RegistrationZoneTrigger : MonoBehaviour
             flashCanvasGroup.interactable = false;
             flashCanvasGroup.blocksRaycasts = false;
         }
+
+        // Peccy start state
+        if (peccyRoot != null && hidePeccyOnStart)
+            peccyRoot.SetActive(false);
     }
 
     private void Start()
     {
         CacheActions();
+        StartCoroutine(InitPeccyVisibilityFromSession());
+    }
+
+    private IEnumerator InitPeccyVisibilityFromSession()
+    {
+        // Wait until VisitorSession is loaded (so we can read passedRegistration)
+        while (VisitorSession.Instance == null || !VisitorSession.Instance.IsLoaded)
+            yield return null;
+
+        var profile = VisitorSession.Instance.Profile;
+        bool passed = profile != null && profile.passedRegistration;
+
+        if (peccyRoot != null)
+            peccyRoot.SetActive(passed);
     }
 
     private void CacheActions()
@@ -136,13 +160,18 @@ public class RegistrationZoneTrigger : MonoBehaviour
         {
             accessGate?.SetRegistrationPassed(true);
 
+            // If already registered, ensure Peccy is visible
+            if (peccyRoot != null) peccyRoot.SetActive(true);
+
             ShowBubbleFaded(replayLine, replayOptions);
 
             if (waitReplayRoutine != null) StopCoroutine(waitReplayRoutine);
             waitReplayRoutine = StartCoroutine(WaitForReplayPressed());
-
             return;
         }
+
+        // Not registered: keep Peccy hidden
+        if (peccyRoot != null) peccyRoot.SetActive(false);
 
         StartCoroutine(Flow(isReplay: false));
     }
@@ -196,13 +225,13 @@ public class RegistrationZoneTrigger : MonoBehaviour
         if (lookAction != null) lookAction.Enable();
         if (nextAction != null) nextAction.Enable();
 
-        ShowBubbleFaded(firstLine, firstOptions);
+        yield return ShowBubbleTypewriter(firstLine, firstOptions);
         yield return WaitForNextPressed();
 
         var profile = VisitorSession.Instance.Profile;
         if (profile == null)
         {
-            ShowBubbleFaded("Sorry, I could not load your data.", "");
+            yield return ShowBubbleTypewriter("Sorry, I could not load your data.", "");
             EndRegistration();
             yield break;
         }
@@ -212,7 +241,7 @@ public class RegistrationZoneTrigger : MonoBehaviour
         if (holdReplySeconds > 0f)
             yield return new WaitForSeconds(holdReplySeconds);
 
-        ShowBubbleFaded(afterNameLine, afterNameOptions);
+        yield return ShowBubbleTypewriter(afterNameLine, afterNameOptions);
 
         if (afterThankYouDelay > 0f)
             yield return new WaitForSeconds(afterThankYouDelay);
@@ -226,7 +255,7 @@ public class RegistrationZoneTrigger : MonoBehaviour
         if (afterFlashDelay > 0f)
             yield return new WaitForSeconds(afterFlashDelay);
 
-        ShowBubbleFaded(badgeLine, "");
+        yield return ShowBubbleTypewriter(badgeLine, "");
 
         if (badgePickup != null)
         {
@@ -234,10 +263,12 @@ public class RegistrationZoneTrigger : MonoBehaviour
             yield return badgePickup.WaitUntilPickedUp();
         }
 
+        // Registration passed -> allow access + show Peccy
+        accessGate?.SetRegistrationPassed(true);
+        if (peccyRoot != null) peccyRoot.SetActive(true);
+
         if (isReplay && badgeHud != null)
             badgeHud.SetForceHidden(false);
-
-        accessGate?.SetRegistrationPassed(true);
 
         HideBubbleFaded();
         EndRegistration();
@@ -248,10 +279,8 @@ public class RegistrationZoneTrigger : MonoBehaviour
         if (snapPoint == null || playerRoot == null) return;
 
         if (characterController != null) characterController.enabled = false;
-
         playerRoot.position = snapPoint.position;
         playerRoot.rotation = snapPoint.rotation;
-
         if (characterController != null) characterController.enabled = true;
     }
 
@@ -288,6 +317,8 @@ public class RegistrationZoneTrigger : MonoBehaviour
 
     private IEnumerator Typewriter(TMP_Text tmp, string fullText, float secondsPerChar)
     {
+        if (tmp == null) yield break;
+
         tmp.text = "";
 
         if (secondsPerChar <= 0f)
@@ -337,8 +368,6 @@ public class RegistrationZoneTrigger : MonoBehaviour
     private void HideBubbleFaded()
     {
         FadeBubble(false);
-        // We intentionally do NOT call speechBubble.Hide() because many prefabs disable the object,
-        // which would break fading. The CanvasGroup alpha=0 is enough.
     }
 
     private void FadeBubble(bool show)
@@ -356,6 +385,26 @@ public class RegistrationZoneTrigger : MonoBehaviour
         speechBubbleGroup.blocksRaycasts = show;
 
         bubbleFadeRoutine = StartCoroutine(FadeCanvasGroup(speechBubbleGroup, from, to, dur));
+    }
+
+    private IEnumerator ShowBubbleTypewriter(string line, string options)
+    {
+        // Fade out
+        FadeBubble(false);
+        if (bubbleFadeOut > 0f) yield return new WaitForSeconds(bubbleFadeOut);
+
+        // Show bubble with empty text first
+        if (speechBubble != null) speechBubble.Show("", options);
+
+        // Fade in
+        FadeBubble(true);
+        if (bubbleFadeIn > 0f) yield return new WaitForSeconds(bubbleFadeIn);
+
+        // Typewriter if possible
+        if (bubbleText != null)
+            yield return Typewriter(bubbleText, line, bubbleTypeSecondsPerChar);
+        else if (speechBubble != null)
+            speechBubble.Show(line, options);
     }
 
     private void HideBottomInstant()
