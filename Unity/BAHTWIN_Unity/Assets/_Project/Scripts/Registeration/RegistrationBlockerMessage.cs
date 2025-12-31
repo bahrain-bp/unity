@@ -1,63 +1,115 @@
-using System.Collections;
 using TMPro;
 using UnityEngine;
 
 public class RegistrationBlockerMessage : MonoBehaviour
 {
     [Header("Prompt UI (reuse PlayerInteractor prompt)")]
-    public GameObject promptRoot;   // drag PlayerInteractor.promptRoot
-    public TMP_Text promptText;     // drag PlayerInteractor.promptText
+    public GameObject promptRoot;   // e.g. InteractionCanvas
+    public TMP_Text promptText;     // e.g. InteractionText (TMP)
 
     [TextArea]
     public string message = "You must pass registration to unlock this path.";
 
     [Header("Timing")]
-    public float showSeconds = 2.0f;
-    public float cooldownSeconds = 1.0f;
+    public float showSeconds = 2f;
+    public float cooldownSeconds = 1f;
 
-    private bool coolingDown;
-    private Coroutine routine;
+    // Internal
+    private bool playerInside;
+    private float showUntil;
+    private float cooldownUntil;
 
-    private void Reset()
+    private string cachedDefaultText;
+    private bool cached;
+
+    private void Awake()
     {
-        // Helpful default: make this collider a trigger if one exists
-        var col = GetComponent<Collider>();
-        if (col != null) col.isTrigger = true;
+        if (promptText != null)
+        {
+            cachedDefaultText = promptText.text;
+            cached = true;
+        }
+    }
+
+    private bool IsRegistrationPassed()
+    {
+        if (VisitorSession.Instance == null || !VisitorSession.Instance.IsLoaded) return false;
+        var p = VisitorSession.Instance.Profile;
+        return p != null && p.passedRegistration;
+    }
+
+    private bool IsPlayerCollider(Collider other)
+    {
+        // Works even if the collider is on a child (common setup)
+        if (other.CompareTag("Player")) return true;
+        if (other.transform.root != null && other.transform.root.CompareTag("Player")) return true;
+        return false;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!IsPlayerCollider(other)) return;
+        playerInside = true;
 
-        // If already registered, do nothing
-        if (VisitorSession.Instance != null &&
-            VisitorSession.Instance.IsLoaded &&
-            VisitorSession.Instance.Profile != null &&
-            VisitorSession.Instance.Profile.passedRegistration)
-            return;
+        // Don’t spam if already passed
+        if (IsRegistrationPassed()) return;
 
-        if (coolingDown) return;
-
-        if (routine != null) StopCoroutine(routine);
-        routine = StartCoroutine(ShowRoutine());
+        TryStartShow();
     }
 
-    private IEnumerator ShowRoutine()
+    private void OnTriggerExit(Collider other)
     {
-        coolingDown = true;
+        if (!IsPlayerCollider(other)) return;
+        playerInside = false;
+        // Stop forcing immediately when leaving
+        showUntil = 0f;
+    }
 
-        // show
-        if (promptRoot != null) promptRoot.SetActive(true);
-        if (promptText != null) promptText.text = message;
+    private void Update()
+    {
+        // If they pass registration while standing inside, stop showing message
+        if (IsRegistrationPassed())
+        {
+            showUntil = 0f;
+            return;
+        }
 
-        // wait
-        yield return new WaitForSeconds(showSeconds);
+        if (!playerInside) return;
 
-        // hide (only if we are the one showing it)
-        if (promptRoot != null) promptRoot.SetActive(false);
+        // If message expired, allow it again after cooldown
+        if (Time.time > showUntil && Time.time > cooldownUntil)
+        {
+            // optional: you can remove this line if you only want it once on enter
+            // TryStartShow();
+        }
+    }
 
-        // cooldown to avoid spam
-        yield return new WaitForSeconds(cooldownSeconds);
-        coolingDown = false;
+    private void LateUpdate()
+    {
+        // LateUpdate runs after PlayerInteractor.Update(), so this will actually appear. :contentReference[oaicite:3]{index=3}
+        if (IsRegistrationPassed()) return;
+        if (!playerInside) return;
+        if (Time.time > showUntil) return;
+
+        if (promptRoot != null && !promptRoot.activeSelf)
+            promptRoot.SetActive(true);
+
+        if (promptText != null)
+            promptText.text = message;
+    }
+
+    private void TryStartShow()
+    {
+        if (Time.time < cooldownUntil) return;
+
+        showUntil = Time.time + Mathf.Max(0.05f, showSeconds);
+        cooldownUntil = showUntil + Mathf.Max(0f, cooldownSeconds);
+    }
+
+    // Optional: if you want to restore the original text when this component disables
+    private void OnDisable()
+    {
+        if (promptText != null && cached)
+            promptText.text = cachedDefaultText;
     }
 }
