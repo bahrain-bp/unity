@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import "../../sass/DashboardCards.scss";
-import { FeedbackClient } from "../services/api";
+import { FeedbackClient } from "../../services/api";
 
 interface Comment {
   comment: string;

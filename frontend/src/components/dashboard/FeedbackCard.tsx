@@ -1,5 +1,3 @@
-import "../../sass/_feedbackCard.scss";
-
 interface Props {
   feedback: any;
 }

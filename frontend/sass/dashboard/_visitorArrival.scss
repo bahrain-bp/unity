@@ -1,3 +1,5 @@
+@use "../var" as *;
+
 .webcam-box {
   padding: 0;
   overflow: hidden;
@@ -27,7 +29,6 @@
   }
 }
 
-/* Centered title for Arrival page only */
 .auth__logo--center {
   text-align: center;
 
@@ -36,10 +37,9 @@
   }
 }
 
-/* Instruction text */
 .auth__description {
   margin-top: 0.5rem;
   font-size: 0.9rem;
-  color: #6b7280; // same muted tone
+  color: $color-dark-grey; // same muted tone
   line-height: 1.5;
 }

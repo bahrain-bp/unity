@@ -1,6 +1,5 @@
-/* ===== Orange Theme ===== */
+@use "../var" as *;
 
-/* Header */
 .card-header {
   display: flex;
   align-items: center;
@@ -8,10 +7,9 @@
   margin-bottom: 0.5rem;
 }
 
-/* Icon */
 .card-icon {
-  background: rgba(255, 118, 20, 0.12);
-  color: #ff7614;
+  background: rgba($color-orange, 0.12);
+  color: $color-orange;
   padding: 6px;
   border-radius: 8px;
   display: flex;
@@ -19,9 +17,9 @@
   justify-content: center
 }
 
-/* Title */
+
 .card-title {
-  font-size: 2vh;
+  font-size: .9vw;
   font-weight: 600;
   color: #4b5563;
   display: flex;
@@ -29,15 +27,15 @@
   gap: 8px;
 }
 
-/* Value */
+
 .card-value {
   font-size: 2.6rem;
   font-weight: 800;
   margin-top: 1.2rem;
-  color: #ff7614;
+  color: $color-orange;
 }
 
-/* Connection Status */
+
 .status-dot {
   width: 8px;
   height: 8px;
@@ -45,30 +43,30 @@
 }
 
 .online {
-  background-color: #22c55e;
+  background-color: $color-green;
 }
 
 .offline {
-  background-color: #9ca3af;
+  background-color: $color-dark-grey;
 }
 .comments-theme {
   flex: 1;
   overflow-y: auto;
   width: 100%;
   .comments-box {
-    flex: 1;              // fills the available space inside the box
-    overflow-y: auto;     // scroll when content exceeds box
+    flex: 1;
+    overflow-y: auto;     
     padding-right: 0.5rem;
     width: 100%;
 
     .comment-item {
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid $color-light-grey;
       padding: 0.5rem 0;
 
       p {
         margin: 0;
-        color: #4b5563;
-        font-size: 2vh;  // optional responsive font size
+        color: $color-dark-grey;
+        font-size: .8vw;  
       }
     }
   }

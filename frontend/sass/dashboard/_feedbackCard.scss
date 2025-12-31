@@ -1,19 +1,14 @@
-$positive: #4caf50;
-$neutral: #ffb400;
-$negative: #f44336;
-$text-primary: #1f2937;
-$text-secondary: #6b7280;
-$border-light: #e5e7eb;
+@use "../var" as *;
 
 .feedback-card {
-  background: #fff;
+  background: $color-white;
   padding: 2rem; // a bit more padding to feel bigger
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  border-left: 6px solid $neutral;
+  border-left: 6px solid $color-orange;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
@@ -21,9 +16,9 @@ $border-light: #e5e7eb;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
   }
 
-  &.positive { border-left-color: $positive; }
-  &.neutral { border-left-color: $neutral; }
-  &.negative { border-left-color: $negative; }
+  &.positive { border-left-color: $color-green; }
+  &.neutral { border-left-color: $color-orange; }
+  &.negative { border-left-color: $color-red; }
 
   .visitor-header {
     grid-column: span 2;
@@ -35,25 +30,24 @@ $border-light: #e5e7eb;
 
     .name-email {
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      flex-direction: column;
       flex-wrap: wrap;
 
       .name {
         font-weight: 600;
-        font-size: 1rem;
-        color: $text-primary;
+        font-size: 1.6rem;
+        $colorfont: color-;
       }
 
       .email {
-        font-size: 0.875rem;
-        color: $text-secondary;
+        font-size: 1.4rem;
+        color: $color-dark-grey;
       }
     }
 
     .created-at {
-      font-size: 0.85rem;
-      color: $text-secondary;
+      font-size: 1.4rem;
+      color: $color-dark-grey;
       white-space: nowrap;
     }
   }
@@ -63,37 +57,38 @@ $border-light: #e5e7eb;
     flex-direction: column;
 
     label {
-      font-size: 0.85rem;
+      font-size: 1.2rem;
       font-weight: 600;
-      color: $text-secondary;
+      color: $color-dark-grey;
       margin-bottom: 3px;
     }
 
     span {
-      font-size: 1rem;
-      color: $text-primary;
+      font-size: 1.4rem;
+      $colorfont: color-;
       word-break: break-word;
     }
   }
 
   .rating {
-    font-weight: 600;
+    font-weight: 00;
     letter-spacing: 1px;
 
-    &.positive { color: $positive; }
-    &.neutral { color: $neutral; }
-    &.negative { color: $negative; }
+    &.positive { color: $color-green; }
+    &.neutral { color: $color-orange; }
+    &.negative { color: $color-red; }
   }
 
   .comments {
     grid-column: span 2;
-    background: #f9f9f9;
+    background: $color-bg;
     padding: 1rem;
     border-radius: 8px;
-    border: 1px solid $border-light;
+    border: 1px solid $color-grey;
     font-style: italic;
-    color: $text-secondary;
+    color: $color-dark-grey;
     line-height: 1.5;
+    font-size: 1.4rem;
     word-break: break-word;
   }
 }

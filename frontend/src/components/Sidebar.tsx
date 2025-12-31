@@ -26,7 +26,7 @@ export default function Sidebar() {
         setUsername(result.data.name);
       }
     } catch (err) {
-      console.error(err);
+      return err;
     }
   };
 

@@ -133,7 +133,6 @@ function App() {
             path="/environment"
             element={
               <ProtectedRoute>
-                <Navbar />
                 <Environment />
               </ProtectedRoute>
             }

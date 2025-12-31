@@ -10,8 +10,7 @@ import {
   Label,
 } from "recharts";
 import { Users } from "lucide-react";
-import "../../sass/DashboardCards.scss";
-import { ImageClient } from "../services/api";
+import { ImageClient } from "../../services/api";
 
 interface UserHourData {
   hour: string;

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Users, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { ImageClient } from "../services/api";
-import "../../sass/DashboardCards.scss";
+import { ImageClient } from "../../services/api";
 
 interface UsersTodayData {
   count: number;

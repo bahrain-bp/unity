@@ -1,5 +1,3 @@
-// uploadBuildHandler.ts
-
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -37,7 +35,7 @@ export const handler = async (
     const timestamp = Date.now();
     const results = [];
 
-    // Generate presigned URLs (no file upload here)
+    // Generate presigned URLs
     for (const f of files) {
       if (!f.filename) {
         return errorResponse(400, 'Each file must have a filename');
@@ -71,16 +69,16 @@ export const handler = async (
       });
     }
 
-    // 🚀 NEW: CloudFront Invalidation
+    // CloudFront Invalidation
     if (DISTRIBUTION_ID) {
       try {
         await invalidateCloudFront(DISTRIBUTION_ID);
         console.log('CloudFront invalidation triggered');
       } catch (err) {
-        console.error('Failed to invalidate CloudFront:', err);
+        console.log('Failed to invalidate CloudFront:', err);
       }
     } else {
-      console.warn('CLOUDFRONT_DISTRIBUTION_ID not provided, skipping invalidation');
+      console.log('CLOUDFRONT_DISTRIBUTION_ID not provided, skipping invalidation');
     }
 
     return successResponse({
@@ -93,8 +91,6 @@ export const handler = async (
   }
 };
 
-// --- Helpers --------------------------------------------------
-
 const invalidateCloudFront = async (distributionId: string) => {
   const command = new CreateInvalidationCommand({
     DistributionId: distributionId,
@@ -102,7 +98,7 @@ const invalidateCloudFront = async (distributionId: string) => {
       CallerReference: Date.now().toString(),
       Paths: {
         Quantity: 1,
-        Items: ['/unity/*'], // invalidate everything in /unity/
+        Items: ['/unity/*'],
       },
     },
   });

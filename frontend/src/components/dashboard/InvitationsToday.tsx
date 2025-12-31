@@ -1,39 +1,38 @@
 import { useEffect, useState } from "react";
-import { Users } from "lucide-react";
-import "../../sass/DashboardCards.scss";
-import { ImageClient } from "../services/api";
+import { Mail } from "lucide-react";
+import { ImageClient } from "../../services/api";
 
-interface TotalVisitorsResponse {
+interface InvitationsTodayResponse {
   card: string;
-  data: { total_visitors: number }[];
+  data: { total: number }[];
 }
 
-export default function TotalBahtwinVisitors() {
-  const [totalVisitors, setTotalVisitors] = useState<number>(0);
+export default function InvitationsToday() {
+  const [totalInvites, setTotalInvites] = useState<number>(0);
   const [connected, setConnected] = useState<boolean>(false);
 
-  // Fetch total visitors on load
-  const fetchTotalVisitors = async () => {
+  // Fetch today invitations on load
+  const fetchTodayInvitations = async () => {
     try {
-      const { data } = await ImageClient.post<TotalVisitorsResponse>(
+      const { data } = await ImageClient.post<InvitationsTodayResponse>(
         "/admin/loadDashboard",
-        { component: "total_bahtwin_visitors" } // send component name
+        { component: "today_invitations" }
       );
 
       if (
-        data.card === "total_bahtwin_visitors" &&
+        data.card === "today_invitations" &&
         Array.isArray(data.data) &&
         data.data.length > 0
       ) {
-        setTotalVisitors(data.data[0].total_visitors); // pick first element
+        setTotalInvites(data.data[0].total);
       }
     } catch (err) {
-      console.error("Error fetching total visitors:", err);
+      console.error("Error fetching today invitations:", err);
     }
   };
 
   useEffect(() => {
-    fetchTotalVisitors();
+    fetchTodayInvitations();
 
     const ws = new WebSocket(
       "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
@@ -44,8 +43,9 @@ export default function TotalBahtwinVisitors() {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.card === "total_bahtwin_visitors") {
-          setTotalVisitors(data.data.total_visitors);
+
+        if (data.card === "today_invitations") {
+          setTotalInvites(data.data.total);
         }
       } catch (err) {
         console.error("WebSocket parse error:", err);
@@ -62,14 +62,16 @@ export default function TotalBahtwinVisitors() {
     <div className="dashboard-card total-visitor">
       <div className="card-header">
         <div className="card-icon">
-          <Users size={30} />
+          <Mail size={30} />
         </div>
+
         <div className="card-title">
-          Total BAHTWIN Users
+          Invitees Today
           <span className={`status-dot ${connected ? "online" : "offline"}`} />
         </div>
       </div>
-      <div className="card-value">{totalVisitors}</div>
+
+      <div className="card-value">{totalInvites}</div>
     </div>
   );
 }

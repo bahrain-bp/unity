@@ -1,12 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
 
-/* Page background */
+
 .feedback1-page {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;   /* stack header + message */
-  justify-content: center;  /* center vertically */
-  align-items: center;      /* center horizontally */
+  flex-direction: column;   
+  justify-content: center;  
+  align-items: center;      
   font-family: "Inter", sans-serif;
   margin-bottom: 2.5rem;
   background: radial-gradient(circle at top, rgba(255, 142, 60, 0.15), transparent 60%);
@@ -14,26 +14,26 @@
   box-sizing: border-box;
 }
 
-/* Header */
+
 .feedback1-page .page-header {
-  font-size: 1.8rem; /* match form h2 */
+  font-size: 1.8rem; 
   font-weight: 600;
   color: #1f2937;
   text-align: center;
-  margin-bottom: 0.5rem; /* small spacing to message */
+  margin-bottom: 0.5rem; 
   font-family: "Inter", sans-serif;
 }
 
-/* Loading message */
+
 .feedback1-page .empty-state {
   text-align: center;
   color: #6b7280;
   font-size: 1rem;
-  margin: 0; /* remove extra padding/margins that push it away */
+  margin: 0; 
   padding: 0;
 }
 
-/* Main card */
+
 .feedback1-page .auth {
   background: #ffffff;
   width: 100%;
@@ -55,7 +55,6 @@
   width: 100%;
 }
 
-/* Header */
 .feedback-page1 .auth h2 {
   
   text-align: center;
@@ -74,14 +73,12 @@
   margin-bottom: 2rem;
 }
 
-/* Layout helpers */
 .feedback1-page .row {
   display: flex;
   gap: 1rem;
   width: 100%;
 }
 
-/* Inputs */
 .feedback1-page input,
 .feedback1-page select,
 .feedback1-page textarea {
@@ -106,7 +103,6 @@
   resize: vertical;
 }
 
-/* Groups */
 .feedback1-page .form-group {
   margin-bottom: 1.4rem;
   margin-top: 1.4rem;
@@ -118,7 +114,6 @@
   margin-bottom: 0.4rem;
 }
 
-/* Stars */
 .feedback1-page .stars {
   font-size: 1.6rem;
   cursor: pointer;
@@ -139,7 +134,7 @@
   color: #ff8c42;
 }
 
-/* Pills */
+
 .feedback1-page .pill-group {
   display: flex;
   gap: 0.75rem;
@@ -165,7 +160,7 @@
   border-color: #ff8c42;
 }
 
-/* Submit */
+
 .feedback1-page .submit-btn {
   display: block;
   margin: 2rem auto 0;
@@ -185,7 +180,7 @@
   transform: scale(1.05);
 }
 
-/* Error */
+
 .feedback1-page .error {
   text-align: center;
   color: #e11d48;

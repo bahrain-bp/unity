@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { User } from "lucide-react";
-import "../../sass/DashboardCards.scss";
-import { ImageClient } from "../services/api";
+import { ImageClient } from "../../services/api";
 
 interface ActiveUsersNowResponse {
   card: string;

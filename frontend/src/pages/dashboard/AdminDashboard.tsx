@@ -1,12 +1,11 @@
-import "../../../sass/AdminDashboard.scss";
-import TotalBahtwinVisitors from "../../components/TotalBahtwinVisitors";
-import RecentVisitors from "../../components/RecentVisitors";
-import AvgFeedbackScore from "../../components/AvgFeedbackScore";
-import VisitorComments from "../../components/VisitorComments";
-import ActiveUsers from "../../components/ActiveUsers";
-import InvitationsToday from "../../components/InvitationsToday";
-import UsersLast6HoursChart from "../../components/UsersLast6HoursChart";
-import UsersToday from "../../components/UsersToday";
+import TotalBahtwinVisitors from "../../components/dashboard/TotalBahtwinVisitors";
+import RecentVisitors from "../../components/dashboard/RecentVisitors";
+import AvgFeedbackScore from "../../components/dashboard/AvgFeedbackScore";
+import VisitorComments from "../../components/dashboard/VisitorComments";
+import ActiveUsers from "../../components/dashboard/ActiveUsers";
+import InvitationsToday from "../../components/dashboard/InvitationsToday";
+import UsersLast6HoursChart from "../../components/dashboard/UsersLast6HoursChart";
+import UsersToday from "../../components/dashboard/UsersToday";
 import DashboardLayout from "./DashboardLayout";
 
 const Dashboard = () => {

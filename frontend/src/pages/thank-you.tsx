@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import "../../sass/_feedback.scss"; 
 
 const ThankYouPage = () => {
   const navigate = useNavigate();
@@ -9,7 +8,7 @@ const ThankYouPage = () => {
       <div className="auth">
         <h2>Thank You!</h2>
         <p className="subtitle">
-          We’ve received your feedback. Your input helps us make the BAHTWIN experience even better.
+          We've received your feedback. Your input helps us make the BAHTWIN experience even better.
         </p>
 
         <p style={{ textAlign: "center", marginTop: "1rem", color: "#555" }}>

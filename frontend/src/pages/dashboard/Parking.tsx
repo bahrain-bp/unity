@@ -1,6 +1,5 @@
 import DashboardLayout from "./DashboardLayout"
 import { useEffect, useMemo, useRef, useState } from "react"
-import "../../../styles/Parking.scss"
 
 // --------------------
 // Types

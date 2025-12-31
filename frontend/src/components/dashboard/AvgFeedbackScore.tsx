@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
-import "../../sass/DashboardCards.scss";
-import { FeedbackClient } from "../services/api";
+import { FeedbackClient } from "../../services/api";
 
 interface AvgFeedbackData {
   avg_score: number;

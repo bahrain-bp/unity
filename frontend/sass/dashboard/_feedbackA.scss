@@ -1,8 +1,4 @@
-$text-primary: #1f2937;
-$text-secondary: #6b7280;
-$border-light: #e5e7eb;
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lora:ital,wght@0,400..700;1,400..700&display=swap");
+@use "../var" as *;
 
 .feedback-page {
   min-height: 100vh;
@@ -10,20 +6,8 @@ $border-light: #e5e7eb;
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Header */
-  .page-header {
-    font-size: 2.25rem;
-    font-weight: 600;
-    color: $text-primary;
-    margin-bottom: 2rem;
-    text-align: center;
-    font-family: "Inter", sans-serif;
-  }
-
-  /* Controls */
-  .controls {
+    .controls {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -37,21 +21,22 @@ $border-light: #e5e7eb;
     .date-picker-input {
       padding: 0.9rem 1.2rem;
       border-radius: 10px;
-      border: 1px solid $border-light;
-      font-size: 1rem;
+      border: 1px solid $color-grey;
+      font-size: 1.4rem;
       min-width: 180px;
       flex: 1 1 200px;
+      font-family: inherit;
+      background-color: $color-white;
     }
 
     label {
       font-size: 0.85rem;
-      color: $text-secondary;
+      color: $color-dark-grey;
       font-weight: 500;
     }
   }
 
-  /* Feedback list */
-  .feedback-list {
+    .feedback-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
@@ -61,27 +46,24 @@ $border-light: #e5e7eb;
     .empty-state {
       grid-column: 1 / -1;
       text-align: center;
-      color: $text-secondary;
+      color: $color-dark-grey;
       font-size: 1rem;
       padding: 2rem 0;
-      margin: 0; /* ensure no extra margin */
-    }
+      margin: 0;     }
 
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
     }
   }
 
-  /* Loading / empty state vertical centering */
-  &.loading {
+    &.loading {
     justify-content: center;
     align-items: center;
     height: 100vh;
     padding: 0;
 
     .page-header {
-      margin-bottom: 1rem; /* slightly smaller for loading */
-    }
+      margin-bottom: 1rem;     }
 
     .empty-state {
       padding: 0;

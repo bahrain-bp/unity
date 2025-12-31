@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import "../../sass/DashboardCards.scss";
-import { ImageClient } from "../services/api";
+import { ImageClient } from "../../services/api";
 
 interface Visitor {
   visitor_name: string;

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { FeedbackCard } from "../../components/FeedbackCard";
+import { FeedbackCard } from "../../components/dashboard/FeedbackCard";
 import { FeedbackClient } from "../../services/api";
-import "../../../sass/_feedbackA.scss";
 import DashboardLayout from "./DashboardLayout";
 
 export default function FeedbackPage() {
