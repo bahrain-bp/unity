@@ -604,3 +604,21 @@ export const STAR = () => {
     </svg>
   );
 };
+export const ANALYTICS = () => {
+  return(
+    <svg 
+      width="46" 
+      height="46" 
+      fill="none" 
+      stroke="currentColor" 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-width="1.5" 
+      viewBox="0 0 24 24" 
+      xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M3 3v18h18"></path>
+        <path d="m7 17 4-8 5 4.5L21 3"></path>
+    </svg>
+  )
+}

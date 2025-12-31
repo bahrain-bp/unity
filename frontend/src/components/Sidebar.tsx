@@ -1,7 +1,7 @@
 "use client";
 
 // import { usePathname } from "next/navigation";
-import { OVERVIEW, USERS, USER, ED, USERADD, STAR } from "../assets/icons";
+import { OVERVIEW, USERS, USER, ED, USERADD, STAR, ANALYTICS } from "../assets/icons";
 import logo from "../assets/logo.svg";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthHook";
@@ -67,6 +67,11 @@ export default function Sidebar() {
       route: "/dashboard/parking",
       icon: USERS, // leave it as USERS for now
     },
+    {
+      name: "Analytics",
+      route: "/dashboard/analytics",
+      icon: ANALYTICS
+    }
   ];
 
   return (
