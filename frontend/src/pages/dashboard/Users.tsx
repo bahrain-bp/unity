@@ -228,6 +228,24 @@ const Users = () => {
                   shape="rounded"
                   showFirstButton
                   showLastButton
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: '#333',
+                      borderColor: '#ddd',
+                    },
+                    '& .MuiPaginationItem-root:hover': {
+                      backgroundColor: '#fff3e0',
+                      borderColor: '#ff6b35',
+                    },
+                    '& .Mui-selected': {
+                      backgroundColor: '#ff6b35 !important',
+                      color: 'white !important',
+                      borderColor: '#ff6b35 !important',
+                    },
+                    '& .Mui-selected:hover': {
+                      backgroundColor: '#ff5722 !important',
+                    },
+                  }}
                 />
               </Stack>
             )}
