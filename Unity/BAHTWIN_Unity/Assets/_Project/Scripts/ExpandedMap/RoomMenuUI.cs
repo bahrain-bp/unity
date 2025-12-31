@@ -27,13 +27,14 @@ public class RoomMenuUI : MonoBehaviour
     public Sprite selectedSprite;
 
     private RoomSO selectedRoom;
+
+    [Header("Controllers")]
     public RouteGuidanceController routeController;
+    public TeleportController teleportController;
+
     [Header("Panel Control")]
     public GameObject mapPanelRoot;
     public MapMenuToggle mapToggle;
-
-
-
 
     private readonly List<GameObject> spawnedObjects = new();
     private readonly Dictionary<Button, RoomSO> buttonRoomMap = new();
@@ -169,18 +170,34 @@ public class RoomMenuUI : MonoBehaviour
     {
         return selectedRoom;
     }
-public void OnShowRouteClicked()
-{
-    if (routeController == null) return;
 
-    var room = GetSelectedRoom();
-    if (room == null) return;
+    public void OnShowRouteClicked()
+    {
+        if (routeController == null) return;
 
-    routeController.SetDestination(room);
+        var room = GetSelectedRoom();
+        if (room == null) return;
 
-    if (mapToggle != null)
-        mapToggle.CloseMap();
-}
+        routeController.SetDestination(room);
 
+        if (mapToggle != null)
+            mapToggle.CloseMap();
+    }
 
+    public void OnTeleportClicked()
+    {
+        if (teleportController == null) return;
+
+        var room = GetSelectedRoom();
+        if (room == null) return;
+
+        // Optional: clear the line if you want teleport to remove any active route
+        if (routeController != null)
+            routeController.ClearRoute();
+
+        teleportController.TeleportToRoom(room);
+
+        if (mapToggle != null)
+            mapToggle.CloseMap();
+    }
 }
