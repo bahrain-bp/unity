@@ -4,6 +4,8 @@
   display: grid;
   grid-template-columns: max-content 1fr;
   grid-template-rows: max-content 1fr;
+  min-height: 100vh;
+  overflow: hidden;
 
   &__header {
     display: flex;
@@ -20,6 +22,8 @@
 
   &__container {
     padding: 2rem;
+    height: calc(100vh - 8rem);
+    overflow-y: auto;
 
     & > button {
       margin-bottom: 2rem;
@@ -32,6 +36,10 @@
     border-radius: 1rem;
     overflow: hidden;
   }
+
+  //
+  // Users
+  //
 
   &__users {
     & th {
@@ -134,49 +142,54 @@
           background-color: $color-light-grey;
           cursor: not-allowed;
         }
-    }
-    &__overview {
-      .overview__grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-        gap: 1.6rem;
-      }
-
-      .overview__card {
-        border: 1px solid #eaeaea;
-        border-radius: 1.2rem;
-        background: $color-white;
-        padding: 1.4rem;
-        position: relative;
-
-        &::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 0;
-          height: 100%;
-          width: 4px;
-          background: $color-orange-2; 
-          border-top-left-radius: 1.2rem;
-          border-bottom-left-radius: 1.2rem;
-        }
-      }
-      .overview__note {
-        font-size: 1.2rem;
-        color: $color-dark-grey;
-        margin-bottom: 0.6rem;
-      }
-      .overview__canvas {
-        height: 320px;
-
-        canvas {
-          width: 100% !important;
-          height: 100% !important;
-        }
       }
     }
-}
+  }
+  //
+  // Overview (Analytics page)
+  //
+  &__overview {
+    .overview__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.6rem;
+    }
 
+    .overview__card {
+      border: 1px solid #eaeaea;
+      border-radius: 1.2rem;
+      background: $color-white;
+      padding: 1.4rem;
+      position: relative;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: $color-orange-2;
+        border-top-left-radius: 1.2rem;
+        border-bottom-left-radius: 1.2rem;
+      }
+    }
+    .overview__note {
+      font-size: 1.2rem;
+      color: $color-dark-grey;
+      margin-bottom: 0.6rem;
+    }
+    .overview__canvas {
+      height: 320px;
+      width: 100%;
+      position: relative;
+
+      canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
   }
 
   //
@@ -306,7 +319,6 @@
     justify-content: space-between;
     align-items: center;
   }
-  
 }
 .password-wrapper {
   position: relative;
@@ -348,11 +360,9 @@
   box-shadow: 0 0 0 3px rgba(245, 154, 59, 0.2);
 }
 
-
 .field {
   margin-top: 1rem;
 }
-
 
 .input-group {
   position: relative;
@@ -360,7 +370,7 @@
 }
 
 .input-group .text-input {
-  padding-right: 4.2rem; 
+  padding-right: 4.2rem;
 }
 
 .icon-btn {
@@ -382,4 +392,3 @@
   width: 2rem;
   height: 2rem;
 }
-
