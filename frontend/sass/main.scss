@@ -8,6 +8,15 @@
 @use "chatbot";
 @use "info";
 @use "auth";
-@use "dashboard";
-@use "sidebar";
-@use "Iot";
+
+// DASHBOARD
+@use "dashboard/dashboard";
+@use "dashboard/sidebar";
+@use "dashboard/adminDashboard";
+@use "dashboard/dashboardCards";
+@use "dashboard/feedback";
+@use "dashboard/feedbackA";
+@use "dashboard/feedbackCard";
+@use "dashboard/visitorArrival";
+@use "dashboard/visitorInvite";
+@use "dashboard/parking";

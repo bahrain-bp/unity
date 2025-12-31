@@ -6,7 +6,7 @@ export default function Environment() {
   useEffect(() => {
     // --- Unity loader script ---
     const loaderScript = document.createElement("script");
-    loaderScript.src = "/unity/Bahtwin_Unity_version1.loader.js";
+    loaderScript.src = "/unity/BAHTWIN_BUILD.loader.js";
     loaderScript.onload = () => {
       const w = window as any;
 
@@ -30,9 +30,9 @@ export default function Environment() {
         w
           .createUnityInstance(canvasRef.current, {
             arguments: [],
-            dataUrl: "/unity/Bahtwin_Unity_version1.data.unityweb",
-            frameworkUrl: "/unity/Bahtwin_Unity_version1.framework.js.unityweb",
-            codeUrl: "/unity/Bahtwin_Unity_version1.wasm.unityweb",
+            dataUrl: "/unity/BAHTWIN_BUILD.data.unityweb",
+            frameworkUrl: "/unity/BAHTWIN_BUILD.framework.js.unityweb",
+            codeUrl: "/unity/BAHTWIN_BUILD.wasm.unityweb",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "DefaultCompany",
             productName: "BAHTWIN_Unity",

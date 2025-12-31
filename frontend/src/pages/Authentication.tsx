@@ -141,7 +141,6 @@ function Authentication() {
     setError("");
     setMessage("");
     setUserId(null);
-    // console.log("Signing Up...");
 
     if (account.password !== account.confirmPassword) {
       setError("Passwords do not match");
@@ -165,16 +164,16 @@ function Authentication() {
 
     setLoading(true);
     const result = await signUp(account.email, account.password);
-    // console.log(result);
+    console.log(result);
 
     if (result.success) {
       // setMessage(result.message);
-      // console.log("Signed Up");
       setUserId(result.userId ?? null);
       if (result.userId) {
         handleImageUpload(result.userId);
       }
       setError("");
+      localStorage.setItem("username", name);
       //setShowVerification(true);
     } else {
       setError(result.message);
@@ -184,10 +183,11 @@ function Authentication() {
   };
 
   const handleImageUpload = async (userId: string) => {
-    // console.log("Image approving....");
-
+    console.log(userId);
+    
     setLoading(true);
     try {
+      console.log(userId);
       await ImageClient.post("/visitor/register", {
         userId: userId,
         name: name,
@@ -196,15 +196,10 @@ function Authentication() {
       });
       setError("");
     } catch (err: any) {
-      setError(
-        err.response?.data?.error ||
-          "Something went wrong. Please try to upload another image"
-      );
+      setError(err.response?.data?.error || "Something went wrong. Please try to upload another image");
       setLoading(false);
-      // console.log("image error");
       return;
     }
-    // console.log("Image approved....");
     setLoading(false);
     setShowVerification(true);
   };

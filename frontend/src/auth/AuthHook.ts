@@ -63,7 +63,7 @@ export const useProvideAuth = (): UseAuth => {
 
   const clearIdToken = () => {
     localStorage.removeItem("idToken");
-    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
   };
 
   // Helper function to extract groups from token
@@ -107,6 +107,7 @@ export const useProvideAuth = (): UseAuth => {
         if (idToken) {
           localStorage.setItem("idToken", idToken);
         }
+
         // API REQUEST TO GET USERNAME, PROFILE IMAGE
 
         setEmail(user.signInDetails?.loginId || "");
@@ -143,7 +144,6 @@ export const useProvideAuth = (): UseAuth => {
       if (result.isSignedIn) {
         setEmail(email);
         const user = await getCurrentUser();
-        localStorage.setItem("userId", user.userId);
         setUserId(user.userId);
         
         // Get user groups after sign in
@@ -152,7 +152,6 @@ export const useProvideAuth = (): UseAuth => {
         setUserRole(getPrimaryRole(groups));
         
         setIsAuthenticated(true);
-
         await saveIdToken();
 
         return { success: true, message: "Sign in successful" };

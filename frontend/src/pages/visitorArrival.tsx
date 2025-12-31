@@ -7,7 +7,6 @@ import {
   FaTimesCircle,
 } from "react-icons/fa";
 import { ImageClient } from "../services/api";
-import "../../sass/_visitorArrival.scss";
 import DashboardLayout from "./dashboard/DashboardLayout";
 
 const Arrival: React.FC = () => {
