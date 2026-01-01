@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { FeedbackCard } from "../../components/FeedbackCard";
+import { FeedbackCard } from "../../components/dashboard/FeedbackCard";
 import { FeedbackClient } from "../../services/api";
-import "../../../sass/_feedbackA.scss";
 import DashboardLayout from "./DashboardLayout";
 
 export default function FeedbackPage() {
@@ -73,7 +72,7 @@ export default function FeedbackPage() {
 
         <DatePicker
           selected={startDate}
-          onChange={(date) => setStartDate(date)}
+          onChange={(date: any) => setStartDate(date)}
           placeholderText="Start Date"
           className="date-picker-input"
           dateFormat="MM/dd/yyyy"
@@ -81,7 +80,7 @@ export default function FeedbackPage() {
 
         <DatePicker
           selected={endDate}
-          onChange={(date) => setEndDate(date)}
+          onChange={(date: any) => setEndDate(date)}
           placeholderText="End Date"
           className="date-picker-input"
           dateFormat="MM/dd/yyyy"

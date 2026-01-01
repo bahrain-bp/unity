@@ -12,19 +12,16 @@ export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    // ✅ Handle CORS preflight
     if (event.httpMethod === "OPTIONS") {
       return jsonResponse(200, {});
     }
 
-    // ✅ Admin check
     if (!isAdmin(event)) {
       return jsonResponse(403, {
         message: "Access denied. Admin role required.",
       });
     }
 
-    // ✅ Safe JSON parsing
     let userData: any = {};
     try {
       userData = event.body ? JSON.parse(event.body) : {};
@@ -38,7 +35,6 @@ export const handler = async (
       return jsonResponse(400, { message: "Email is required" });
     }
 
-    // ✅ Create user (email as username)
     const input = {
       UserPoolId: process.env.USER_POOL_ID,
       Username: email,
