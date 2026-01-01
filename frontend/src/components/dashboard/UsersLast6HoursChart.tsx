@@ -24,6 +24,9 @@ interface UsersLast6HoursResponse {
   }[];
 }
 
+const wsAPI = import.meta.env.VITE_WS_API;
+const wsToken = import.meta.env.VITE_WS_TOKEN;
+
 export default function UsersLast6Hours() {
   const [seriesData, setSeriesData] = useState<UserHourData[]>([]);
   const [connected, setConnected] = useState<boolean>(false);
@@ -51,9 +54,7 @@ export default function UsersLast6Hours() {
   useEffect(() => {
     fetchUsersData();
 
-    const ws = new WebSocket(
-      "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
-    );
+    const ws = new WebSocket(`${wsAPI}?token=${wsToken}`);
 
     ws.onopen = () => setConnected(true);
 

@@ -84,6 +84,7 @@ const Feedback = () => {
       digitalPref,
       faceHelp,
       overallRating,
+      commentText
     ];
 
     const hasEmpty = requiredFields.some(

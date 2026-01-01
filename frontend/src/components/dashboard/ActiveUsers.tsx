@@ -10,6 +10,9 @@ interface ActiveUsersNowResponse {
   }[];
 }
 
+const wsAPI = import.meta.env.VITE_WS_API;
+const wsToken = import.meta.env.VITE_WS_TOKEN;
+
 export default function ActiveUsersNow() {
   const [activeUsers, setActiveUsers] = useState<number>(0);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
@@ -39,10 +42,7 @@ export default function ActiveUsersNow() {
   useEffect(() => {
     fetchActiveUsers();
 
-    const ws = new WebSocket(
-      "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
-    );
-
+    const ws = new WebSocket(`${wsAPI}?token=${wsToken}`);
     ws.onopen = () => setConnected(true);
 
     ws.onmessage = (event) => {

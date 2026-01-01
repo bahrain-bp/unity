@@ -58,10 +58,11 @@ def handler(event, context):
             "commentText",
         ]
 
-        missing = [f for f in required_fields if f not in data]
+        # Check for missing or empty values
+        missing = [f for f in required_fields if f not in data or data[f] in [None, ""]]
         if missing:
-            print("missing field")
-            return resp(400, {"error": f"Missing fields: {', '.join(missing)}"})
+            print("missing or empty field")
+            return resp(400, {"error": f"Missing or empty fields: {', '.join(missing)}"})
             
         # 4. Prepare item for DynamoDB
         # Define Bahrain timezone
