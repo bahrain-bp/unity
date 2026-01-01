@@ -27,22 +27,27 @@ public class PeccyDialogue : MonoBehaviour
 
     private float ignoreInputUntilTime = 0f;
 
+    public ChatUIController chatUI;
+
     // Renderer to check if Peccy is visible
     private Renderer[] renderers;
+
+    [HideInInspector]
+    public bool chatUIOpen = false;
 
     void Awake()
     {
         renderers = GetComponentsInChildren<Renderer>(true);
 
-        nextAction  = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/n");
+        nextAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/n");
         enterAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/enter");
-        yesAction   = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/y");
-        chatAction  = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/c");
+        yesAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/y");
+        chatAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/c");
 
-        nextAction.performed  += OnNext;
+        nextAction.performed += OnNext;
         enterAction.performed += OnNext;
-        yesAction.performed   += OnYes;
-        chatAction.performed  += OnChat;
+        yesAction.performed += OnYes;
+        chatAction.performed += OnChat;
 
         nextAction.Enable();
         enterAction.Enable();
@@ -52,10 +57,10 @@ public class PeccyDialogue : MonoBehaviour
 
     void OnDestroy()
     {
-        nextAction.performed  -= OnNext;
+        nextAction.performed -= OnNext;
         enterAction.performed -= OnNext;
-        yesAction.performed   -= OnYes;
-        chatAction.performed  -= OnChat;
+        yesAction.performed -= OnYes;
+        chatAction.performed -= OnChat;
 
         nextAction.Disable();
         enterAction.Disable();
@@ -87,14 +92,23 @@ public class PeccyDialogue : MonoBehaviour
             }
         }
 
-        // Assistant mode bubble appears whenever Peccy is visible 
+        // Assistant mode bubble appears whenever Peccy is visible,
+        // but NOT while chat UI is open
         if (introStarted && state == DialogueState.IdleAssistant)
         {
-            if (IsPeccyVisibleOnScreen())
-                bubble.Show("Need my Assistance? Let's Chat!", "Chat (C)");
-            else
+            if (chatUIOpen)
+            {
                 bubble.Hide();
+            }
+            else
+            {
+                if (IsPeccyVisibleOnScreen())
+                    bubble.Show("Need my Assistance? Let's Chat!", "Chat (C)");
+                else
+                    bubble.Hide();
+            }
         }
+
     }
 
     public void StartIntro()
@@ -143,7 +157,10 @@ public class PeccyDialogue : MonoBehaviour
         if (state != DialogueState.IdleAssistant) return;
         if (!IsPeccyVisibleOnScreen()) return;
 
-        Debug.Log("Chat requested (C). Hook UI panel later.");
+        if (chatUI != null)
+            chatUI.Open();
+        else
+            Debug.LogWarning("ChatUI not assigned in PeccyDialogue.");
     }
 
     private void ChooseNo()
@@ -166,6 +183,24 @@ public class PeccyDialogue : MonoBehaviour
             "Want a quick tour? I can guide you to the coolest spots in the office.",
             "Yes (Y)   |   No (N)"
         );
+    }
+
+    public void OnChatOpened()
+    {
+        chatUIOpen = true;
+        if (bubble != null) bubble.Hide();
+    }
+
+    public void OnChatClosed()
+    {
+        chatUIOpen = false;
+
+        if (bubble == null) return;
+
+        if (introStarted && state == DialogueState.IdleAssistant && IsPeccyVisibleOnScreen())
+            bubble.Show("Need my Assistance? Let's Chat!", "Chat (C)");
+        else
+            bubble.Hide();
     }
 
     private bool IsPeccyVisibleOnScreen()
