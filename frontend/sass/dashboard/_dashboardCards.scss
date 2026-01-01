@@ -1,0 +1,73 @@
+@use "../var" as *;
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.card-icon {
+  background: rgba($color-orange, 0.12);
+  color: $color-orange;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center
+}
+
+
+.card-title {
+  font-size: .9vw;
+  font-weight: 600;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+.card-value {
+  font-size: 2.6rem;
+  font-weight: 800;
+  margin-top: 1.2rem;
+  color: $color-orange;
+}
+
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.online {
+  background-color: $color-green;
+}
+
+.offline {
+  background-color: $color-dark-grey;
+}
+.comments-theme {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  .comments-box {
+    flex: 1;
+    overflow-y: auto;     
+    padding-right: 0.5rem;
+    width: 100%;
+
+    .comment-item {
+      border-bottom: 1px solid $color-light-grey;
+      padding: 0.5rem 0;
+
+      p {
+        margin: 0;
+        color: $color-dark-grey;
+        font-size: .8vw;  
+      }
+    }
+  }
+}

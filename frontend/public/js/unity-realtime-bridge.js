@@ -252,6 +252,7 @@ function setupWebSocket(unityInstance) {
 
       // forward telemetry to Unity UI (if Unity attached)
       sendDht11TelemetryToUnity(msg.payload, msg.ts);
+      sendPirOccupancyToUnity(msg.payload, msg.ts);
 
       return;
     }
@@ -383,4 +384,127 @@ window.initSmartPlugBridge = function (unityInstance) {
   };
 
   console.log("[JS] Unity Realtime Bridge Ready");
+};
+
+
+/**
+ * PIR occupancy telemetry → Unity
+ * Expects payload like:
+ * { sensor_type:"pir", attrs:{ room_status:"OCCUPIED" } }
+ */
+function sendPirOccupancyToUnity(payload, msgTs) {
+  if (!payload) return;
+
+  // Only PIR
+  if (payload.sensor_type !== "pir") return;
+
+  const roomStatus = payload.attrs?.room_status;
+  if (typeof roomStatus !== "string" || roomStatus.length === 0) return;
+
+  const normalized = {
+    device: payload.device || "",
+    sensor_id: payload.sensor_id || "",
+    sensor_type: payload.sensor_type || "pir",
+    state: roomStatus, // "OCCUPIED" / "EMPTY"
+    ts: payload.ts || msgTs || safeNowSeconds(),
+    status: payload.status || "ok",
+  };
+
+  // GameObject in Unity must exist (choose your name)
+  const targetObj = "Occupancy_UI";
+
+  console.log("[Bridge] PIR Occupancy → Unity:", normalized);
+
+  try {
+    wsUnityInstance?.SendMessage(
+      targetObj,
+      "OnOccupancyJson",
+      JSON.stringify(normalized)
+    );
+  } catch (e) {
+    console.warn("[Bridge] PIR SendMessage failed:", e);
+  }
+}
+
+
+// ============================================================
+// Unity – Backend HTTP (Chat Assistant Bridge)
+// ============================================================
+
+// Store Unity WebGL instance ONLY for chat
+window.__CHAT_UNITY_INSTANCE__ = null;
+
+// Called once after Unity loads
+window.initChatBridge = function (unityInstance) {
+  window.__CHAT_UNITY_INSTANCE__ = unityInstance;
+  console.log("[ChatBridge] Unity instance registered");
+};
+
+// Chat assistant endpoint
+const ASSISTANT_ENDPOINT = `${API_BASE}/assistant`;
+
+// Unity calls:
+// AskPeccyAssistant(question, sessionId, unityObjectName)
+window.AskPeccyAssistant = async function (question, sessionId, unityObjectName) {
+  const unity = window.__CHAT_UNITY_INSTANCE__;
+  if (!unity) return;
+
+  const token = getIdToken();
+  if (!token) {
+    unity.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify({
+      answer: "You are not logged in. Please sign in first.",
+      sessionId: sessionId || null,
+      status: 401,
+      errorType: "AUTH"
+    }));
+    return;
+  }
+
+  let status = 0;
+  let responseBody = null;
+
+  try {
+    const requestBody = sessionId ? { question, sessionId } : { question };
+
+    const res = await fetch(ASSISTANT_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    status = res.status;
+
+    const text = await res.text();
+    try {
+      responseBody = JSON.parse(text);
+    } catch {
+      responseBody = { answer: text };
+    }
+  } catch (err) {
+    unity.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify({
+      answer: "Network error. Could not reach the assistant service.",
+      sessionId: sessionId || null,
+      status: 0,
+      errorType: "NETWORK"
+    }));
+    return;
+  }
+
+  // If backend returns an error format, surface it clearly
+  const answer =
+    responseBody?.answer ||
+    responseBody?.message ||
+    (status === 429 ? "Assistant is busy or quota is reached (HTTP 429)." : null) ||
+    (status >= 400 ? `Assistant error (HTTP ${status}).` : null) ||
+    "Sorry, I couldn’t generate a response.";
+
+  unity.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify({
+    answer,
+    sessionId: responseBody?.sessionId || sessionId || null,
+    status,
+    errorType: status === 429 ? "QUOTA_OR_THROTTLE" : (status >= 400 ? "BACKEND" : "OK")
+  }));
 };

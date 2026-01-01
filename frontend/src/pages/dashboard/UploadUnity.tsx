@@ -1,190 +1,278 @@
-import { useNavigate } from "react-router-dom";
-import { useRef, useState, useEffect } from "react";
-import type { ChangeEvent } from "react";
+import React, { useState, useRef } from "react";
 import DashboardLayout from "./DashboardLayout";
-import { FILE, FILES, X } from "../../assets/icons";
+import { ERROR, FILE, FILES } from "../../assets/icons";
+import Message from "../../components/Message";
 
-// interface AuthContext {
-//   token: string;
-// }
-
-// You'll need to import your auth context or pass it as a prop
-// For now, I'm assuming you have an auth object available
-// declare const auth: AuthContext;
+interface UploadProgress {
+  filename: string;
+  progress: number;
+  status: "pending" | "uploading" | "completed" | "error";
+  error?: string;
+}
 
 function UploadUnity() {
-  const filePickerRef = useRef<HTMLInputElement>(null);
-  // const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileList | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // const navigate = useNavigate();
+  const filePickerRef = useRef<HTMLInputElement>(null);
 
   const pickFilesHandler = () => {
     filePickerRef.current?.click();
   };
 
-  useEffect(() => {
+  const formatFileSize = (bytes: number): string => {
+    const kb = 1024;
+    const mb = kb * 1024;
+    const gb = mb * 1024;
+
+    if (bytes >= gb) {
+      return (bytes / gb).toFixed(2).replace(/\.00$/, "") + " GB";
+    }
+    if (bytes >= mb) {
+      return (bytes / mb).toFixed(2).replace(/\.00$/, "") + " MB";
+    }
+    if (bytes >= kb) {
+      return (bytes / kb).toFixed(2).replace(/\.00$/, "") + " KB";
+    }
+    return bytes + "b";
+  };
+
+  const renameFile = (filename: string): string => {
+    const parts = filename.split(".");
+    parts.shift();
+    const suffix = parts.join(".");
+    return `BAHTWIN_BUILD.${suffix}`;
+  }
+  
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 4) {
+      setError("Maximum 4 files allowed");
+      e.target.value = "";
+      return;
+    }
+    setFiles(e.target.files);
+    setError(null);
+    setUploadProgress([]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!files || files.length === 0) {
+      setError("Please select at least one file");
       return;
     }
 
-    const fileReaders: FileReader[] = [];
-
-    files.forEach((file) => {
-      const fileReader = new FileReader();
-      fileReaders.push(fileReader);
-
-      fileReader.readAsDataURL(file);
-    });
-  }, [files]);
-
-  const pickedHandler = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const pickedFiles = Array.from(event.target.files);
-
-      // Limit to 4 total files, including already selected files
-      if (files.length + pickedFiles.length > 4) {
-        setError("You can upload up to 4 files.");
-        return;
-      }
-
-      const updatedFiles = [...pickedFiles];
-
-      pickedFiles.forEach((file) => {
-        updatedFiles.push(file);
-      });
-
-      setFiles(updatedFiles);
-      setError(null);
-    }
-  };
-
-  const uploadFilesHandler = async () => {
-    const formData = new FormData();
-
-    // Find the common letters
-    let target_name = "";
-
-    for (let i = 0; i < files[0].name.length; i++) {
-      if (files[0].name[i] === files[1].name[i]) {
-        target_name += files[0].name[i];
-      }
+    if (files.length > 4) {
+      setError("Maximum 4 files allowed");
+      return;
     }
 
-    // renaming each file BAHTWIN.**
-    files.forEach((file) => {
+    setUploading(true);
+    setError(null);
 
-      const renamedFile = new File(
-        [file],
-        file.name.replace(target_name, "BAHTWIN."),
-        { type: file.type }
-      );
-
-      formData.append("files", renamedFile);
-    });
+    // Progress bar initialization
+    const initialProgress: UploadProgress[] = Array.from(files).map((file) => ({
+      filename: file.name,
+      progress: 0,
+      status: "pending",
+    }));
+    setUploadProgress(initialProgress);
 
     try {
-      setIsLoading(true);
-      // const response = await fetch(
-      //   `${process.env.NEXT_PUBLIC_BE}/file/upload`,
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       "auth-token": auth.token,
-      //     },
-      //     body: formData,
-      //   }
-      // );
+      // STEP 1 — Request presigned URLs
+      const fileRequests = Array.from(files).map((file) => ({
+        filename: renameFile(file.name),
+        contentType: file.type || "application/octet-stream",
+        size: file.size,
+      }));
 
-      // if (response.ok) {
-      //   ////////////////////////////////
-      //   navigate("/dashboard/files");
-      //   ////////////////////////////////
-      // } else {
-      //   setIsLoading(false);
-      //   throw new Error("File upload failed.");
-      // }
+      const response = await fetch(import.meta.env.VITE_WEBGL_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files: fileRequests }),
+      });
 
-      // const responseData = await response.json();
-      // console.log("Uploaded successfully:", responseData);
-      setFiles([]);
-      // setPreviewUrls([]);
-      setError(null);
-      setIsLoading(false);
-    } catch (err) {
-      setIsLoading(false);
-      setError(err instanceof Error ? err.message : "An error occurred");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch presigned URLs`);
+      }
+
+      const data = await response.json();
+
+      if (!data.urls || !Array.isArray(data.urls)) {
+        throw new Error("Invalid backend response: missing urls[]");
+      }
+
+      const urls = data.urls;
+
+      // STEP 2 — Upload each file using the returned order
+      const uploadPromises = urls.map(async (urlData: any, index: number) => {
+        const file = files[index];
+
+        setUploadProgress((prev) =>
+          prev.map((p, i) => (i === index ? { ...p, status: "uploading" } : p))
+        );
+
+        try {
+          await uploadFileToS3(
+            file,
+            urlData.uploadUrl,
+            urlData.headers["Content-Type"],
+            (progress) => {
+              setUploadProgress((prev) =>
+                prev.map((p, i) => (i === index ? { ...p, progress } : p))
+              );
+            }
+          );
+
+          setUploadProgress((prev) =>
+            prev.map((p, i) =>
+              i === index ? { ...p, progress: 100, status: "completed" } : p
+            )
+          );
+        } catch (err) {
+          setUploadProgress((prev) =>
+            prev.map((p, i) =>
+              i === index
+                ? {
+                    ...p,
+                    status: "error",
+                    error: err instanceof Error ? err.message : "Upload failed",
+                  }
+                : p
+            )
+          );
+          throw err;
+        }
+      });
+
+      await Promise.all(uploadPromises);
+    } catch (err: any) {
+      setError(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
     }
-  };
-
-  const removeFile = (fileToRemove: File) => {
-    const updatedFiles = files.filter((file) => file !== fileToRemove);
-    setFiles(updatedFiles);
   };
 
   return (
-    <DashboardLayout className="dashboard__webgl" header="Upload WebGL Files">
-      <input
-        ref={filePickerRef}
-        style={{ display: "none" }}
-        type="file"
-        multiple
-        onChange={pickedHandler}
-        name="files"
-        accept=".js,.unityweb"
-      />
-      <div
-        className={`dashboard__webgl--files${
-          files.length === 0 ? " flexCenter" : ""
-        }`}
-        onClick={pickFilesHandler}
-      >
-        {files.length > 0 ? (
-          files.map((file, index) => (
-            <div key={index} className="dashboard__webgl--file">
-              {FILE()} {file.name}
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeFile(file);
-                }}
-                className="dashboard__webgl--file-close"
-              >
-                {X()}
-              </span>
+    <DashboardLayout className="dashboard__webgl" header="Upload WebGL Build">
+      {error && <Message message={error} type="error" icon={ERROR()} />}
+
+      <form onSubmit={handleSubmit}>
+        <input
+          ref={filePickerRef}
+          type="file"
+          multiple
+          disabled={uploading}
+          onChange={handleFileChange}
+          accept=".js,.unityweb"
+          style={{ display: "none" }}
+        />
+        <div className="dashboard__webgl--files" onClick={pickFilesHandler}>
+          {files ? (
+            <>
+              {uploadProgress.length > 0 ? (
+                <div className="dashboard__webgl--uploading">
+                  {uploadProgress.map((item, i) => (
+                    <div className="dashboard__webgl--file" key={i}>
+                      <div className="dashboard__webgl--fileDetails">
+                        {FILE()}
+                        <span>{item.filename}</span>
+                        <span>
+                          {item.status === "completed"
+                            ? "Completed"
+                            : item.status === "error"
+                            ? "Error!"
+                            : `${Math.round(item.progress)}%`}
+                        </span>
+                      </div>
+                      <div className="dashboard__webgl--progress-bg">
+                        <div
+                          className="dashboard__webgl--progress"
+                          style={{
+                            width: `${item.progress}%`,
+                            backgroundColor:
+                              item.status === "error"
+                                ? "#e71010"
+                                : item.status === "completed"
+                                ? "#019426"
+                                : "#ff8e3c",
+                          }}
+                        />
+                      </div>
+                      {item.error && (
+                        <Message
+                          message={item.error}
+                          type="error"
+                          icon={ERROR()}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {files &&
+                    Array.from(files).map((file, i) => (
+                      <div className="dashboard__webgl--fileDetails" key={i}>
+                        {FILE()}
+                        <span>{file.name}</span>
+                        <span>{formatFileSize(file.size)}</span>
+                      </div>
+                    ))}
+                </>
+              )}
+            </>
+          ) : (
+            <div className="dashboard__webgl--upload">
+              {FILES()}
+              <p>Click to choose files (Max 4)</p>
+              <span>Supported formats: JS, UNITYWEB </span>
             </div>
-          ))
-        ) : (
-          <div className="dashboard__webgl--upload">
-            {FILES()}
-            <p>Click to choose files (up to 4)</p>
-            <span>Supported formats: JS, UNITYWEB </span>
-          </div>
-        )}
-      </div>
-
-      {error && (
-        <p className="error" style={{ width: "fit-content" }}>
-          {error}
-        </p>
-      )}
-      {message && (
-        <p className="success" style={{ width: "fit-content" }}>
-          {message}
-        </p>
-      )}
-
-      <button
-        className="dashboard__webgl--btn btn btn-orange"
-        onClick={uploadFilesHandler}
-      >
-        {isLoading ? "Loading..." : "Upload Files"}
-      </button>
+          )}
+        </div>
+        <button
+          className="dashboard__webgl--btn btn btn-orange"
+          type="submit"
+          disabled={uploading || !files}
+        >
+          {uploading ? "Uploading..." : "Upload Files"}
+        </button>
+      </form>
     </DashboardLayout>
   );
+}
+
+// Upload file with progress tracking using PUT to presigned URL
+async function uploadFileToS3(
+  file: File,
+  presignedUrl: string,
+  contentType: string,
+  onProgress: (progress: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        onProgress((e.loaded / e.total) * 100);
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed: ${xhr.status}`));
+    });
+
+    xhr.addEventListener("error", () => reject(new Error("Network error")));
+    xhr.addEventListener("abort", () => reject(new Error("Upload aborted")));
+
+    xhr.open("PUT", presignedUrl);
+    xhr.setRequestHeader("Content-Type", contentType);
+    xhr.send(file);
+  });
 }
 
 export default UploadUnity;

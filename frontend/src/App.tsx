@@ -10,6 +10,7 @@ import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
+import type { PropsWithChildren } from "react";
 //import SmartPlugEnvironment from "./pages/SmartPlugEnvironment";
 import Chatbot from "./components/ChatBot";
 import VisitorArrival from "./pages/visitorArrival";
@@ -21,13 +22,14 @@ import Users from "./pages/dashboard/Users";
 import Footer from "./components/Footer";
 import { useAuth } from "./auth/AuthHook";
 import UploadUnity from "./pages/dashboard/UploadUnity";
+import Analytics from "./pages/dashboard/Analytics";
 import Parking from "./pages/dashboard/Parking";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import { useEffect } from "react";
 import FeedbackPage from "./pages/dashboard/Feedback";
 
 // Protected Route Component for authenticated users
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children }:PropsWithChildren) {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
@@ -38,7 +40,7 @@ function ProtectedRoute({ children }) {
 }
 
 // Admin Only Route Component
-function AdminRoute({ children }) {
+function AdminRoute({ children }:PropsWithChildren) {
   const { userRole } = useAuth();
 
   if (userRole !== "admin") {
@@ -49,7 +51,7 @@ function AdminRoute({ children }) {
 }
 
 // Public Only Route (redirects authenticated users)
-function PublicOnlyRoute({ children }) {
+function PublicOnlyRoute({ children }:PropsWithChildren ) {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
@@ -132,11 +134,20 @@ function App() {
             path="/environment"
             element={
               <ProtectedRoute>
-                <Navbar />
                 <Environment />
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/dashboard/analytics"
+            element={
+              <AdminRoute>
+                <Analytics />
+              </AdminRoute>
+            }
+          />
+
           <Route
             path="/dashboard/users"
             element={

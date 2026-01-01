@@ -5,6 +5,7 @@ import {
   signOut as amplifySignOut,
   signUp as amplifySignUp,
   confirmSignUp as amplifyConfirmSignUp,
+  confirmSignIn,
   getCurrentUser,
   fetchAuthSession,
 } from "aws-amplify/auth";
@@ -24,6 +25,7 @@ export interface UseAuth {
   signUp: (email: string, password: string) => Promise<SignUpResult>;
   confirmSignUp: (email: string, code: string) => Promise<Result>;
   signOut: () => Promise<Result>;
+  changePassword: (newPassword: string) => Promise<Result>
 }
 
 interface Result {
@@ -61,19 +63,21 @@ export const useProvideAuth = (): UseAuth => {
 
   const clearIdToken = () => {
     localStorage.removeItem("idToken");
-    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
   };
 
   // Helper function to extract groups from token
   const getUserGroups = async (): Promise<string[]> => {
     try {
       const session = await fetchAuthSession();
-      const groups = session.tokens?.accessToken?.payload["cognito:groups"];
-      
-      if (groups && Array.isArray(groups)) {
-        return groups;
-      }
-      return [];
+      const groupsRaw = session.tokens?.accessToken?.payload["cognito:groups"];
+
+      const groups: string[] = Array.isArray(groupsRaw)
+        ? groupsRaw.filter((g): g is string => typeof g === "string")
+        : [];
+
+      return groups;
+
     } catch (error) {
       console.error("Error fetching user groups:", error);
       return [];
@@ -103,6 +107,7 @@ export const useProvideAuth = (): UseAuth => {
         if (idToken) {
           localStorage.setItem("idToken", idToken);
         }
+
         // API REQUEST TO GET USERNAME, PROFILE IMAGE
 
         setEmail(user.signInDetails?.loginId || "");
@@ -139,7 +144,6 @@ export const useProvideAuth = (): UseAuth => {
       if (result.isSignedIn) {
         setEmail(email);
         const user = await getCurrentUser();
-        localStorage.setItem("userId", user.userId);
         setUserId(user.userId);
         
         // Get user groups after sign in
@@ -148,10 +152,16 @@ export const useProvideAuth = (): UseAuth => {
         setUserRole(getPrimaryRole(groups));
         
         setIsAuthenticated(true);
-
         await saveIdToken();
 
         return { success: true, message: "Sign in successful" };
+      }
+
+      if (result.nextStep?.signInStep === "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED") {
+        return { 
+          success: false, 
+          message: "NEW_PASSWORD_REQUIRED"
+        };
       }
 
       return { success: false, message: "Sign in incomplete" };
@@ -240,6 +250,23 @@ export const useProvideAuth = (): UseAuth => {
     }
   };
 
+  const changePassword = async (newPassword: string): Promise<Result> => {
+    try {
+      const result = await confirmSignIn({
+        challengeResponse: newPassword
+      });
+      
+      if (result.isSignedIn) {
+        await checkAuthState();
+        return { success: true, message: "Password changed successfully" };
+      }
+      
+      return { success: false, message: "Password change failed" };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }
+
   return {
     isLoading,
     isAuthenticated,
@@ -251,5 +278,6 @@ export const useProvideAuth = (): UseAuth => {
     signUp,
     confirmSignUp,
     signOut,
+    changePassword
   };
 };

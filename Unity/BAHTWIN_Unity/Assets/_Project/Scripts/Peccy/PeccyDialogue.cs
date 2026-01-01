@@ -6,11 +6,25 @@ public class PeccyDialogue : MonoBehaviour
     [Header("References")]
     public SpeechBubbleUI bubble;
     public Camera playerCamera;
+    public ChatUIController chatUI;
+
+    [Header("Look-to-interact gate (NO colliders needed)")]
+    [Range(0.5f, 1f)]
+    public float lookDotThreshold = 0.93f;
+
+    [Tooltip("If true, interaction is blocked when something (like a wall) is between the camera and Peccy.")]
+    public bool blockIfOccluded = true;
+
+    [Tooltip("Layers that can block line of sight (Walls, props, etc). Exclude the Player layer if it causes issues.")]
+    public LayerMask occluderMask = ~0;
 
     [Header("Start Trigger")]
     public bool startWhenVisible = true;
     public bool startManually = false;
     public float startInputCooldown = 0.35f;
+
+    [Header("Follower (enable on No)")]
+    public PeccyFollower follower; 
 
     [Header("State (read-only)")]
     public bool introStarted = false;
@@ -20,15 +34,16 @@ public class PeccyDialogue : MonoBehaviour
     private enum DialogueState { Welcome, TourQuestion, IdleAssistant }
     private DialogueState state = DialogueState.Welcome;
 
-    private InputAction nextAction;    // N
-    private InputAction enterAction;   // Enter
-    private InputAction yesAction;     // Y
-    private InputAction chatAction;    // C
+    private InputAction nextAction;   // N
+    private InputAction enterAction;  // Enter
+    private InputAction yesAction;    // Y
+    private InputAction chatAction;   // C
 
     private float ignoreInputUntilTime = 0f;
 
-    // Renderer to check if Peccy is visible
     private Renderer[] renderers;
+
+    [HideInInspector] public bool chatUIOpen = false;
 
     void Awake()
     {
@@ -66,34 +81,36 @@ public class PeccyDialogue : MonoBehaviour
     void Start()
     {
         if (bubble != null) bubble.Hide();
+
         introStarted = false;
         assistantMode = false;
         tourMode = false;
 
-        if (playerCamera == null)
-        {
-            playerCamera = Camera.main;
-        }
+        if (playerCamera == null) playerCamera = Camera.main;
     }
 
     void Update()
     {
-        // Start intro as soon as Peccy is visible on screen
+        // Start intro as soon as Peccy is visible on screen (your old behavior)
         if (!introStarted && !startManually && startWhenVisible)
         {
-            if (IsPeccyVisibleOnScreen())
-            {
+            if (IsPeccyOnScreen())
                 StartIntro();
-            }
         }
 
-        // Assistant mode bubble appears whenever Peccy is visible 
         if (introStarted && state == DialogueState.IdleAssistant)
         {
-            if (IsPeccyVisibleOnScreen())
-                bubble.Show("Need my Assistance? Let's Chat!", "Chat (C)");
-            else
+            if (chatUIOpen)
+            {
                 bubble.Hide();
+            }
+            else
+            {
+                if (IsPlayerLookingAtPeccy())
+                    bubble.Show("Need my Assistance? Let's Chat!", "Chat (C)");
+                else
+                    bubble.Hide();
+            }
         }
     }
 
@@ -112,6 +129,7 @@ public class PeccyDialogue : MonoBehaviour
     {
         if (!introStarted) return;
         if (Time.time < ignoreInputUntilTime) return;
+        if (!IsPlayerLookingAtPeccy()) return;
 
         if (state == DialogueState.Welcome)
         {
@@ -119,7 +137,7 @@ public class PeccyDialogue : MonoBehaviour
         }
         else if (state == DialogueState.TourQuestion)
         {
-            // N or Enter here means No
+            // N or Enter means No
             ChooseNo();
         }
     }
@@ -129,10 +147,13 @@ public class PeccyDialogue : MonoBehaviour
         if (!introStarted) return;
         if (Time.time < ignoreInputUntilTime) return;
         if (state != DialogueState.TourQuestion) return;
+        if (!IsPlayerLookingAtPeccy()) return;
 
         tourMode = true;
         assistantMode = false;
         bubble.Hide();
+
+        if (follower != null) follower.SetFollow(false);
 
         Debug.Log("Tour mode selected (Y). Hook tour start later.");
     }
@@ -141,9 +162,12 @@ public class PeccyDialogue : MonoBehaviour
     {
         if (!introStarted) return;
         if (state != DialogueState.IdleAssistant) return;
-        if (!IsPeccyVisibleOnScreen()) return;
+        if (!IsPlayerLookingAtPeccy()) return;
 
-        Debug.Log("Chat requested (C). Hook UI panel later.");
+        if (chatUI != null)
+            chatUI.Open();
+        else
+            Debug.LogWarning("ChatUI not assigned in PeccyDialogue.");
     }
 
     private void ChooseNo()
@@ -151,7 +175,12 @@ public class PeccyDialogue : MonoBehaviour
         tourMode = false;
         assistantMode = true;
         state = DialogueState.IdleAssistant;
+
+        // Hide once, then Update() will show "Let's Chat" only when looked at
         bubble.Hide();
+
+        // Start following after "No"
+        if (follower != null) follower.SetFollow(true);
     }
 
     private void ShowWelcome()
@@ -168,11 +197,55 @@ public class PeccyDialogue : MonoBehaviour
         );
     }
 
-    private bool IsPeccyVisibleOnScreen()
+    public void OnChatOpened()
+    {
+        chatUIOpen = true;
+        if (bubble != null) bubble.Hide();
+    }
+
+    public void OnChatClosed()
+    {
+        chatUIOpen = false;
+
+        if (bubble == null) return;
+
+        if (introStarted && state == DialogueState.IdleAssistant && IsPlayerLookingAtPeccy())
+            bubble.Show("Need my Assistance? Let's Chat!", "Chat (C)");
+        else
+            bubble.Hide();
+    }
+
+    private bool IsPlayerLookingAtPeccy()
     {
         if (playerCamera == null) return false;
 
-        // Fast check any renderer visible to any camera
+        Vector3 vp = playerCamera.WorldToViewportPoint(transform.position); // 
+        bool onScreen = (vp.z > 0f && vp.x > 0f && vp.x < 1f && vp.y > 0f && vp.y < 1f);
+        if (!onScreen) return false;
+
+        Vector3 toPeccy = (transform.position - playerCamera.transform.position).normalized;
+        float dot = Vector3.Dot(playerCamera.transform.forward, toPeccy);
+        if (dot < lookDotThreshold) return false;
+
+        if (blockIfOccluded)
+        {
+            Vector3 start = playerCamera.transform.position;
+            Vector3 end = transform.position;
+
+            if (Physics.Linecast(start, end, out RaycastHit hit, occluderMask))
+            {
+                if (Vector3.Distance(hit.point, end) > 0.15f)
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private bool IsPeccyOnScreen()
+    {
+        if (playerCamera == null) return false;
+
         bool anyRendererVisible = false;
         for (int i = 0; i < renderers.Length; i++)
         {
@@ -184,10 +257,7 @@ public class PeccyDialogue : MonoBehaviour
         }
         if (!anyRendererVisible) return false;
 
-        // Ensure Peccy is actually inside THIS camera view
-        Vector3 p = playerCamera.WorldToViewportPoint(transform.position);
-
-        // in front of camera and within screen bounds
+        Vector3 p = playerCamera.WorldToViewportPoint(transform.position); // 
         return (p.z > 0f && p.x > 0f && p.x < 1f && p.y > 0f && p.y < 1f);
     }
 }
