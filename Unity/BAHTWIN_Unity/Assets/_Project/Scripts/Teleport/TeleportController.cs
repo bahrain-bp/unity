@@ -9,6 +9,13 @@ public class TeleportController : MonoBehaviour
     public Transform playerRoot;                 // the object you want to teleport (usually the CC holder)
     public CharacterController characterController;
 
+    [Header("Peccy Refs")]
+    public Transform peccyRoot;                  // drag Peccy main transform here
+    public NavMeshAgent peccyAgent;              // drag Peccy's NavMeshAgent here (if he has one)
+    public Vector3 peccyOffset = new Vector3(0.6f, 0f, -0.6f); // beside/behind player
+    public float peccySampleRadius = 3f;         // NavMesh snap radius for Peccy
+    public bool resetPeccyPathAfterTeleport = true;
+
     [Header("Registration Gate")]
     public bool requirePassedRegistration = true;
 
@@ -117,26 +124,66 @@ public class TeleportController : MonoBehaviour
         if (holdBlackTime > 0f)
             yield return new WaitForSeconds(holdBlackTime);
 
-        // Snap to NavMesh to land safely
-        Vector3 finalPos = targetWorldPos;
+        // Snap player landing to NavMesh
+        Vector3 playerFinalPos = targetWorldPos;
         if (NavMesh.SamplePosition(targetWorldPos, out NavMeshHit hit, sampleRadius, NavMesh.AllAreas))
-            finalPos = hit.position;
+            playerFinalPos = hit.position;
 
-        finalPos += Vector3.up * yOffset;
+        playerFinalPos += Vector3.up * yOffset;
 
         // Disable CC before teleporting to prevent CC fighting the transform move
         if (characterController != null)
             characterController.enabled = false;
 
-        playerRoot.position = finalPos;
+        playerRoot.position = playerFinalPos;
 
         if (characterController != null)
             characterController.enabled = true;
+
+        // Teleport Peccy too (optional)
+        TeleportPeccyNearPlayer(playerFinalPos);
 
         // Fade in
         if (fadeCanvasGroup != null)
             yield return FadeTo(0f, fadeInTime);
     }
+
+    private void TeleportPeccyNearPlayer(Vector3 playerFinalPos)
+    {
+        if (peccyRoot == null) return;
+
+        // Keep the query at the player's height so it doesn’t “prefer” roof navmesh
+        Vector3 query = playerFinalPos + peccyOffset;
+        query.y = playerFinalPos.y;
+
+        Vector3 peccyFinalPos = query;
+
+        if (NavMesh.SamplePosition(query, out NavMeshHit hit, peccySampleRadius, NavMesh.AllAreas))
+        {
+            // If the sampled point is way above/below the player, reject it (likely roof/other floor)
+            float yDelta = Mathf.Abs(hit.position.y - playerFinalPos.y);
+            if (yDelta <= 1.2f) // tweak if needed (1.0 to 2.0)
+                peccyFinalPos = hit.position;
+            else
+                peccyFinalPos = query; // fallback: stay near player height
+        }
+
+        peccyFinalPos += Vector3.up * yOffset;
+
+        if (peccyAgent != null && peccyAgent.enabled)
+        {
+            // Warp is the correct way to teleport a NavMeshAgent. :contentReference[oaicite:2]{index=2}
+            peccyAgent.Warp(peccyFinalPos);
+
+            if (resetPeccyPathAfterTeleport)
+                peccyAgent.ResetPath();
+        }
+        else
+        {
+            peccyRoot.position = peccyFinalPos;
+        }
+    }
+
 
     private IEnumerator FadeTo(float targetAlpha, float duration)
     {
