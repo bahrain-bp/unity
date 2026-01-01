@@ -16,6 +16,9 @@ public class ModeButtonsUI : MonoBehaviour
     public Sprite emergencyNormalSprite;
     public Sprite emergencyStopSprite;
 
+    [Header("Controllers")]
+    public EmergencyModeController emergencyModeController;
+
     bool tourActive = false;
     bool emergencyActive = false;
 
@@ -42,10 +45,8 @@ public class ModeButtonsUI : MonoBehaviour
             ToggleEmergency();
     }
 
-    // MODE TOGGLES
     void ToggleTour()
     {
-        // Turn OFF emergency if it's active
         if (!tourActive && emergencyActive)
         {
             emergencyActive = false;
@@ -54,14 +55,10 @@ public class ModeButtonsUI : MonoBehaviour
         tourActive = !tourActive;
 
         UpdateAllVisuals();
-
-        // if (tourActive) StartTour();
-        // else StopTour();
     }
 
     void ToggleEmergency()
     {
-        // Turn OFF tour if it's active
         if (!emergencyActive && tourActive)
         {
             tourActive = false;
@@ -71,11 +68,10 @@ public class ModeButtonsUI : MonoBehaviour
 
         UpdateAllVisuals();
 
-        // if (emergencyActive) StartEvacuation();
-        // else StopEvacuation();
+        if (emergencyModeController != null)
+            emergencyModeController.ToggleEmergencyMode();
     }
 
-    // VISUAL UPDATES
     void UpdateAllVisuals()
     {
         UpdateTourVisual();
@@ -95,4 +91,10 @@ public class ModeButtonsUI : MonoBehaviour
             ? emergencyStopSprite
             : emergencyNormalSprite;
     }
+    public void ForceExitEmergencyMode()
+{
+    emergencyActive = false;
+    UpdateAllVisuals();
+}
+
 }
