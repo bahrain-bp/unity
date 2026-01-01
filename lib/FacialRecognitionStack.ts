@@ -18,7 +18,10 @@ import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 export class FacialRecognitionStack extends cdk.Stack {
   public readonly userTable: dynamodb.Table;
   public readonly broadcastLambda: lambda.Function;
+  public readonly PreRegisterCheckExport: lambda.Function;
+ // restApi: apigw.RestApi; 
 
+  
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -141,9 +144,13 @@ export class FacialRecognitionStack extends cdk.Stack {
       }),
       environment: {
         JWT_SECRET: 'secret',  // same as before
-        FRONTEND_URL: 'http://localhost:5173/visitorfeedback',  // your frontend link (test change later)
-        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending
-        GMAIL_PASS: 'thun ojje rdpt ocjg',        // Gmail app password
+        FRONTEND_URL: 'https://dks06xhy7s4u4.cloudfront.net/VisitorFeedBack',  //  frontend link 
+        GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
+        GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
+        WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
+        WORKMAIL_PASS: 'Test1234*',
+        WORKMAIL_SMTP: 'smtp.mail.us-east-1.awsapps.com',
+        
       },
       timeout: cdk.Duration.seconds(30),
       functionName: 'SendFeedbackLambda',
@@ -271,15 +278,18 @@ export class FacialRecognitionStack extends cdk.Stack {
       functionName: 'PreRegisterCheck', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
+    this.PreRegisterCheckExport = PreRegisterCheck;
     //create lambda to save individual visitor invite
     const RegisterIndividualVisitor = new lambda.Function(this, 'RegisterIndividualVisitor',{
       runtime: lambda.Runtime.PYTHON_3_11,
       handler:'RegisterIndividualVisitor.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment:{
-        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
-        GMAIL_PASS: 'thun ojje rdpt ocjg', 
-        BUCKET_NAME: bucket.bucketName,
+        GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
+        GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
+        WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
+        WORKMAIL_PASS: 'Test1234*',
+        WORKMAIL_SMTP: 'smtp.mail.us-east-1.awsapps.com',
         InviteTable: InvitedVisitorTable.tableName,
         BROADCAST_LAMBDA: this.broadcastLambda.functionArn
       },
@@ -293,9 +303,11 @@ export class FacialRecognitionStack extends cdk.Stack {
       handler:'RegisterBulkVisitor.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment:{
-        GMAIL_USER: 'nonreplyfeedbackrequest@gmail.com',      // Gmail address for sending "this is for test create another one later"
-        GMAIL_PASS: 'thun ojje rdpt ocjg', 
-        BUCKET_NAME: bucket.bucketName,
+        GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
+        GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
+        WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
+        WORKMAIL_PASS: 'Test1234*',
+        WORKMAIL_SMTP: 'smtp.mail.us-east-1.awsapps.com',
         InviteTable: InvitedVisitorTable.tableName,
         BROADCAST_LAMBDA: this.broadcastLambda.functionArn
       },
@@ -392,6 +404,7 @@ export class FacialRecognitionStack extends cdk.Stack {
     const api_arrival = new apigw.RestApi(this, 'api_arrival', {
       restApiName: 'Bahtwin Visitor API',
     });
+ 
 
     // create visitor resource for the api
     const visitorResource = api_arrival.root.addResource('visitor');

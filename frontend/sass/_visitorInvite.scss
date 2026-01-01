@@ -1,10 +1,13 @@
 .invite-page{
+  
+  
     .auth__form--input input {
     background-color: transparent; /* removes the white background */
     border: 1px solid #ccc;        /* keeps the border */
     border-radius: 4px;            /* optional: keep corners slightly rounded */
     padding: 8px 12px;             /* adjust padding as needed */
     color: #000;                   /* text color */
+    
     }
   
     .auth__form--upload {
@@ -60,20 +63,31 @@
   padding: 12px;
   border-radius: 6px;
   margin-bottom: 16px;
-  font-size: 0.9rem;
+  font-size: 1.5rem;
+  width: 100%;
 }
 
 .csv-info__title {
   font-weight: 600;
   margin-bottom: 6px;
 }
+.csv-info ul {
+    margin: 10px 0 0 0;     // remove browser margin
+    padding-left: 20px;    // pull bullets INSIDE the box
+  }
+
+  .csv-info ul li {
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+
 
 .csv-example {
   background: #111827;
   color: #e5e7eb;
   padding: 8px;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 1.2rem;
   margin-top: 6px;
 }
 @keyframes spin {
