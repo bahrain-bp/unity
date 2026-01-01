@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { FaUpload } from "react-icons/fa";
 import DashboardLayout from "./DashboardLayout";
+import "../../../sass/dashboard/_visitorInvite.scss"
 import { ImageClient } from "../../services/api";
 
 function VisitorTestPage() {
