@@ -52,6 +52,14 @@ export default function Environment() {
                 "initSmartPlugBridge not found. Is /js/unity-realtime-bridge.js loaded?"
               );
             }
+
+            // Chat bridge 
+            if (w.initChatBridge) {
+              console.log("Initializing Chat bridge…");
+              w.initChatBridge(instance);
+            } else {
+              console.warn("initChatBridge not found. Is unity-realtime-bridge.js loaded?");
+            }
           })
           .catch((message: any) => {
             console.error("Unity load error:", message);
