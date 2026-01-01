@@ -1,5 +1,4 @@
 @use "../var" as *;
-
 .webcam-box {
   padding: 0;
   overflow: hidden;
@@ -12,11 +11,11 @@
   }
 }
 
-.invite-page {
+.visitor-arrival {
   min-height: auto !important;
 
   p{
-    font-size:1.5rem;
+    font-size:1.3rem;
   }
 }
 
@@ -33,6 +32,7 @@
   }
 }
 
+/* Centered title for Arrival page only */
 .auth__logo--center {
   text-align: center;
 
@@ -41,10 +41,10 @@
   }
 }
 
+/* Instruction text */
 .auth__description {
   margin-top: 0.5rem;
   font-size: 0.9rem;
-  color: $color-dark-grey; // same muted tone
+  color: #6b7280; // same muted tone
   line-height: 1.5;
 }
-
