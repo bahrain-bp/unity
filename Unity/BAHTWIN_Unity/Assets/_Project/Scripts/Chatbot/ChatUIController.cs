@@ -36,17 +36,22 @@ public class ChatUIController : MonoBehaviour
     [Header("Optional: Disable FPS Look While Chat Open")]
     public Behaviour fpsLookScript;
 
+    [Header("Disable Gameplay While Chat Open (Simple Arrays)")]
+    [Tooltip("Drag gameplay scripts here (movement, interaction raycast, teleport, etc.). Do NOT put EventSystem or chat UI scripts here.")]
+    public Behaviour[] disableBehavioursWhileChatOpen;
+
+    [Tooltip("Optional: drag gameplay GameObjects here (example: InteractPrompt UI, crosshair, gameplay panels). Do NOT put Chat UI here.")]
+    public GameObject[] disableGameObjectsWhileChatOpen;
+
     // Conversation thread id (backend returns it, we send it back next time)
     private string sessionId = null;
 
-    // Prevent sending multiple messages while waiting
     private bool waitingForReply = false;
-
-    // Keep reference so we can remove "Typing..."
     private ChatMessageItem typingItem;
-
-    // Track if user already asked something (so we hide quick questions after first send)
     private bool hasSentFirstMessage = false;
+
+    private bool[] cachedBehaviourStates;
+    private bool[] cachedGameObjectStates;
 
     public bool IsOpen { get; private set; }
 
@@ -60,24 +65,23 @@ public class ChatUIController : MonoBehaviour
         if (sendButton != null) sendButton.onClick.AddListener(SendFromInputField);
         if (closeButton != null) closeButton.onClick.AddListener(Close);
 
-        // Hook quick question buttons (optional convenience)
         HookQuickQuestionButtons();
 
         if (chatPanel != null) chatPanel.SetActive(false);
         IsOpen = false;
 
         SetInputEnabled(true);
+
+        CacheDisableTargetsInitialStates();
     }
 
     void Update()
     {
         if (!IsOpen) return;
 
-        // ESC closes chat
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             Close();
 
-        // Enter sends if typing in the input field
         if (Keyboard.current != null && Keyboard.current.enterKey.wasPressedThisFrame)
         {
             if (inputField != null && inputField.isFocused)
@@ -89,11 +93,14 @@ public class ChatUIController : MonoBehaviour
     {
         if (chatPanel == null) return;
 
-        // Disable FPS first so it doesn't fight the snap
+        // Disable FPS look so it doesn't fight focus/cursor
         if (fpsLookScript != null) fpsLookScript.enabled = false;
 
         // Snap camera instantly to Peccy/chat anchor
         if (chatFocus != null) chatFocus.SnapFocus();
+
+        // Disable gameplay stuff
+        ApplyDisableTargets(disable: true);
 
         chatPanel.SetActive(true);
         IsOpen = true;
@@ -103,9 +110,7 @@ public class ChatUIController : MonoBehaviour
 
         if (peccyDialogue != null) peccyDialogue.OnChatOpened();
 
-        // Show quick questions only if user hasn't sent anything yet
         RefreshQuickQuestionsVisibility();
-
         FocusInput();
     }
 
@@ -116,12 +121,14 @@ public class ChatUIController : MonoBehaviour
         chatPanel.SetActive(false);
         IsOpen = false;
 
+        // Restore gameplay stuff
+        ApplyDisableTargets(disable: false);
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         if (fpsLookScript != null) fpsLookScript.enabled = true;
 
-        // Restore bubble + stop focus
         if (chatFocus != null) chatFocus.StopFocus();
         if (peccyDialogue != null) peccyDialogue.OnChatClosed();
     }
@@ -139,12 +146,10 @@ public class ChatUIController : MonoBehaviour
         SendQuestion(text);
     }
 
-    // Called by quick question buttons (either automatically hooked or manually from Inspector)
     public void SendQuickQuestion(string question)
     {
         if (string.IsNullOrWhiteSpace(question)) return;
 
-        // Optional: also populate input field so user "sees" what was sent
         if (inputField != null)
         {
             inputField.text = "";
@@ -159,7 +164,6 @@ public class ChatUIController : MonoBehaviour
         if (!IsOpen) return;
         if (waitingForReply) return;
 
-        // First message? then hide quick questions panel
         if (!hasSentFirstMessage)
         {
             hasSentFirstMessage = true;
@@ -182,13 +186,10 @@ public class ChatUIController : MonoBehaviour
             Fail("Chat bridge plugin call failed (AskPeccyAssistantFromUnity).", e);
         }
 #else
-        // Editor cannot use the bridge (no website token/storage).
         Fail("Chat works only in WebGL build inside the website.", null);
 #endif
     }
 
-    // JS calls this back:
-    // unityInstance.SendMessage(unityObjectName, "OnAssistantResponseJson", JSON.stringify(payload))
     public void OnAssistantResponseJson(string json)
     {
         HideTyping();
@@ -199,7 +200,6 @@ public class ChatUIController : MonoBehaviour
         {
             AddMessage(data.answer, isBot: true);
 
-            // Save sessionId for the next question
             if (!string.IsNullOrEmpty(data.sessionId))
                 sessionId = data.sessionId;
         }
@@ -217,7 +217,6 @@ public class ChatUIController : MonoBehaviour
     {
         try
         {
-            // JsonUtility ignores extra fields (status/message), so safe.
             return JsonUtility.FromJson<AssistantResponse>(json);
         }
         catch
@@ -274,13 +273,10 @@ public class ChatUIController : MonoBehaviour
         if (sendButton != null) sendButton.interactable = enabled;
         if (inputField != null) inputField.interactable = enabled;
 
-        // Optional: disable quick questions while waiting so user can't spam
         if (quickQuestionButtons != null)
         {
             foreach (var b in quickQuestionButtons)
-            {
                 if (b != null) b.interactable = enabled;
-            }
         }
     }
 
@@ -301,7 +297,6 @@ public class ChatUIController : MonoBehaviour
             return;
         }
 
-        // Show only if first message not sent yet
         quickQuestionsPanel.SetActive(!hasSentFirstMessage);
     }
 
@@ -321,6 +316,84 @@ public class ChatUIController : MonoBehaviour
 
             btn.onClick.RemoveAllListeners();
             btn.onClick.AddListener(() => SendQuickQuestion(q));
+        }
+    }
+
+    // -------------------------
+    // Disable Targets (Simple)
+    // -------------------------
+
+    void CacheDisableTargetsInitialStates()
+    {
+        if (disableBehavioursWhileChatOpen != null)
+        {
+            cachedBehaviourStates = new bool[disableBehavioursWhileChatOpen.Length];
+            for (int i = 0; i < disableBehavioursWhileChatOpen.Length; i++)
+            {
+                var b = disableBehavioursWhileChatOpen[i];
+                cachedBehaviourStates[i] = (b != null && b.enabled);
+            }
+        }
+
+        if (disableGameObjectsWhileChatOpen != null)
+        {
+            cachedGameObjectStates = new bool[disableGameObjectsWhileChatOpen.Length];
+            for (int i = 0; i < disableGameObjectsWhileChatOpen.Length; i++)
+            {
+                var go = disableGameObjectsWhileChatOpen[i];
+                cachedGameObjectStates[i] = (go != null && go.activeSelf);
+            }
+        }
+    }
+
+    void ApplyDisableTargets(bool disable)
+    {
+        // Behaviours
+        if (disableBehavioursWhileChatOpen != null)
+        {
+            for (int i = 0; i < disableBehavioursWhileChatOpen.Length; i++)
+            {
+                var b = disableBehavioursWhileChatOpen[i];
+                if (b == null) continue;
+
+                // Safety: do not disable anything that lives under the chat UI
+                if (chatPanel != null && b.transform.IsChildOf(chatPanel.transform)) continue;
+                if (b == this) continue;
+
+                if (disable)
+                {
+                    b.enabled = false;
+                }
+                else
+                {
+                    // restore original state
+                    bool original = (cachedBehaviourStates != null && i < cachedBehaviourStates.Length) ? cachedBehaviourStates[i] : true;
+                    b.enabled = original;
+                }
+            }
+        }
+
+        // GameObjects
+        if (disableGameObjectsWhileChatOpen != null)
+        {
+            for (int i = 0; i < disableGameObjectsWhileChatOpen.Length; i++)
+            {
+                var go = disableGameObjectsWhileChatOpen[i];
+                if (go == null) continue;
+
+                // Safety: do not disable chat itself
+                if (chatPanel != null && (go == chatPanel || go.transform.IsChildOf(chatPanel.transform))) continue;
+
+                if (disable)
+                {
+                    go.SetActive(false);
+                }
+                else
+                {
+                    bool original = (cachedGameObjectStates != null && i < cachedGameObjectStates.Length) ? cachedGameObjectStates[i] : true;
+                    go.SetActive(original);
+                }
+            }
         }
     }
 
