@@ -8,6 +8,7 @@ TagManager:
   - ElevatorNumericButton
   - ElevatorButtonOpen
   - ElevatorGoButton
+  - Peccy
   layers:
   - Default
   - TransparentFX

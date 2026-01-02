@@ -76,7 +76,7 @@ public class DoorLock : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!IsAllowedOpener(other)) return;
 
         playerInside = false;
 
@@ -136,4 +136,15 @@ public class DoorLock : MonoBehaviour
         closeRoutine = null;
     }
 
+    private bool IsAllowedOpener(Collider other)
+    {
+        if (allowedTags == null || allowedTags.Length == 0) return other.CompareTag("Player");
+
+        for (int i = 0; i < allowedTags.Length; i++)
+        {
+            if (!string.IsNullOrEmpty(allowedTags[i]) && other.CompareTag(allowedTags[i]))
+                return true;
+        }
+        return false;
+    }
 }
