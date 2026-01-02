@@ -7,8 +7,8 @@ public class PeccyFollower : MonoBehaviour
     public Transform player;
 
     [Header("Behaviour")]
-    public bool followPlayer = false;      // stays false until dialogue sets it
-    public float stopDistance = 7f;        // keep distance from player
+    public bool followPlayer = false;      
+    public float stopDistance = 8f;        
 
     private NavMeshAgent agent;
     private Animator animator;
