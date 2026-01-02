@@ -59,6 +59,8 @@ public class ChatUIController : MonoBehaviour
     [DllImport("__Internal")]
     private static extern void AskPeccyAssistantFromUnity(string question, string sessionId, string unityObjectName);
 #endif
+    [Header("Input Locks")]
+    public MapMenuToggle mapMenuToggle;
 
     void Awake()
     {
@@ -91,6 +93,10 @@ public class ChatUIController : MonoBehaviour
 
     public void Open()
     {
+        // Block chat ONLY if expanded map is open
+        if (mapMenuToggle != null && mapMenuToggle.IsMapOpen)
+            return;
+            
         if (chatPanel == null) return;
 
         // Disable FPS look so it doesn't fight focus/cursor

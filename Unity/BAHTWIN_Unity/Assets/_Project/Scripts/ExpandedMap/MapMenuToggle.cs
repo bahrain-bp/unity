@@ -9,6 +9,8 @@ public class MapMenuToggle : MonoBehaviour
     public Behaviour playerMoveScript;
     [Header("Emergency")]
     public EmergencyEvacuationController evacuationController;
+    public bool IsMapOpen => mapPanelRoot != null && mapPanelRoot.activeSelf;
+
 
 
     void Start()
