@@ -27,6 +27,7 @@ import Parking from "./pages/dashboard/Parking";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import { useEffect } from "react";
 import FeedbackPage from "./pages/dashboard/Feedback";
+import Whiteboard from "./pages/Whiteboard";
 
 // Protected Route Component for authenticated users
 function ProtectedRoute({ children }:PropsWithChildren) {
@@ -118,6 +119,7 @@ function App() {
             }
           />
 
+
           {/* Auth route - only for non-authenticated users */}
           <Route
             path="/auth"
@@ -177,6 +179,14 @@ function App() {
             element={
               <AdminRoute>
                 <Parking />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/dashboard/whiteboard"
+            element={
+              <AdminRoute>
+                <Whiteboard />
               </AdminRoute>
             }
           />
