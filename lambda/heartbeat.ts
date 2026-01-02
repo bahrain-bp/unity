@@ -82,6 +82,13 @@ export const handler = async (event: any) => {
     const timestamp = Math.floor(nowUtc.getTime() / 1000);
     console.log(`Current UTC timestamp: ${timestamp}`);
 
+    const bahrainDate = new Date(
+      (timestamp + BAHRAIN_OFFSET_SECONDS) * 1000
+    ).toISOString().slice(0, 10);
+    const yesterdayBahrainDate = new Date(
+      (timestamp + BAHRAIN_OFFSET_SECONDS - 24 * 60 * 60) * 1000
+    ).toISOString().slice(0, 10);
+
     // 1️⃣ Save heartbeat
     console.log(`Saving heartbeat for userId: ${userId}`);
     await dynamo.send(
@@ -98,16 +105,32 @@ export const handler = async (event: any) => {
     );
     console.log("Heartbeat saved successfully");
 
+    // 1️⃣ Save daily marker (users active today)
+    try {
+      await dynamo.send(
+        new PutItemCommand({
+          TableName: process.env.WEBSITE_ACTIVITY_TABLE!,
+          Item: {
+            pk: { S: `DAY#${bahrainDate}` },
+            sk: { S: userId },
+            ttl: { N: (timestamp + TTL_SECONDS).toString() },
+          },
+          ConditionExpression: "attribute_not_exists(pk) AND attribute_not_exists(sk)",
+        })
+      );
+    } catch (error: any) {
+      if (error?.name !== "ConditionalCheckFailedException") {
+        throw error;
+      }
+    }
+
     // 2️⃣ Query activity
     const last6HoursCutoff = timestamp - LAST_6_HOURS_SECONDS;
     const activeCutoff = timestamp - ACTIVE_WINDOW_SECONDS;
-    const todayCutoff = getBahrainDayStartUtcSeconds(nowUtc);
-    const yesterdayStart = todayCutoff - 24 * 60 * 60;
-    const yesterdayEnd = todayCutoff - 1;
 
-    console.log("Query cutoffs:", { last6HoursCutoff, activeCutoff, todayCutoff, yesterdayStart, yesterdayEnd });
+    console.log("Query cutoffs:", { last6HoursCutoff, activeCutoff });
 
-    const [last6Hours, today, yesterday] = await Promise.all([
+    const [last6Hours, todayDaily, yesterdayDaily] = await Promise.all([
       dynamo.send(
         new QueryCommand({
           TableName: process.env.WEBSITE_ACTIVITY_TABLE!,
@@ -121,29 +144,26 @@ export const handler = async (event: any) => {
       dynamo.send(
         new QueryCommand({
           TableName: process.env.WEBSITE_ACTIVITY_TABLE!,
-          KeyConditionExpression: "pk = :pk AND sk >= :sk",
+          KeyConditionExpression: "pk = :pk",
           ExpressionAttributeValues: {
-            ":pk": { S: "WEBSITE" },
-            ":sk": { S: `${todayCutoff}` },
+            ":pk": { S: `DAY#${bahrainDate}` },
           },
         })
       ),
       dynamo.send(
         new QueryCommand({
           TableName: process.env.WEBSITE_ACTIVITY_TABLE!,
-          KeyConditionExpression: "pk = :pk AND sk BETWEEN :start AND :end",
+          KeyConditionExpression: "pk = :pk",
           ExpressionAttributeValues: {
-            ":pk": { S: "WEBSITE" },
-            ":start": { S: `${yesterdayStart}` },
-            ":end": { S: `${yesterdayEnd}#\uffff` },
+            ":pk": { S: `DAY#${yesterdayBahrainDate}` },
           },
         })
       ),
     ]);
 
     console.log("Queried last 6 hours items:", last6Hours.Items?.length ?? 0);
-    console.log("Queried today items:", today.Items?.length ?? 0);
-    console.log("Queried yesterday items:", yesterday.Items?.length ?? 0);
+    console.log("Queried today items:", todayDaily.Items?.length ?? 0);
+    console.log("Queried yesterday items:", yesterdayDaily.Items?.length ?? 0);
 
     // 3️⃣ Calculate metrics
     const activeUsers = new Set<string>();
@@ -164,13 +184,13 @@ export const handler = async (event: any) => {
     }
     console.log("Active users in last 5 minutes:", Array.from(activeUsers));
 
-    for (const item of today.Items ?? []) {
-      if (item.userId?.S) usersToday.add(item.userId.S);
+    for (const item of todayDaily.Items ?? []) {
+      if (item.sk?.S) usersToday.add(item.sk.S);
     }
     console.log("Users today:", Array.from(usersToday));
 
-    for (const item of yesterday.Items ?? []) {
-      if (item.userId?.S) usersYesterday.add(item.userId.S);
+    for (const item of yesterdayDaily.Items ?? []) {
+      if (item.sk?.S) usersYesterday.add(item.sk.S);
     }
     console.log("Users yesterday:", Array.from(usersYesterday));
 
@@ -182,10 +202,16 @@ export const handler = async (event: any) => {
 
     const usersTodayCount = usersToday.size;
     const usersYesterdayCount = usersYesterday.size;
-    const usersTodayChangePct =
-      usersYesterdayCount > 0
-        ? ((usersTodayCount - usersYesterdayCount) / usersYesterdayCount) * 100
-        : 0;
+    let usersTodayChangePct: number;
+
+    if (usersYesterdayCount === 0 && usersTodayCount > 0) {
+      usersTodayChangePct = 100;
+    } else if (usersYesterdayCount === 0 && usersTodayCount === 0) {
+      usersTodayChangePct = 0;
+    } else {
+      usersTodayChangePct =
+        ((usersTodayCount - usersYesterdayCount) / usersYesterdayCount) * 100;
+    }
 
     // 4️⃣ Send cards to broadcast Lambda
     const invoke = (payload: any) => {

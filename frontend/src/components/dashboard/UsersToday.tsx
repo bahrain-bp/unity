@@ -14,6 +14,9 @@ interface UsersTodayResponse {
   data: UsersTodayData;
 }
 
+const wsAPI = import.meta.env.VITE_WS_API;
+const wsToken = import.meta.env.VITE_WS_TOKEN;
+
 export default function UsersTodayContent() {
   const [data, setData] = useState<UsersTodayData | null>(null);
   const [connected, setConnected] = useState(false);
@@ -36,9 +39,7 @@ export default function UsersTodayContent() {
   useEffect(() => {
     fetchUsersToday();
 
-    const ws = new WebSocket(
-      "wss://wk3629navk.execute-api.us-east-1.amazonaws.com/dev/"
-    );
+    const ws = new WebSocket(`${wsAPI}?token=${wsToken}`);
 
     ws.onopen = () => setConnected(true);
 

@@ -1,87 +1,98 @@
-.invite-page {
-  .auth__form--input input {
-    background-color: transparent;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 8px 12px;
-    color: #000;
+.invite-page{
+  
+  
+    .auth__form--input input {
+    background-color: transparent; /* removes the white background */
+    border: 1px solid #ccc;        /* keeps the border */
+    border-radius: 4px;            /* optional: keep corners slightly rounded */
+    padding: 8px 12px;             /* adjust padding as needed */
+    color: #000;                   /* text color */
+    
+    }
+  
+    .auth__form--upload {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 30px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.2s;
+
+  &:hover {
+    border-color: #383737;
+    background-color: #f9f9f9;
   }
 
-  .auth__form--upload {
-    border: 2px dashed #ccc;
-    border-radius: 8px;
-    padding: 30px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.3s, background-color 0.2s;
-
-    &:hover {
-      border-color: #383737;
-      background-color: #f9f9f9;
-    }
-
-    .upload-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #555;
-
-      .upload-icon {
-        font-size: 36px; // same size as in Arrival
-        margin-bottom: 8px;
-        color: #555; // match your Arrival button color
-      }
-
-      p {
-        margin: 0;
-        font-size: 16px;
-      }
-    }
-  }
-  .message.processing {
-    color: #007bff;
+  .upload-content {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    color: #555;
+
+    .upload-icon {
+      font-size: 36px; // same size as in Arrival
+      margin-bottom: 8px;
+      color: #555; // match your Arrival button color
+    }
+
+    p {
+      margin: 0;
+      font-size: 16px;
+    }
+  }
+}
+.message.processing {
+  color: #007bff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3; /* Light grey */
+  border-top: 4px solid black; /* Blue */
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+.csv-info {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 1.5rem;
+  width: 100%;
+}
+
+.csv-info__title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.csv-info ul {
+    margin: 10px 0 0 0;     // remove browser margin
+    padding-left: 20px;    // pull bullets INSIDE the box
   }
 
-  .spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid black;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    animation: spin 1s linear infinite;
-  }
-  .csv-info {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-size: 0.9rem;
-  }
-
-  .csv-info__title {
-    font-weight: 600;
+  .csv-info ul li {
     margin-bottom: 6px;
+    line-height: 1.5;
   }
 
-  .csv-example {
-    background: #111827;
-    color: #e5e7eb;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    margin-top: 6px;
-  }
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
+
+.csv-example {
+  background: #111827;
+  color: #e5e7eb;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  margin-top: 6px;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 }
