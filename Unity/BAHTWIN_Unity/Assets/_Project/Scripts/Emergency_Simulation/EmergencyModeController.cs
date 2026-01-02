@@ -42,50 +42,40 @@ public class EmergencyModeController : MonoBehaviour
             EnterEmergencyMode();
     }
 
-    void EnterEmergencyMode()
-    {
-        emergencyActive = true;
+public void EnterEmergencyMode()
+{
+    if (emergencyActive) return;
 
-        emergencyOverlay.SetActive(true);
+    emergencyActive = true;
+    emergencyOverlay.SetActive(true);
 
-        // Disable player scripts
-        foreach (var script in disableWhenEmergency)
-            script.enabled = false;
+    foreach (var script in disableWhenEmergency)
+        script.enabled = false;
 
-        // Disable minimap
-        if (minimapRoot != null)
-            minimapRoot.SetActive(false);
+    if (minimapRoot != null)
+        minimapRoot.SetActive(false);
 
-        // Cursor
-        if (showCursor)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-    }
+    Cursor.lockState = CursorLockMode.None;
+    Cursor.visible = true;
+}
 
-    void ExitEmergencyMode()
-    {
-        emergencyActive = false;
+public void ExitEmergencyMode()
+{
+    if (!emergencyActive) return;
 
-        emergencyOverlay.SetActive(false);
+    emergencyActive = false;
+    emergencyOverlay.SetActive(false);
 
-        // Re-enable player scripts
-        foreach (var script in disableWhenEmergency)
-            script.enabled = true;
+    foreach (var script in disableWhenEmergency)
+        script.enabled = true;
 
-        // Enable minimap
-        if (minimapRoot != null)
-            minimapRoot.SetActive(true);
+    if (minimapRoot != null)
+        minimapRoot.SetActive(true);
 
-        // Cursor
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+    Cursor.lockState = CursorLockMode.Locked;
+    Cursor.visible = false;
+}
 
-        // reset Emergency button visuals
-        if (modeButtonsUI != null)
-            modeButtonsUI.ForceExitEmergencyMode();
-    }
 
 
 void OnStartEvacuation()

@@ -24,6 +24,9 @@ public class ModeButtonsUI : MonoBehaviour
 
     Image tourImage;
     Image emergencyImage;
+    [Header("Emergency Logic")]
+    public EmergencyEvacuationController evacuationController;
+
 
     void Awake()
     {
@@ -57,20 +60,35 @@ public class ModeButtonsUI : MonoBehaviour
         UpdateAllVisuals();
     }
 
-    void ToggleEmergency()
+void ToggleEmergency()
+{
+    // CASE 1: Evacuation is running , STOP it
+    if (evacuationController != null && evacuationController.IsEvacuating)
     {
-        if (!emergencyActive && tourActive)
-        {
-            tourActive = false;
-        }
-
-        emergencyActive = !emergencyActive;
-
+        evacuationController.StopEvacuation();
+        emergencyActive = false;
         UpdateAllVisuals();
-
-        if (emergencyModeController != null)
-            emergencyModeController.ToggleEmergencyMode();
+        return;
     }
+
+    // CASE 2: Toggle emergency panel
+    emergencyActive = !emergencyActive;
+
+    if (emergencyActive)
+    {
+        if (emergencyModeController != null)
+            emergencyModeController.EnterEmergencyMode();
+    }
+    else
+    {
+        if (emergencyModeController != null)
+            emergencyModeController.ExitEmergencyMode();
+    }
+
+    UpdateAllVisuals();
+}
+
+
 
     void UpdateAllVisuals()
     {
@@ -92,9 +110,16 @@ public class ModeButtonsUI : MonoBehaviour
             : emergencyNormalSprite;
     }
     public void ForceExitEmergencyMode()
-{
-    emergencyActive = false;
-    UpdateAllVisuals();
-}
+    {
+        emergencyActive = false;
+        UpdateAllVisuals();
+    }
+    public void ForceEnterEmergencyMode()
+    {
+        emergencyActive = true;
+        tourActive = false; // safety: only one mode active
+        UpdateAllVisuals();
+    }
+
 
 }

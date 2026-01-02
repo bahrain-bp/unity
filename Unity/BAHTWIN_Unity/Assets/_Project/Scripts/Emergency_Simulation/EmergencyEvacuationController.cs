@@ -23,6 +23,8 @@ public class EmergencyEvacuationController : MonoBehaviour
     bool hasDestination;
     [Header("Audio")]
     public AudioSource alarmSource;
+    public bool IsEvacuating => evacuating;
+
 
 
     void Awake()
@@ -59,6 +61,8 @@ public class EmergencyEvacuationController : MonoBehaviour
         {
             alarmSource.Play();
         }
+        if (modeButtonsUI != null)
+            modeButtonsUI.ForceEnterEmergencyMode();
 
         ShowMessage("Follow the route to the nearest exit");
     }
@@ -172,4 +176,27 @@ public class EmergencyEvacuationController : MonoBehaviour
         if (statusText != null)
             statusText.gameObject.SetActive(false);
     }
+    public void StopEvacuation()
+{
+    if (!evacuating) return;
+
+    evacuating = false;
+    hasDestination = false;
+
+    if (alarmSource != null && alarmSource.isPlaying)
+        alarmSource.Stop();
+
+    if (routeController != null)
+    {
+        routeController.ClearRoute();
+        routeController.gameObject.SetActive(false);
+    }
+
+    if (statusText != null)
+        statusText.gameObject.SetActive(false);
+
+    if (modeButtonsUI != null)
+        modeButtonsUI.ForceExitEmergencyMode();
+}
+
 }
