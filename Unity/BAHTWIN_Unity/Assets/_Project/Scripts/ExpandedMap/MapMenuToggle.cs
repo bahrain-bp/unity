@@ -7,6 +7,9 @@ public class MapMenuToggle : MonoBehaviour
     public GameObject mapPanelRoot;
     public Behaviour playerLookScript;
     public Behaviour playerMoveScript;
+    [Header("Emergency")]
+    public EmergencyEvacuationController evacuationController;
+
 
     void Start()
     {
@@ -17,14 +20,22 @@ public class MapMenuToggle : MonoBehaviour
         Cursor.visible = false;
     }
 
-    void Update()
+void Update()
+{
+    if (Keyboard.current == null) return;
+
+    // Block map toggle during evacuation
+    if (evacuationController != null && evacuationController.IsEvacuating)
+        return;
+
+    // M key only opens the map
+    if (Keyboard.current.mKey.wasPressedThisFrame)
     {
-        // M key ONLY opens the map
-        if (Keyboard.current.mKey.wasPressedThisFrame)
-        {
-            OpenMap();
-        }
+        OpenMap();
     }
+}
+
+
 
     public void OpenMap()
     {

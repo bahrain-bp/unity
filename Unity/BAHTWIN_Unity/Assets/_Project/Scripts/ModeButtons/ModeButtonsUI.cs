@@ -48,21 +48,25 @@ public class ModeButtonsUI : MonoBehaviour
             ToggleEmergency();
     }
 
-    void ToggleTour()
+void ToggleTour()
+{
+    //Block tour during evacuation
+    if (evacuationController != null && evacuationController.IsEvacuating)
+        return;
+
+    if (!tourActive && emergencyActive)
     {
-        if (!tourActive && emergencyActive)
-        {
-            emergencyActive = false;
-        }
-
-        tourActive = !tourActive;
-
-        UpdateAllVisuals();
+        emergencyActive = false;
     }
+
+    tourActive = !tourActive;
+    UpdateAllVisuals();
+}
+
 
 void ToggleEmergency()
 {
-    // CASE 1: Evacuation is running , STOP it
+    // If evacuation is running , STOP evacuation
     if (evacuationController != null && evacuationController.IsEvacuating)
     {
         evacuationController.StopEvacuation();
@@ -71,21 +75,15 @@ void ToggleEmergency()
         return;
     }
 
-    // CASE 2: Toggle emergency panel
-    emergencyActive = !emergencyActive;
-
-    if (emergencyActive)
+    //  If panel is already open , just close UI (X behavior)
+    if (emergencyModeController != null && emergencyModeController.IsPanelOpen)
     {
-        if (emergencyModeController != null)
-            emergencyModeController.EnterEmergencyMode();
-    }
-    else
-    {
-        if (emergencyModeController != null)
-            emergencyModeController.ExitEmergencyMode();
+        emergencyModeController.ExitEmergencyMode();
+        return;
     }
 
-    UpdateAllVisuals();
+    //  Normal case , open panel only (no state change)
+    emergencyModeController.EnterEmergencyMode();
 }
 
 
