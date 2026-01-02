@@ -26,6 +26,10 @@ public class ModeButtonsUI : MonoBehaviour
     Image emergencyImage;
     [Header("Emergency Logic")]
     public EmergencyEvacuationController evacuationController;
+    [Header("Input Locks")]
+    public MapMenuToggle mapMenuToggle;
+    public RouteGuidanceController routeGuidanceController;
+
 
 
     void Awake()
@@ -50,43 +54,55 @@ public class ModeButtonsUI : MonoBehaviour
 
     void ToggleTour()
     {
+        // Block Tour if map open OR route active
+        if ((mapMenuToggle != null && mapMenuToggle.IsMapOpen) ||
+            (routeGuidanceController != null && routeGuidanceController.IsRouteActive))
+        {
+            return;
+        }
+
+        //Block tour during evacuation
+        if (evacuationController != null && evacuationController.IsEvacuating)
+            return;
+
         if (!tourActive && emergencyActive)
         {
             emergencyActive = false;
         }
 
         tourActive = !tourActive;
-
         UpdateAllVisuals();
     }
 
-void ToggleEmergency()
-{
-    // CASE 1: Evacuation is running , STOP it
-    if (evacuationController != null && evacuationController.IsEvacuating)
-    {
-        evacuationController.StopEvacuation();
-        emergencyActive = false;
-        UpdateAllVisuals();
-        return;
-    }
 
-    // CASE 2: Toggle emergency panel
-    emergencyActive = !emergencyActive;
+    void ToggleEmergency()
+    {
+        // Block Emergency if map open OR route active
+        if ((mapMenuToggle != null && mapMenuToggle.IsMapOpen) ||
+            (routeGuidanceController != null && routeGuidanceController.IsRouteActive))
+        {
+            return;
+        }
 
-    if (emergencyActive)
-    {
-        if (emergencyModeController != null)
-            emergencyModeController.EnterEmergencyMode();
-    }
-    else
-    {
-        if (emergencyModeController != null)
+        // If evacuation is running , STOP evacuation
+        if (evacuationController != null && evacuationController.IsEvacuating)
+        {
+            evacuationController.StopEvacuation();
+            emergencyActive = false;
+            UpdateAllVisuals();
+            return;
+        }
+
+        //  If panel is already open , just close UI (X behavior)
+        if (emergencyModeController != null && emergencyModeController.IsPanelOpen)
+        {
             emergencyModeController.ExitEmergencyMode();
-    }
+            return;
+        }
 
-    UpdateAllVisuals();
-}
+        //  Normal case , open panel only (no state change)
+        emergencyModeController.EnterEmergencyMode();
+    }
 
 
 

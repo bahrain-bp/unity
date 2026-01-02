@@ -24,6 +24,7 @@ public class EmergencyModeController : MonoBehaviour
 
 
     bool emergencyActive;
+    public bool IsPanelOpen => emergencyActive;
 
     void Awake()
     {
