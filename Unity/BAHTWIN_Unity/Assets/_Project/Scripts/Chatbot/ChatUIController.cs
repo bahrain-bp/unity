@@ -53,14 +53,14 @@ public class ChatUIController : MonoBehaviour
     private bool[] cachedBehaviourStates;
     private bool[] cachedGameObjectStates;
 
-    public bool IsOpen { get; private set; }
-
 #if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal")]
     private static extern void AskPeccyAssistantFromUnity(string question, string sessionId, string unityObjectName);
 #endif
     [Header("Input Locks")]
     public MapMenuToggle mapMenuToggle;
+
+     public bool IsOpen => chatPanel != null && chatPanel.activeSelf;
 
     void Awake()
     {
@@ -70,7 +70,6 @@ public class ChatUIController : MonoBehaviour
         HookQuickQuestionButtons();
 
         if (chatPanel != null) chatPanel.SetActive(false);
-        IsOpen = false;
 
         SetInputEnabled(true);
 
@@ -109,7 +108,6 @@ public class ChatUIController : MonoBehaviour
         ApplyDisableTargets(disable: true);
 
         chatPanel.SetActive(true);
-        IsOpen = true;
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -125,7 +123,6 @@ public class ChatUIController : MonoBehaviour
         if (chatPanel == null) return;
 
         chatPanel.SetActive(false);
-        IsOpen = false;
 
         // Restore gameplay stuff
         ApplyDisableTargets(disable: false);

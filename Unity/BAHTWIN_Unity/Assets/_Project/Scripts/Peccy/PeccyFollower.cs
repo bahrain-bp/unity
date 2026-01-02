@@ -7,8 +7,8 @@ public class PeccyFollower : MonoBehaviour
     public Transform player;
 
     [Header("Behaviour")]
-    public bool followPlayer = false;      
-    public float stopDistance = 8f;        
+    public bool followPlayer = false;
+    public float stopDistance = 8f;
 
     private NavMeshAgent agent;
     private Animator animator;
@@ -30,6 +30,7 @@ public class PeccyFollower : MonoBehaviour
 
         if (agent == null) return;
 
+        // Only STOP ONCE when turning follow OFF
         if (!followPlayer)
         {
             agent.isStopped = true;
@@ -42,10 +43,11 @@ public class PeccyFollower : MonoBehaviour
     {
         if (agent == null) return;
 
-        // If not following or no player reference, stay idle
+        // IMPORTANT:
+        // If follow is OFF, do NOT keep forcing agent state every frame.
+        // Tour/other systems may need to move the agent.
         if (!followPlayer || player == null)
         {
-            if (!agent.isStopped) agent.isStopped = true;
             SetWalking(false);
             return;
         }
@@ -60,6 +62,7 @@ public class PeccyFollower : MonoBehaviour
         else
         {
             agent.isStopped = true;
+            agent.ResetPath();
         }
 
         bool isMoving = !agent.isStopped && agent.velocity.sqrMagnitude > 0.01f;

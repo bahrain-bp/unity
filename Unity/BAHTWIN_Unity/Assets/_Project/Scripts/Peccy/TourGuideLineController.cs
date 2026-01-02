@@ -17,9 +17,6 @@ public class TourGuideLineController : MonoBehaviour
     public float keepBehindMeters = 0.0f;
     public float heightOffset = 0.08f;
 
-    [Header("Arrival")]
-    public float arrivalDistance = 1.8f;
-
     private Vector3 lastRecalcPos;
     private float nextRecalcTime;
 
@@ -36,13 +33,21 @@ public class TourGuideLineController : MonoBehaviour
     void Awake()
     {
         if (!line) line = GetComponent<LineRenderer>();
-        if (line) line.positionCount = 0;
+
+        // IMPORTANT: hide line on scene start no matter what
+        if (line)
+        {
+            line.positionCount = 0;
+            line.enabled = false;
+        }
+
+        target = null;
     }
 
     void Update()
     {
-        if (player == null || target == null || line == null)
-            return;
+        // Do nothing unless tour has set a target
+        if (player == null || target == null || line == null) return;
 
         if (Time.time >= nextRecalcTime)
         {
@@ -55,29 +60,38 @@ public class TourGuideLineController : MonoBehaviour
 
         if (fullCorners != null && fullCorners.Length >= 2)
             TrimPathBehindPlayer();
-
-        float dist = Vector3.Distance(player.position, target.position);
-        if (dist <= arrivalDistance)
-            ClearRoute();
     }
 
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;
+
+        if (line)
+        {
+            line.enabled = (target != null);
+            line.positionCount = 0;
+        }
+
         RecalculatePath();
         nextRecalcTime = Time.time + recalcInterval;
     }
 
     public void ClearRoute()
     {
+        target = null;
         fullCorners = null;
         cumulative = null;
-        if (line) line.positionCount = 0;
+
+        if (line)
+        {
+            line.positionCount = 0;
+            line.enabled = false;
+        }
     }
 
     private void RecalculatePath()
     {
-        if (player == null || target == null) return;
+        if (player == null || target == null || line == null) return;
 
         lastRecalcPos = player.position;
 
@@ -88,7 +102,7 @@ public class TourGuideLineController : MonoBehaviour
         {
             fullCorners = null;
             cumulative = null;
-            if (line) line.positionCount = 0;
+            line.positionCount = 0;
             return;
         }
 

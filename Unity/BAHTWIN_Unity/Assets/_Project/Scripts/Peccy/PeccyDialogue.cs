@@ -9,11 +9,12 @@ public class PeccyDialogue : MonoBehaviour
     public SpeechBubbleUI bubble;
     public Camera playerCamera;
     public ChatUIController chatUI;
+    public PeccyTourManager tourManager;
 
     [Header("Peccy Movement")]
-    public NavMeshAgent agent;          
-    public PeccyFollower follower;      
-    public Animator animator;           
+    public NavMeshAgent agent;
+    public PeccyFollower follower;
+    public Animator animator;
     public string tapTriggerName = "TapBadge";
 
     [Header("Intro Lines")]
@@ -31,7 +32,7 @@ public class PeccyDialogue : MonoBehaviour
     [TextArea] public string badgeAskLine = "Let me tap my badge...";
     public string badgeAskOptions = "Next (N)";
     [TextArea] public string badgeDoneLine = "You may come in.";
-    public float tapAnimSeconds = 2f;         
+    public float tapAnimSeconds = 2f;
     public float afterDoneHoldSeconds = 10f;
 
     [Header("Start Trigger")]
@@ -60,18 +61,20 @@ public class PeccyDialogue : MonoBehaviour
 
     // IMPORTANT: when badge flow runs, we pause the normal assistant prompt
     private bool overrideBusy = false;
+    private bool tourLock = false;
+
 
     void Awake()
     {
-        nextAction  = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/n");
+        nextAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/n");
         enterAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/enter");
-        yesAction   = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/y");
-        chatAction  = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/c");
+        yesAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/y");
+        chatAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/c");
 
-        nextAction.performed  += OnNextOrEnter;
+        nextAction.performed += OnNextOrEnter;
         enterAction.performed += OnNextOrEnter;
-        yesAction.performed   += OnYes;
-        chatAction.performed  += OnChat;
+        yesAction.performed += OnYes;
+        chatAction.performed += OnChat;
 
         nextAction.Enable();
         enterAction.Enable();
@@ -81,10 +84,10 @@ public class PeccyDialogue : MonoBehaviour
 
     void OnDestroy()
     {
-        nextAction.performed  -= OnNextOrEnter;
+        nextAction.performed -= OnNextOrEnter;
         enterAction.performed -= OnNextOrEnter;
-        yesAction.performed   -= OnYes;
-        chatAction.performed  -= OnChat;
+        yesAction.performed -= OnYes;
+        chatAction.performed -= OnChat;
 
         nextAction.Disable();
         enterAction.Disable();
@@ -105,6 +108,8 @@ public class PeccyDialogue : MonoBehaviour
         {
             StartIntro();
         }
+
+        if (tourLock) return;
 
         // If badge override is running, do NOT show assistant prompt
         if (overrideBusy) return;
@@ -143,6 +148,7 @@ public class PeccyDialogue : MonoBehaviour
 
     private void OnNextOrEnter(InputAction.CallbackContext ctx)
     {
+        if (tourLock) return;
         if (!introStarted) return;
         if (Time.time < ignoreInputUntilTime) return;
         if (overrideBusy) return; // badge flow consumes N/Enter separately
@@ -160,6 +166,7 @@ public class PeccyDialogue : MonoBehaviour
 
     private void OnYes(InputAction.CallbackContext ctx)
     {
+        if (tourLock) return;
         if (!introStarted) return;
         if (Time.time < ignoreInputUntilTime) return;
         if (overrideBusy) return;
@@ -173,6 +180,12 @@ public class PeccyDialogue : MonoBehaviour
 
         // Tour system will take over later, for now stop following
         if (follower != null) follower.SetFollow(false);
+
+        if (tourManager != null)
+            tourManager.StartTourFromDialogueYes();
+        else
+            Debug.LogWarning("PeccyDialogue: tourManager not assigned.");
+
     }
 
     private void ChooseNo()
@@ -189,6 +202,7 @@ public class PeccyDialogue : MonoBehaviour
 
     private void OnChat(InputAction.CallbackContext ctx)
     {
+        if (tourLock) return;
         if (!introStarted) return;
         if (overrideBusy) return;
         if (!assistantMode) return;
@@ -213,7 +227,7 @@ public class PeccyDialogue : MonoBehaviour
     // CALLED BY BadgeDoorEntry
     public void StartBadgeDoorSequence(Transform tapPoint, Collider entryBlocker, float unblockSeconds)
     {
-        if (!introStarted) return;      
+        if (!introStarted) return;
         if (overrideBusy) return;
 
         StartCoroutine(BadgeDoorRoutine(tapPoint, entryBlocker, unblockSeconds));
@@ -254,24 +268,24 @@ public class PeccyDialogue : MonoBehaviour
         // Play tap animation
         if (animator != null && !string.IsNullOrEmpty(tapTriggerName))
         {
-            animator.SetTrigger(tapTriggerName); 
+            animator.SetTrigger(tapTriggerName);
         }
 
         // Wait until animation finishes (set tapAnimSeconds to your clip length)
         if (tapAnimSeconds > 0f)
-            yield return new WaitForSeconds(tapAnimSeconds); 
+            yield return new WaitForSeconds(tapAnimSeconds);
 
         // Say you may come in
         bubble.Show(badgeDoneLine, "");
 
-        
+
         if (entryBlocker != null) entryBlocker.enabled = false;
 
         // Re-enable follow immediately 
         if (follower != null) follower.SetFollow(true);
 
         if (afterDoneHoldSeconds > 0f)
-            yield return new WaitForSeconds(afterDoneHoldSeconds); 
+            yield return new WaitForSeconds(afterDoneHoldSeconds);
 
         // Return to assistant prompt mode
         state = DialogueState.IdleAssistant;
@@ -307,5 +321,31 @@ public class PeccyDialogue : MonoBehaviour
 
         Vector3 vp = playerCamera.WorldToViewportPoint(transform.position);
         return (vp.z > 0f && vp.x > 0f && vp.x < 1f && vp.y > 0f && vp.y < 1f);
+    }
+
+    public void SetTourLock(bool locked)
+    {
+        tourLock = locked;
+
+        if (locked)
+        {
+            // Hide PeccyDialogue bubble output while tour owns the bubble
+            if (bubble != null) bubble.Hide();
+        }
+    }
+
+    public void ForceAssistantIdle()
+    {
+        // Make sure intro is considered done
+        introStarted = true;
+
+        // Force assistant state
+        tourMode = false;
+        assistantMode = true;
+        state = DialogueState.IdleAssistant;
+
+        // If chat is not open, show assistant bubble immediately
+        if (!chatUIOpen && !overrideBusy && !tourLock && bubble != null)
+            bubble.Show(assistantLine, assistantOptions);
     }
 }

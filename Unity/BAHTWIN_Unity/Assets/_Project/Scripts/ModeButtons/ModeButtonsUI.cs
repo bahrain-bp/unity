@@ -18,6 +18,7 @@ public class ModeButtonsUI : MonoBehaviour
 
     [Header("Controllers")]
     public EmergencyModeController emergencyModeController;
+    public PeccyTourManager tourManager;
 
     bool tourActive = false;
     bool emergencyActive = false;
@@ -29,7 +30,6 @@ public class ModeButtonsUI : MonoBehaviour
     [Header("Input Locks")]
     public MapMenuToggle mapMenuToggle;
     public RouteGuidanceController routeGuidanceController;
-
 
 
     void Awake()
@@ -53,26 +53,32 @@ public class ModeButtonsUI : MonoBehaviour
     }
 
     void ToggleTour()
+{
+    // Block Tour if map open OR route active
+    if ((mapMenuToggle != null && mapMenuToggle.IsMapOpen) ||
+        (routeGuidanceController != null && routeGuidanceController.IsRouteActive))
     {
-        // Block Tour if map open OR route active
-        if ((mapMenuToggle != null && mapMenuToggle.IsMapOpen) ||
-            (routeGuidanceController != null && routeGuidanceController.IsRouteActive))
-        {
-            return;
-        }
-
-        //Block tour during evacuation
-        if (evacuationController != null && evacuationController.IsEvacuating)
-            return;
-
-        if (!tourActive && emergencyActive)
-        {
-            emergencyActive = false;
-        }
-
-        tourActive = !tourActive;
-        UpdateAllVisuals();
+        return;
     }
+
+    // Block tour during evacuation
+    if (evacuationController != null && evacuationController.IsEvacuating)
+        return;
+
+    // If emergency was active, turn it off (visual only)
+    if (!tourActive && emergencyActive)
+        emergencyActive = false;
+
+    // Toggle tour visual state
+    tourActive = !tourActive;
+    UpdateAllVisuals();
+
+    // START/STOP the actual tour system
+    if (tourManager != null)
+        tourManager.ToggleTour();
+    else
+        Debug.LogWarning("ModeButtonsUI: tourManager not assigned.");
+}
 
 
     void ToggleEmergency()
@@ -137,5 +143,10 @@ public class ModeButtonsUI : MonoBehaviour
         UpdateAllVisuals();
     }
 
+    public void SetTourActiveVisual(bool active)
+    {
+        tourActive = active;
+        UpdateTourVisual();
+    }
 
 }
