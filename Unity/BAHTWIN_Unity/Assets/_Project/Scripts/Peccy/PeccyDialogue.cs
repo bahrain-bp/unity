@@ -32,7 +32,7 @@ public class PeccyDialogue : MonoBehaviour
     public string badgeAskOptions = "Next (N)";
     [TextArea] public string badgeDoneLine = "You may come in.";
     public float tapAnimSeconds = 2f;         
-    public float afterDoneHoldSeconds = 5f;
+    public float afterDoneHoldSeconds = 10f;
 
     [Header("Start Trigger")]
     public bool startWhenOnScreen = true;
