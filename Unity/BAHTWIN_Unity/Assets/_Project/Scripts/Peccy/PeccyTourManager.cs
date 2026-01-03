@@ -52,29 +52,33 @@ public class PeccyTourManager : MonoBehaviour
     private bool speedSaved = false;
 
     [Header("Stop Accuracy (NavMesh projection)")]
-    [Tooltip("First attempt radius. Keep it small.")]
     public float stopSampleRadius = 0.25f;
-
-    [Tooltip("Fallback radius if strict sampling fails (still keep small to avoid jumping floors).")]
-    public float stopSampleFallbackRadius = 0.9f;
-
-    [Tooltip("Reject sampled positions that jump too far in Y (prevents multi-floor snap).")]
+    public float stopSampleFallbackRadius = 1.25f;
     public float maxYDelta = 1.2f;
 
-    [Header("Floor Raycast (helps when point is slightly above floor)")]
+    [Header("Floor Raycast (IMPORTANT)")]
+    [Tooltip("Turn on. But set floorMask to ONLY your real floor colliders layer.")]
     public bool useFloorRaycast = true;
-    public float floorRayUp = 1.5f;
-    public float floorRayDown = 4.0f;
+
+    [Tooltip("Ray starts from target + up.")]
+    public float floorRayUp = 2.0f;
+
+    [Tooltip("Ray goes down this far.")]
+    public float floorRayDown = 6.0f;
+
+    [Tooltip("Set this to ONLY your floor layer(s). Do NOT keep ~0 if you have furniture colliders.")]
     public LayerMask floorMask = ~0;
 
+    [Header("Start Tour Placement")]
+    [Tooltip("When tour starts, always snap Peccy onto NavMesh near his current position.")]
+    public bool snapPeccyToNavMeshOnStart = true;
+
+    [Tooltip("Radius used when snapping Peccy to NavMesh at tour start.")]
+    public float startSnapRadius = 3f;
+
     [Header("Arrival + Snap")]
-    [Tooltip("Tour uses a smaller stopping distance for more precise stopping.")]
     public float tourStoppingDistance = 0.05f;
-
-    [Tooltip("If Peccy ends up within this distance from the destination, do a tiny final snap.")]
     public float finalSnapDistance = 0.25f;
-
-    [Tooltip("Velocity threshold to consider fully stopped.")]
     public float stopVelocityThreshold = 0.01f;
 
     private float originalStoppingDistance;
@@ -105,6 +109,9 @@ public class PeccyTourManager : MonoBehaviour
     [TextArea] public string outroLine = "That brings us to the end of our tour. Thank you for joining me today.";
     public string outroOptions = "Done (D)";
 
+    [Header("Debug")]
+    public bool debugStops = true;
+
     [Header("State (read-only)")]
     public bool tourRunning = false;
 
@@ -127,9 +134,9 @@ public class PeccyTourManager : MonoBehaviour
         chatAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/c");
         doneAction = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/d");
 
-        nextAction.performed += OnNextPerformed;
-        chatAction.performed += OnChatPerformed;
-        doneAction.performed += OnDonePerformed;
+        nextAction.performed += ctx => nextPressed = true;
+        chatAction.performed += ctx => chatPressed = true;
+        doneAction.performed += ctx => donePressed = true;
 
         nextAction.Enable();
         chatAction.Enable();
@@ -138,18 +145,10 @@ public class PeccyTourManager : MonoBehaviour
 
     void OnDestroy()
     {
-        if (nextAction != null) nextAction.performed -= OnNextPerformed;
-        if (chatAction != null) chatAction.performed -= OnChatPerformed;
-        if (doneAction != null) doneAction.performed -= OnDonePerformed;
-
         if (nextAction != null) nextAction.Disable();
         if (chatAction != null) chatAction.Disable();
         if (doneAction != null) doneAction.Disable();
     }
-
-    private void OnNextPerformed(InputAction.CallbackContext ctx) => nextPressed = true;
-    private void OnChatPerformed(InputAction.CallbackContext ctx) => chatPressed = true;
-    private void OnDonePerformed(InputAction.CallbackContext ctx) => donePressed = true;
 
     private void SetWalking(bool walking)
     {
@@ -181,6 +180,10 @@ public class PeccyTourManager : MonoBehaviour
 
         if (peccyAgent != null)
         {
+            // Snap Peccy onto NavMesh where he currently is (fixes starting tour when he's far away/off-mesh)
+            if (snapPeccyToNavMeshOnStart)
+                SnapAgentToNavMesh(startSnapRadius);
+
             if (!speedSaved)
             {
                 originalSpeed = peccyAgent.speed;
@@ -197,8 +200,6 @@ public class PeccyTourManager : MonoBehaviour
             peccyAgent.speed = tourMoveSpeed;
             peccyAgent.angularSpeed = tourAngularSpeed;
             peccyAgent.stoppingDistance = tourStoppingDistance;
-
-            // Make arrival more consistent
             peccyAgent.autoBraking = true;
         }
 
@@ -266,11 +267,9 @@ public class PeccyTourManager : MonoBehaviour
 
     private IEnumerator TourRoutine()
     {
-        // Intro
         yield return ShowTyped(introLine, introOptions);
         yield return WaitNext();
 
-        // Stops
         while (tourRunning && stopIndex < stops.Length)
         {
             TourStop s = stops[stopIndex];
@@ -280,21 +279,13 @@ public class PeccyTourManager : MonoBehaviour
                 continue;
             }
 
-            // Badge tap before entering this stop
             if (s.requiresBadgeTap && s.badgeTapPoint != null)
             {
-                // Walk to badge reader, keep tapPoint rotation, do NOT face player there
-                yield return MovePeccyToPoint(
-                    s.badgeTapPoint,
-                    facePlayerAtEnd: false,
-                    forceEndRotation: s.badgeTapPoint.rotation
-                );
+                yield return MovePeccyToPoint(s.badgeTapPoint, facePlayerAtEnd: false, forceEndRotation: s.badgeTapPoint.rotation);
 
-                // Show prompt only when standing at the reader
                 yield return ShowTyped("I’ll tap my badge so we can enter this room.", "Next (N)");
                 yield return WaitNext();
 
-                // Play tap animation
                 if (peccyAnimator != null && !string.IsNullOrEmpty(tapTriggerName))
                     peccyAnimator.SetTrigger(tapTriggerName);
 
@@ -305,17 +296,11 @@ public class PeccyTourManager : MonoBehaviour
                     yield return new WaitForSeconds(afterBadgeDoneHold);
             }
 
-            // Move to stop, then face player
-            yield return MovePeccyToPoint(
-                s.stopPoint,
-                facePlayerAtEnd: s.facePlayerWhenStopped,
-                forceEndRotation: null
-            );
+            yield return MovePeccyToPoint(s.stopPoint, facePlayerAtEnd: s.facePlayerWhenStopped, forceEndRotation: null);
 
             if (s.arriveHoldSeconds > 0f)
                 yield return new WaitForSeconds(s.arriveHoldSeconds);
 
-            // Speak lines
             lineIndex = 0;
             while (tourRunning && s.lines != null && lineIndex < s.lines.Length)
             {
@@ -344,7 +329,6 @@ public class PeccyTourManager : MonoBehaviour
 
         if (!tourRunning) yield break;
 
-        // Outro
         yield return ShowTyped(outroLine, outroOptions);
 
         donePressed = false;
@@ -356,32 +340,68 @@ public class PeccyTourManager : MonoBehaviour
     }
 
     // -------------------------
-    // NavMesh Point Resolve
+    // Fix: snap agent to navmesh
     // -------------------------
+    private void SnapAgentToNavMesh(float radius)
+    {
+        if (peccyAgent == null) return;
 
+        if (NavMesh.SamplePosition(peccyAgent.transform.position, out var hit, radius, peccyAgent.areaMask))
+        {
+            // Warp only if noticeably off
+            if (Vector3.Distance(peccyAgent.transform.position, hit.position) > 0.02f)
+                peccyAgent.Warp(hit.position);
+        }
+    }
+
+    // -------------------------
+    // Destination resolve (key fix for stop 5 & 8)
+    // -------------------------
     private bool TryResolveDestination(Transform targetPoint, out Vector3 dest, out Vector3 sampleFrom)
     {
         dest = Vector3.zero;
-        sampleFrom = Vector3.zero;
-
-        if (targetPoint == null) return false;
-
-        // Start from the transform
         sampleFrom = targetPoint.position;
 
-        // Optional: project to floor using raycast (fixes "looks on mesh but isn't")
+        // STEP 1: optional raycast to floor, BUT if it hits non-floor junk we do NOT want that
         if (useFloorRaycast)
         {
             Vector3 rayStart = targetPoint.position + Vector3.up * floorRayUp;
             float rayLen = floorRayUp + floorRayDown;
 
-            if (Physics.Raycast(rayStart, Vector3.down, out RaycastHit rh, rayLen, floorMask, QueryTriggerInteraction.Ignore))
-                sampleFrom = rh.point;
+            // RaycastAll so we can choose the closest hit that is actually on floorMask
+            RaycastHit[] hits = Physics.RaycastAll(rayStart, Vector3.down, rayLen, floorMask, QueryTriggerInteraction.Ignore);
+            if (hits != null && hits.Length > 0)
+            {
+                // Choose nearest
+                int best = 0;
+                float bestDist = hits[0].distance;
+                for (int i = 1; i < hits.Length; i++)
+                {
+                    if (hits[i].distance < bestDist)
+                    {
+                        bestDist = hits[i].distance;
+                        best = i;
+                    }
+                }
+
+                sampleFrom = hits[best].point;
+
+                if (debugStops)
+                    Debug.Log($"[Tour] Raycast '{targetPoint.name}' hit '{hits[best].collider.name}' at {sampleFrom}");
+            }
+            else
+            {
+                // If raycast fails, keep original transform pos
+                sampleFrom = targetPoint.position;
+
+                if (debugStops)
+                    Debug.Log($"[Tour] Raycast '{targetPoint.name}' found no floor hit. Using transform position {sampleFrom}");
+            }
         }
 
         int mask = (peccyAgent != null) ? peccyAgent.areaMask : NavMesh.AllAreas;
 
-        // Attempt 1: strict
+        // STEP 2: strict sample
         if (NavMesh.SamplePosition(sampleFrom, out NavMeshHit hit, stopSampleRadius, mask))
         {
             if (Mathf.Abs(hit.position.y - sampleFrom.y) <= maxYDelta)
@@ -391,7 +411,7 @@ public class PeccyTourManager : MonoBehaviour
             }
         }
 
-        // Attempt 2: fallback radius (still small)
+        // STEP 3: fallback sample
         if (NavMesh.SamplePosition(sampleFrom, out hit, stopSampleFallbackRadius, mask))
         {
             if (Mathf.Abs(hit.position.y - sampleFrom.y) <= maxYDelta)
@@ -420,25 +440,25 @@ public class PeccyTourManager : MonoBehaviour
         // Ensure agent is on navmesh
         if (!peccyAgent.isOnNavMesh)
         {
-            if (NavMesh.SamplePosition(peccyAgent.transform.position, out var hit, 2f, peccyAgent.areaMask))
+            if (NavMesh.SamplePosition(peccyAgent.transform.position, out var hit, 3f, peccyAgent.areaMask))
                 peccyAgent.Warp(hit.position);
             else
                 yield break;
         }
 
-        // Resolve destination robustly (fixes your tapPoint warning + wrong stops)
         if (!TryResolveDestination(targetPoint, out Vector3 dest, out Vector3 sampleFrom))
         {
             Debug.LogWarning(
                 $"PeccyTourManager: Could not resolve NavMesh point for '{targetPoint.name}'. " +
                 $"From={sampleFrom} TargetPos={targetPoint.position} " +
-                $"(r={stopSampleRadius} fb={stopSampleFallbackRadius} mask={(peccyAgent != null ? peccyAgent.areaMask : NavMesh.AllAreas)}). " +
-                $"Move the transform onto walkable floor OR increase fallback slightly."
+                $"(r={stopSampleRadius} fb={stopSampleFallbackRadius})."
             );
             yield break;
         }
 
-        // Reset before moving
+        if (debugStops)
+            Debug.Log($"[Tour] Move '{targetPoint.name}' sampleFrom={sampleFrom} dest={dest}");
+
         peccyAgent.ResetPath();
         peccyAgent.isStopped = false;
         SetWalking(true);
@@ -463,9 +483,8 @@ public class PeccyTourManager : MonoBehaviour
             yield break;
         }
 
-        // Timeout based on distance (prevents giving up too early on later stops)
         float startDist = Vector3.Distance(peccyAgent.transform.position, dest);
-        float timeout = Mathf.Clamp(startDist / Mathf.Max(0.1f, peccyAgent.speed) + 6f, 8f, 25f);
+        float timeout = Mathf.Clamp(startDist / Mathf.Max(0.1f, peccyAgent.speed) + 6f, 10f, 35f);
 
         float t = 0f;
         while (tourRunning)
@@ -491,7 +510,6 @@ public class PeccyTourManager : MonoBehaviour
             peccyAgent.isStopped = true;
             peccyAgent.ResetPath();
 
-            // Final snap only if already near (prevents warping across the room)
             float endDist = Vector3.Distance(peccyAgent.transform.position, dest);
             if (endDist <= finalSnapDistance)
                 peccyAgent.Warp(dest);
@@ -499,7 +517,6 @@ public class PeccyTourManager : MonoBehaviour
 
         SetWalking(false);
 
-        // Tap point rotation (only for tap)
         if (forceEndRotation.HasValue)
             peccyAgent.transform.rotation = forceEndRotation.Value;
 
@@ -523,7 +540,6 @@ public class PeccyTourManager : MonoBehaviour
 
     private IEnumerator ShowTyped(string line, string options)
     {
-        // If chat open, wait until closed before showing tour bubble
         if (peccyDialogue != null && peccyDialogue.chatUI != null)
         {
             while (tourRunning && peccyDialogue.chatUI.IsOpen)
@@ -579,7 +595,6 @@ public class PeccyTourManager : MonoBehaviour
                     chatPressed = false;
                     nextPressed = false;
 
-                    // Re-show the SAME checkpoint line again after chat closes
                     yield return ShowTyped(currentLine, currentOptions);
                     continue;
                 }
