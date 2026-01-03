@@ -68,7 +68,7 @@ public class PeccyTourManager : MonoBehaviour
     [Header("Badge Tap")]
     public string tapTriggerName = "TapBadge";
     public float tapAnimSeconds = 2f;
-    public float afterBadgeDoneHold = 10f;
+    public float afterBadgeDoneHold = 0.1f;
 
     [Header("Tour Intro/Outro")]
     [TextArea] public string introLine = "Great choice! Let’s begin our guided tour of the AWS Bahrain office.";
@@ -144,7 +144,6 @@ public class PeccyTourManager : MonoBehaviour
         if (tourRunning) return;
         if (stops == null || stops.Length == 0) return;
 
-        // Reset input flags
         nextPressed = chatPressed = donePressed = false;
 
         tourRunning = true;
@@ -163,23 +162,19 @@ public class PeccyTourManager : MonoBehaviour
             peccyAgent.angularSpeed = tourAngularSpeed;
         }
 
-        // Lock dialogue so it doesn't fight over bubble + N key
         if (peccyDialogue != null) peccyDialogue.SetTourLock(true);
 
         stopIndex = 0;
         lineIndex = 0;
 
-        // tell dialogue we’re in tour mode so it stops assistant prompt
         if (peccyDialogue != null)
         {
             peccyDialogue.tourMode = true;
             peccyDialogue.assistantMode = false;
         }
 
-        // disable follower while touring
         if (follower != null) follower.SetFollow(false);
 
-        // show tour line
         if (tourLine != null)
         {
             if (showLineDuringTour)
@@ -201,26 +196,19 @@ public class PeccyTourManager : MonoBehaviour
 
         StopAllCoroutines();
 
-        // stop walk anim
         SetWalking(false);
 
-        // hide bubble
         if (bubble != null) bubble.Hide();
-
-        // hide tour line
         if (tourLine != null) tourLine.ClearRoute();
 
-        // restore follower
         if (follower != null) follower.SetFollow(true);
 
-        // restore agent speed
         if (peccyAgent != null && speedSaved)
         {
             peccyAgent.speed = originalSpeed;
             peccyAgent.angularSpeed = originalAngularSpeed;
         }
 
-        // unlock dialogue and restore assistant
         if (peccyDialogue != null)
         {
             peccyDialogue.SetTourLock(false);
@@ -246,13 +234,17 @@ public class PeccyTourManager : MonoBehaviour
                 continue;
             }
 
-            // Badge tap before entering this stop (WALK to tap point, no teleport)
+            // Badge tap before entering this stop
             if (s.requiresBadgeTap && s.badgeTapPoint != null)
             {
-                // Walk to badge reader first
-                yield return MovePeccyToStop(s.badgeTapPoint);
+                // Walk to badge reader
+                yield return MovePeccyToStop(
+                    s.badgeTapPoint,
+                    facePlayerAtEnd: false,
+                    forceEndRotation: s.badgeTapPoint.rotation
+                );
 
-                // Now show the badge prompt at the reader
+                // Show prompt only when standing at the reader
                 yield return ShowTyped("I’ll tap my badge so we can enter this room.", "Next (N)");
                 yield return WaitNext();
 
@@ -263,12 +255,16 @@ public class PeccyTourManager : MonoBehaviour
                 if (tapAnimSeconds > 0f)
                     yield return new WaitForSeconds(tapAnimSeconds);
 
-                // Small pause so animation doesn't snap into walk immediately
-                yield return new WaitForSeconds(0.1f);
+                if (afterBadgeDoneHold > 0f)
+                    yield return new WaitForSeconds(afterBadgeDoneHold);
             }
 
-            // Move Peccy to stop
-            yield return MovePeccyToStop(s.stopPoint);
+            // Move to stop, then face player (you ticked it for all stops)
+            yield return MovePeccyToStop(
+                s.stopPoint,
+                facePlayerAtEnd: s.facePlayerWhenStopped,
+                forceEndRotation: null
+            );
 
             // Speak lines
             lineIndex = 0;
@@ -281,13 +277,14 @@ public class PeccyTourManager : MonoBehaviour
                     opt = s.options[lineIndex];
 
                 bool lastLine = (lineIndex == s.lines.Length - 1);
+
                 if (s.chatCheckpoint && lastLine)
                     opt = "Chat (C) | Next (N)";
 
                 yield return ShowTyped(line, opt);
 
                 if (s.chatCheckpoint && lastLine)
-                    yield return WaitChatOrNext();
+                    yield return WaitChatOrNext(line, opt); // IMPORTANT: pass current line+options
                 else
                     yield return WaitNext();
 
@@ -302,7 +299,6 @@ public class PeccyTourManager : MonoBehaviour
         // Outro
         yield return ShowTyped(outroLine, outroOptions);
 
-        // Wait for Done (D)
         donePressed = false;
         while (tourRunning && !donePressed)
             yield return null;
@@ -311,21 +307,20 @@ public class PeccyTourManager : MonoBehaviour
             StopTour();
     }
 
-    private IEnumerator MovePeccyToStop(Transform stopPoint)
+    private IEnumerator MovePeccyToStop(Transform targetPoint, bool facePlayerAtEnd, Quaternion? forceEndRotation)
     {
         if (bubble != null) bubble.Hide();
-
-        if (stopPoint == null) yield break;
+        if (targetPoint == null) yield break;
 
         if (peccyAgent == null)
         {
-            transform.position = stopPoint.position;
-            transform.rotation = stopPoint.rotation;
-            FacePlayer();
+            transform.position = targetPoint.position;
+            transform.rotation = forceEndRotation ?? targetPoint.rotation;
+            if (facePlayerAtEnd) FacePlayer();
             yield break;
         }
 
-        // Ensure agent is on navmesh (or bail safely)
+        // Ensure agent is on navmesh
         if (!peccyAgent.isOnNavMesh)
         {
             if (NavMesh.SamplePosition(peccyAgent.transform.position, out var hit, 2f, NavMesh.AllAreas))
@@ -335,20 +330,17 @@ public class PeccyTourManager : MonoBehaviour
         }
 
         // Snap destination to navmesh
-        Vector3 dest = stopPoint.position;
-        if (NavMesh.SamplePosition(stopPoint.position, out var destHit, 2f, NavMesh.AllAreas))
+        Vector3 dest = targetPoint.position;
+        if (NavMesh.SamplePosition(targetPoint.position, out var destHit, 2f, NavMesh.AllAreas))
             dest = destHit.position;
 
-        // IMPORTANT: ResetPath before new destination to avoid leftover path weirdness
         peccyAgent.ResetPath();
-
         peccyAgent.isStopped = false;
         SetWalking(true);
 
         bool ok = peccyAgent.SetDestination(dest);
         if (!ok)
         {
-            // If destination can't be set, do NOT keep trying forever
             peccyAgent.isStopped = true;
             SetWalking(false);
             yield break;
@@ -361,7 +353,6 @@ public class PeccyTourManager : MonoBehaviour
 
         if (peccyAgent.pathStatus != NavMeshPathStatus.PathComplete)
         {
-            // Don't teleport; just stop and continue (prevents surprise warps)
             peccyAgent.isStopped = true;
             SetWalking(false);
             yield break;
@@ -372,7 +363,6 @@ public class PeccyTourManager : MonoBehaviour
 
         while (tourRunning)
         {
-            // Update walking from velocity
             SetWalking(peccyAgent.velocity.sqrMagnitude > movingSpeedThreshold);
 
             float dist = Vector3.Distance(peccyAgent.transform.position, dest);
@@ -394,19 +384,21 @@ public class PeccyTourManager : MonoBehaviour
         {
             peccyAgent.isStopped = true;
             peccyAgent.ResetPath();
-            if (bubble != null) bubble.Hide(); // keep hidden until you call ShowTyped()
-
         }
 
         SetWalking(false);
 
-        if (stopPoint != null)
+        // Apply end rotation rules
+        if (forceEndRotation.HasValue && peccyAgent != null)
         {
-            // optional tiny hold at stop
-            yield return null;
+            peccyAgent.transform.rotation = forceEndRotation.Value;
         }
 
-        FacePlayer();
+        // Optional tiny settle frame
+        yield return null;
+
+        if (facePlayerAtEnd)
+            FacePlayer();
     }
 
     private void FacePlayer()
@@ -457,7 +449,7 @@ public class PeccyTourManager : MonoBehaviour
             yield return null;
     }
 
-    private IEnumerator WaitChatOrNext()
+    private IEnumerator WaitChatOrNext(string currentLine, string currentOptions)
     {
         nextPressed = false;
         chatPressed = false;
@@ -468,32 +460,30 @@ public class PeccyTourManager : MonoBehaviour
 
             if (chatPressed)
             {
-                // Open chat
                 if (peccyDialogue != null && peccyDialogue.chatUI != null)
                 {
                     peccyDialogue.chatUI.Open();
 
-                    // Hide bubble while chat is open
                     if (bubble != null) bubble.Hide();
 
-                    // PAUSE tour here until chat is closed
+                    // Pause tour until chat closes
                     while (tourRunning && peccyDialogue.chatUI.IsOpen)
                         yield return null;
 
-                    // After chat closes, show the same line again (so user can press Next)
+                    // After closing chat: re-show the SAME checkpoint bubble again
                     chatPressed = false;
                     nextPressed = false;
 
-                    // IMPORTANT: do NOT "yield break" here, we want to keep waiting for Next
+                    yield return ShowTyped(currentLine, currentOptions);
+
+                    // Continue waiting for Next or Chat again
                     continue;
                 }
 
-                // If no chatUI, just ignore
                 chatPressed = false;
             }
 
             yield return null;
         }
     }
-
 }
