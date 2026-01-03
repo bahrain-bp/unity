@@ -20,28 +20,32 @@ public class ModeButtonsUI : MonoBehaviour
     public EmergencyModeController emergencyModeController;
     public PeccyTourManager tourManager;
 
-    bool tourActive = false;
-    bool emergencyActive = false;
-
-    Image tourImage;
-    Image emergencyImage;
     [Header("Emergency Logic")]
     public EmergencyEvacuationController evacuationController;
+
     [Header("Input Locks")]
     public MapMenuToggle mapMenuToggle;
     public RouteGuidanceController routeGuidanceController;
 
+    private bool tourActive = false;
+    private bool emergencyActive = false;
+
+    private Image tourImage;
+    private Image emergencyImage;
 
     void Awake()
     {
-        tourImage = tourButton.GetComponent<Image>();
-        emergencyImage = emergencyButton.GetComponent<Image>();
+        if (tourButton != null) tourImage = tourButton.GetComponent<Image>();
+        if (emergencyButton != null) emergencyImage = emergencyButton.GetComponent<Image>();
 
         UpdateAllVisuals();
     }
 
     void Update()
     {
+        // Always sync visuals with REAL state, even if UI buttons close panels
+        SyncVisualStatesFromControllers();
+
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
@@ -52,65 +56,132 @@ public class ModeButtonsUI : MonoBehaviour
             ToggleEmergency();
     }
 
-    void ToggleTour()
-{
-    // Block Tour if map open OR route active
-    if ((mapMenuToggle != null && mapMenuToggle.IsMapOpen) ||
-        (routeGuidanceController != null && routeGuidanceController.IsRouteActive))
+    // -------------------------
+    // Sync (fixes your issue)
+    // -------------------------
+
+    void SyncVisualStatesFromControllers()
     {
-        return;
+        bool realTourRunning = (tourManager != null && tourManager.tourRunning);
+
+        bool panelOpen = (emergencyModeController != null && emergencyModeController.IsPanelOpen);
+        bool evacuating = (evacuationController != null && evacuationController.IsEvacuating);
+        bool realEmergencyActive = panelOpen || evacuating;
+
+        bool changed = false;
+
+        if (tourActive != realTourRunning)
+        {
+            tourActive = realTourRunning;
+            changed = true;
+        }
+
+        if (emergencyActive != realEmergencyActive)
+        {
+            emergencyActive = realEmergencyActive;
+            changed = true;
+        }
+
+        if (changed)
+            UpdateAllVisuals();
     }
 
-    // Block tour during evacuation
-    if (evacuationController != null && evacuationController.IsEvacuating)
-        return;
+    bool IsBlockedByUI()
+    {
+        return (mapMenuToggle != null && mapMenuToggle.IsMapOpen) ||
+               (routeGuidanceController != null && routeGuidanceController.IsRouteActive);
+    }
 
-    // If emergency was active, turn it off (visual only)
-    if (!tourActive && emergencyActive)
+    // -------------------------
+    // Mutual Exclusivity Helpers
+    // -------------------------
+
+    void StopTourIfRunning()
+    {
+        if (tourManager != null && tourManager.tourRunning)
+            tourManager.StopTour();
+
+        tourActive = false;
+        UpdateTourVisual();
+    }
+
+    void ExitEmergencyIfOpenOrRunning()
+    {
+        if (evacuationController != null && evacuationController.IsEvacuating)
+            evacuationController.StopEvacuation();
+
+        if (emergencyModeController != null && emergencyModeController.IsPanelOpen)
+            emergencyModeController.ExitEmergencyMode();
+
         emergencyActive = false;
+        UpdateEmergencyVisual();
+    }
 
-    // Toggle tour visual state
-    tourActive = !tourActive;
-    UpdateAllVisuals();
+    // -------------------------
+    // Tour
+    // -------------------------
 
-    // START/STOP the actual tour system
-    if (tourManager != null)
-        tourManager.ToggleTour();
-    else
-        Debug.LogWarning("ModeButtonsUI: tourManager not assigned.");
-}
+    void ToggleTour()
+    {
+        if (IsBlockedByUI())
+            return;
 
+        if (evacuationController != null && evacuationController.IsEvacuating)
+            return;
+
+        // If we're about to start tour, ensure emergency is fully off
+        bool willTurnOnTour = !(tourManager != null && tourManager.tourRunning);
+        if (willTurnOnTour)
+            ExitEmergencyIfOpenOrRunning();
+
+        if (tourManager != null)
+            tourManager.ToggleTour();
+        else
+            Debug.LogWarning("ModeButtonsUI: tourManager not assigned.");
+
+        // Sync visuals from real state immediately
+        SyncVisualStatesFromControllers();
+    }
+
+    // -------------------------
+    // Emergency
+    // -------------------------
 
     void ToggleEmergency()
     {
-        // Block Emergency if map open OR route active
-        if ((mapMenuToggle != null && mapMenuToggle.IsMapOpen) ||
-            (routeGuidanceController != null && routeGuidanceController.IsRouteActive))
-        {
+        if (IsBlockedByUI())
             return;
-        }
 
-        // If evacuation is running , STOP evacuation
+        // If evacuation running -> stop it
         if (evacuationController != null && evacuationController.IsEvacuating)
         {
             evacuationController.StopEvacuation();
-            emergencyActive = false;
-            UpdateAllVisuals();
+            SyncVisualStatesFromControllers();
             return;
         }
 
-        //  If panel is already open , just close UI (X behavior)
+        // If panel open -> close it
         if (emergencyModeController != null && emergencyModeController.IsPanelOpen)
         {
             emergencyModeController.ExitEmergencyMode();
+            SyncVisualStatesFromControllers();
             return;
         }
 
-        //  Normal case , open panel only (no state change)
-        emergencyModeController.EnterEmergencyMode();
+        // We are about to open emergency -> stop tour first
+        StopTourIfRunning();
+
+        if (emergencyModeController != null)
+            emergencyModeController.EnterEmergencyMode();
+        else
+            Debug.LogWarning("ModeButtonsUI: emergencyModeController not assigned.");
+
+        SyncVisualStatesFromControllers();
     }
 
-
+    // -------------------------
+    // Visuals
+    // -------------------------
 
     void UpdateAllVisuals()
     {
@@ -120,26 +191,31 @@ public class ModeButtonsUI : MonoBehaviour
 
     void UpdateTourVisual()
     {
-        tourImage.sprite = tourActive
-            ? tourStopSprite
-            : tourNormalSprite;
+        if (tourImage == null) return;
+        tourImage.sprite = tourActive ? tourStopSprite : tourNormalSprite;
     }
 
     void UpdateEmergencyVisual()
     {
-        emergencyImage.sprite = emergencyActive
-            ? emergencyStopSprite
-            : emergencyNormalSprite;
+        if (emergencyImage == null) return;
+        emergencyImage.sprite = emergencyActive ? emergencyStopSprite : emergencyNormalSprite;
     }
+
+    // -------------------------
+    // External calls (optional)
+    // -------------------------
+
     public void ForceExitEmergencyMode()
     {
-        emergencyActive = false;
+        ExitEmergencyIfOpenOrRunning();
         UpdateAllVisuals();
     }
+
     public void ForceEnterEmergencyMode()
     {
+        StopTourIfRunning();
         emergencyActive = true;
-        tourActive = false; // safety: only one mode active
+        tourActive = false;
         UpdateAllVisuals();
     }
 
@@ -148,5 +224,4 @@ public class ModeButtonsUI : MonoBehaviour
         tourActive = active;
         UpdateTourVisual();
     }
-
 }
