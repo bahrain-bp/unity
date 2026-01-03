@@ -6,12 +6,16 @@ public class DoorLock : MonoBehaviour
     [Header("Lock")]
     public bool isLocked = false;
 
+    [Header("Who can open the door")]
+    public string[] allowedTags = { "Player", "Peccy" };
+
+
     public void SetLocked(bool locked)
     {
         isLocked = locked;
 
 
-        // If we lock while it’s open, optionally force close:
+        // If we lock while itï¿½s open, optionally force close:
         if (isLocked)
         {
             if (openRoutine != null) { StopCoroutine(openRoutine); openRoutine = null; }
@@ -49,7 +53,7 @@ public class DoorLock : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!IsAllowedOpener(other)) return;
 
         if (isLocked)
         {
@@ -72,7 +76,7 @@ public class DoorLock : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!IsAllowedOpener(other)) return;
 
         playerInside = false;
 
@@ -132,4 +136,15 @@ public class DoorLock : MonoBehaviour
         closeRoutine = null;
     }
 
+    private bool IsAllowedOpener(Collider other)
+    {
+        if (allowedTags == null || allowedTags.Length == 0) return other.CompareTag("Player");
+
+        for (int i = 0; i < allowedTags.Length; i++)
+        {
+            if (!string.IsNullOrEmpty(allowedTags[i]) && other.CompareTag(allowedTags[i]))
+                return true;
+        }
+        return false;
+    }
 }

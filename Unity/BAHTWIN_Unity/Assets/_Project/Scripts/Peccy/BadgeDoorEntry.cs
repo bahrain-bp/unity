@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class BadgeDoorEntry : MonoBehaviour
 {
     [Header("UI Prompt")]
-    public GameObject promptUI;                 
+    public GameObject promptUI;
     public string promptLine = "Open (F)";
 
     [Header("Entry blocker (outside only)")]
@@ -15,6 +15,9 @@ public class BadgeDoorEntry : MonoBehaviour
 
     [Header("Peccy Dialogue (owner of bubble + animation)")]
     public PeccyDialogue peccyDialogue;
+
+    [Header("Tour Block")]
+    public PeccyTourManager tourManager;
 
     [Header("Allow entry seconds")]
     public float allowSeconds = 15f;
@@ -43,10 +46,17 @@ public class BadgeDoorEntry : MonoBehaviour
 
     void Update()
     {
+        // Block door badging while tour is running (tour owns badge flow)
+        if (tourManager != null && tourManager.tourRunning)
+        {
+            if (promptUI != null) promptUI.SetActive(false);
+            return;
+        }
+
         if (!playerInZone) return;
         if (interactAction == null) return;
 
-        if (interactAction.WasPressedThisFrame()) 
+        if (interactAction.WasPressedThisFrame())
         {
             // Trigger Peccy's badge flow for THIS door
             if (peccyDialogue != null)
@@ -60,6 +70,15 @@ public class BadgeDoorEntry : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
+
+        // Block showing prompt during tour
+        if (tourManager != null && tourManager.tourRunning)
+        {
+            if (promptUI != null) promptUI.SetActive(false);
+            playerInZone = false;
+            return;
+        }
+
         playerInZone = true;
         if (promptUI != null) promptUI.SetActive(true);
     }

@@ -43,6 +43,9 @@ public class ChatUIController : MonoBehaviour
     [Tooltip("Optional: drag gameplay GameObjects here (example: InteractPrompt UI, crosshair, gameplay panels). Do NOT put Chat UI here.")]
     public GameObject[] disableGameObjectsWhileChatOpen;
 
+    [Header("Input Locks")]
+    public MapMenuToggle mapMenuToggle;
+
     // Conversation thread id (backend returns it, we send it back next time)
     private string sessionId = null;
 
@@ -59,8 +62,6 @@ public class ChatUIController : MonoBehaviour
     [DllImport("__Internal")]
     private static extern void AskPeccyAssistantFromUnity(string question, string sessionId, string unityObjectName);
 #endif
-    [Header("Input Locks")]
-    public MapMenuToggle mapMenuToggle;
 
     void Awake()
     {
@@ -68,13 +69,12 @@ public class ChatUIController : MonoBehaviour
         if (closeButton != null) closeButton.onClick.AddListener(Close);
 
         HookQuickQuestionButtons();
+        CacheDisableTargetsInitialStates();
 
         if (chatPanel != null) chatPanel.SetActive(false);
         IsOpen = false;
 
         SetInputEnabled(true);
-
-        CacheDisableTargetsInitialStates();
     }
 
     void Update()
@@ -96,23 +96,28 @@ public class ChatUIController : MonoBehaviour
         // Block chat ONLY if expanded map is open
         if (mapMenuToggle != null && mapMenuToggle.IsMapOpen)
             return;
-            
+
         if (chatPanel == null) return;
+        if (IsOpen) return;
 
-        // Disable FPS look so it doesn't fight focus/cursor
-        if (fpsLookScript != null) fpsLookScript.enabled = false;
-
-        // Snap camera instantly to Peccy/chat anchor
-        if (chatFocus != null) chatFocus.SnapFocus();
-
-        // Disable gameplay stuff
-        ApplyDisableTargets(disable: true);
-
-        chatPanel.SetActive(true);
+        // Mark open first so other systems can react immediately
         IsOpen = true;
 
+        // Show panel first so UI exists for focus/select
+        chatPanel.SetActive(true);
+
+        // Disable gameplay systems first (including any camera look scripts you put in the arrays)
+        ApplyDisableTargets(disable: true);
+
+        // Disable FPS look script BEFORE any camera snap to avoid a 1-frame "flinch"
+        if (fpsLookScript != null) fpsLookScript.enabled = false;
+
+        // Cursor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        // Snap camera to Peccy/chat anchor after gameplay/camera scripts are disabled
+        if (chatFocus != null) chatFocus.SnapFocus();
 
         if (peccyDialogue != null) peccyDialogue.OnChatOpened();
 
@@ -123,19 +128,26 @@ public class ChatUIController : MonoBehaviour
     public void Close()
     {
         if (chatPanel == null) return;
+        if (!IsOpen) return;
 
+        // Hide panel first
         chatPanel.SetActive(false);
         IsOpen = false;
 
         // Restore gameplay stuff
         ApplyDisableTargets(disable: false);
 
+        // Cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
+        // Restore FPS look
         if (fpsLookScript != null) fpsLookScript.enabled = true;
 
+        // Stop camera focus smoothing (if any)
         if (chatFocus != null) chatFocus.StopFocus();
+
+        // Let PeccyDialogue decide what bubble should show now
         if (peccyDialogue != null) peccyDialogue.OnChatClosed();
     }
 
@@ -372,8 +384,10 @@ public class ChatUIController : MonoBehaviour
                 }
                 else
                 {
-                    // restore original state
-                    bool original = (cachedBehaviourStates != null && i < cachedBehaviourStates.Length) ? cachedBehaviourStates[i] : true;
+                    bool original = (cachedBehaviourStates != null && i < cachedBehaviourStates.Length)
+                        ? cachedBehaviourStates[i]
+                        : true;
+
                     b.enabled = original;
                 }
             }
@@ -396,7 +410,10 @@ public class ChatUIController : MonoBehaviour
                 }
                 else
                 {
-                    bool original = (cachedGameObjectStates != null && i < cachedGameObjectStates.Length) ? cachedGameObjectStates[i] : true;
+                    bool original = (cachedGameObjectStates != null && i < cachedGameObjectStates.Length)
+                        ? cachedGameObjectStates[i]
+                        : true;
+
                     go.SetActive(original);
                 }
             }
