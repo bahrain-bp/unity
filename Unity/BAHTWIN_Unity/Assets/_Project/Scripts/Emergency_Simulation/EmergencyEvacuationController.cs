@@ -24,6 +24,9 @@ public class EmergencyEvacuationController : MonoBehaviour
     [Header("Audio")]
     public AudioSource alarmSource;
     public bool IsEvacuating => evacuating;
+    [Header("Emergency Overlay")]
+    public GameObject redOverlayPanel;
+
 
 
 
@@ -34,6 +37,9 @@ public class EmergencyEvacuationController : MonoBehaviour
 
         if (statusText != null)
             statusText.gameObject.SetActive(false);
+        if (redOverlayPanel != null)
+            redOverlayPanel.SetActive(false);
+
     }
 
     // Called from EmergencyModeController when "Start Evacuation" is pressed
@@ -53,6 +59,10 @@ public class EmergencyEvacuationController : MonoBehaviour
         evacuating = true;
         hasDestination = true;
         destinationWorld = destWorld;
+
+        if (redOverlayPanel != null)
+            redOverlayPanel.SetActive(true);
+
 
         routeController.gameObject.SetActive(true);
         routeController.arrivalDistance = arrivalDistance;
@@ -99,6 +109,9 @@ public class EmergencyEvacuationController : MonoBehaviour
 
         if (modeButtonsUI != null)
             modeButtonsUI.ForceExitEmergencyMode();
+
+        if (redOverlayPanel != null)
+            redOverlayPanel.SetActive(false);
     }
 
     // Nearest-exit logic
@@ -177,26 +190,30 @@ public class EmergencyEvacuationController : MonoBehaviour
             statusText.gameObject.SetActive(false);
     }
     public void StopEvacuation()
-{
-    if (!evacuating) return;
-
-    evacuating = false;
-    hasDestination = false;
-
-    if (alarmSource != null && alarmSource.isPlaying)
-        alarmSource.Stop();
-
-    if (routeController != null)
     {
-        routeController.ClearRoute();
-        routeController.gameObject.SetActive(false);
+        if (!evacuating) return;
+
+        evacuating = false;
+        hasDestination = false;
+
+        if (alarmSource != null && alarmSource.isPlaying)
+            alarmSource.Stop();
+
+        if (routeController != null)
+        {
+            routeController.ClearRoute();
+            routeController.gameObject.SetActive(false);
+        }
+
+        if (statusText != null)
+            statusText.gameObject.SetActive(false);
+
+        if (modeButtonsUI != null)
+            modeButtonsUI.ForceExitEmergencyMode();
+
+        if (redOverlayPanel != null)
+            redOverlayPanel.SetActive(false);
+
     }
-
-    if (statusText != null)
-        statusText.gameObject.SetActive(false);
-
-    if (modeButtonsUI != null)
-        modeButtonsUI.ForceExitEmergencyMode();
-}
 
 }
