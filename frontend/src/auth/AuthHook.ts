@@ -19,8 +19,8 @@ export interface UseAuth {
   isAuthenticated: boolean;
   email: string;
   userId: string;
-  userGroups: string[]; // Add this
-  userRole: string | null; // Add this - primary group/role
+  userGroups: string[];
+  userRole: string | null;
   signIn: (email: string, password: string) => Promise<Result>;
   signUp: (email: string, password: string) => Promise<SignUpResult>;
   confirmSignUp: (email: string, code: string) => Promise<Result>;
@@ -64,6 +64,7 @@ export const useProvideAuth = (): UseAuth => {
   const clearIdToken = () => {
     localStorage.removeItem("idToken");
     localStorage.removeItem("username");
+    localStorage.removeItem("userId");
   };
 
   // Helper function to extract groups from token
@@ -144,6 +145,7 @@ export const useProvideAuth = (): UseAuth => {
       if (result.isSignedIn) {
         setEmail(email);
         const user = await getCurrentUser();
+        localStorage.setItem("userId", user.userId);
         setUserId(user.userId);
         
         // Get user groups after sign in

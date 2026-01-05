@@ -57,7 +57,6 @@ function Info() {
       target: { value },
     } = event;
     setFilter(
-      // On autofill we get a stringified value.
       typeof value === "string" ? value.split(",") : value
     );
   };
@@ -73,7 +72,7 @@ function Info() {
       return SHOP();
     }
 
-    return LOCATION(); // optional fallback
+    return LOCATION();
   }
 
   return (

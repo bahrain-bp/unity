@@ -1,9 +1,5 @@
 import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-} from "react-router-dom";
+BrowserRouter as Router,Route,Routes,Navigate,} from "react-router-dom";
 import "../styles/globals.css";
 import Landing from "./pages/Landing";
 import Info from "./pages/Info";
@@ -11,7 +7,6 @@ import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
 import type { PropsWithChildren } from "react";
-//import SmartPlugEnvironment from "./pages/SmartPlugEnvironment";
 import Chatbot from "./components/ChatBot";
 import VisitorArrival from "./pages/visitorArrival";
 import InviteVisitor from "./pages/dashboard/InviteVisitor";
@@ -65,7 +60,7 @@ function PublicOnlyRoute({ children }:PropsWithChildren ) {
 function App() {
   const { userId } = useAuth();
   useEffect(() => {
-    if (!userId) return; // don't register events until userId exists
+    if (!userId) return;
 
     let lastHeartbeatSentAt = 0;
     const HEARTBEAT_INTERVAL = 30_000; // 30 seconds
@@ -80,9 +75,7 @@ function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, timestamp: now }),
-      }).catch(() => {
-        // silently ignore network errors
-      });
+      }).catch(() => {});
     };
 
     window.addEventListener("click", maybeSendHeartbeat);
@@ -94,12 +87,12 @@ function App() {
       window.removeEventListener("scroll", maybeSendHeartbeat);
       window.removeEventListener("keydown", maybeSendHeartbeat);
     };
-  }, [userId]); // <- re-run when userId becomes available
+  }, [userId]);
   return (
     <>
       <Router>
         <Routes>
-          {/* Public routes - accessible to everyone */}
+          {/* Public routes */}
           <Route
             path="/"
             element={
@@ -120,7 +113,7 @@ function App() {
           />
 
 
-          {/* Auth route - only for non-authenticated users */}
+          {/* routes for non authenticated users */}
           <Route
             path="/auth"
             element={
@@ -131,7 +124,7 @@ function App() {
             }
           />
 
-          {/* Protected routes - for authenticated users only */}
+          {/* Protected routes for authenticated users only */}
           <Route
             path="/environment"
             element={
@@ -141,6 +134,7 @@ function App() {
             }
           />
 
+          {/* Admin only routes */}
           <Route
             path="/dashboard/analytics"
             element={
@@ -215,7 +209,7 @@ function App() {
             }
           />
 
-          {/* Visitor routes - public access */}
+          {/* Utility routes */}
           <Route
             path="/VisitorFeedBack"
             element={
@@ -225,7 +219,6 @@ function App() {
             }
           />
 
-          {/* Utility routes */}
           <Route
             path="/error"
             element={

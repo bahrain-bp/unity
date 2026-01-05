@@ -1,15 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  MAIL,
-  EYEC,
-  EYEO,
-  LOCK,
-  IMAGE,
-  CAMERA,
-  SUCCESS,
-  ERROR,
-  USER,
-} from "../assets/icons";
+import {MAIL,EYEC,EYEO,LOCK,IMAGE,CAMERA,SUCCESS,ERROR,USER,} from "../assets/icons";
 import imagePlaceholder from "../assets/image.svg";
 import { useAuth } from "../auth/AuthHook";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +11,6 @@ function Authentication() {
   const [showPass1, setShowPass1] = useState<boolean>(false);
   const [showPass2, setShowPass2] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<boolean>(true);
-  // const [isSignedUp, setIsSignedUp] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -167,19 +156,15 @@ function Authentication() {
     console.log(result);
 
     if (result.success) {
-      // setMessage(result.message);
       setUserId(result.userId ?? null);
       if (result.userId) {
         handleImageUpload(result.userId);
       }
       setError("");
       localStorage.setItem("username", name);
-      //setShowVerification(true);
     } else {
       setError(result.message);
     }
-
-    // setLoading(false);
   };
 
   const handleImageUpload = async (userId: string) => {
@@ -241,15 +226,6 @@ function Authentication() {
               length={6}
               onChange={(value) => setVerificationCode(value)}
             />
-            {/* <input
-              type="email"
-              className="auth__form--input"
-              placeholder="Enter your email"
-              id="email"
-              name="email"
-              onChange={handleChange}
-            /> */}
-
             {error && <Message type="error" icon={ERROR()} message={error} />}
             {message && (
               <Message type="success" icon={SUCCESS()} message={message} />
