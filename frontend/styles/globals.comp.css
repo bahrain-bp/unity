@@ -1729,6 +1729,11 @@ body {
   min-height: 100vh;
   overflow: hidden;
 }
+@media only screen and (max-width: 1250px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+}
 .dashboard__header {
   display: flex;
   height: 8rem;
@@ -1754,134 +1759,6 @@ body {
   border: 1px solid #cfcfcf;
   border-radius: 1rem;
   overflow: hidden;
-}
-.dashboard__users th {
-  vertical-align: middle !important;
-}
-.dashboard__users th, .dashboard__users td {
-  font-size: 1.6rem;
-}
-.dashboard__users--btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  justify-content: start;
-  cursor: pointer;
-}
-.dashboard__users--btn svg {
-  width: 3rem;
-  height: 3rem;
-  stroke: #161D26 !important;
-}
-.dashboard__users--btn.btn {
-  background-color: #ff8e3c;
-  padding: 0.8rem 2rem;
-  border-radius: 10rem;
-  margin-top: 2rem;
-  border: 1px solid #161D26 !important;
-  box-shadow: 3px 3px 0px #161D26 !important;
-  transition: all 0.3s;
-}
-.dashboard__users--menu-item {
-  display: flex;
-  align-items: center;
-  column-gap: 1rem;
-  padding: 1.3rem 2rem;
-  font-size: 1.4rem;
-  font-weight: 400;
-  transition: all 0.3s;
-  background-color: #F0F0F0;
-  cursor: pointer;
-}
-.dashboard__users--menu-item:hover {
-  background-color: #D8D8D8;
-}
-.dashboard__users--menu-item svg {
-  width: 1.8rem;
-  height: 1.8rem;
-}
-.dashboard__users--menu-item[title=Delete] {
-  color: #e71010;
-}
-.dashboard__users--menu-item[title=Delete]:hover {
-  background-color: rgba(231, 16, 16, 0.2);
-}
-.dashboard__users--status {
-  padding: 0.5rem 0.8rem;
-  border-radius: 0.8rem;
-  font-size: 1.4rem;
-}
-.dashboard__users--status[data-status=verified] {
-  background-color: rgba(1, 148, 38, 0.2);
-  color: #019426;
-}
-.dashboard__users--status[data-status=unverified] {
-  background-color: rgba(255, 142, 60, 0.2);
-  color: #ff8e3c;
-}
-.dashboard__users--form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.4rem;
-}
-.dashboard__users--form .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.dashboard__users--form .form-group label {
-  font-size: 1.3rem;
-  color: #6B6B6B;
-}
-.dashboard__users--form .form-group input,
-.dashboard__users--form .form-group select {
-  padding: 0.8rem 1rem;
-  font-size: 1.4rem;
-  border-radius: 0.6rem;
-  border: 1px solid #cfcfcf;
-  font-family: inherit;
-}
-.dashboard__users--form .form-group .input-disabled {
-  background-color: #D8D8D8;
-  cursor: not-allowed;
-}
-.dashboard__overview .overview__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 1.6rem;
-}
-.dashboard__overview .overview__card {
-  border: 1px solid #eaeaea;
-  border-radius: 1.2rem;
-  background: #F0F0F0;
-  padding: 1.4rem;
-  position: relative;
-}
-.dashboard__overview .overview__card::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 4px;
-  background: #ff7614;
-  border-top-left-radius: 1.2rem;
-  border-bottom-left-radius: 1.2rem;
-}
-.dashboard__overview .overview__note {
-  font-size: 1.2rem;
-  color: #6B6B6B;
-  margin-bottom: 0.6rem;
-}
-.dashboard__overview .overview__canvas {
-  height: 320px;
-  width: 100%;
-  position: relative;
-}
-.dashboard__overview .overview__canvas canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
 }
 .dashboard__webgl {
   display: flex;
@@ -2072,6 +1949,27 @@ body {
   grid-template-rows: 8rem 1fr max-content;
   grid-row: 1/-1;
   border-right: 1px solid #cfcfcf;
+}
+@media only screen and (max-width: 1250px) {
+  .sidebar_desktop {
+    display: none;
+  }
+}
+.sidebar_mobile, .sidebar_drawer, .sidebar_trigger {
+  display: none;
+}
+@media only screen and (max-width: 1250px) {
+  .sidebar_mobile, .sidebar_drawer, .sidebar_trigger {
+    display: block;
+  }
+}
+.sidebar_trigger {
+  margin-left: auto;
+}
+.sidebar_trigger svg {
+  stroke: #6B6B6B;
+  width: 4rem;
+  height: 4rem;
 }
 .sidebar a.active {
   color: #161D26;
