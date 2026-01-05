@@ -91,7 +91,7 @@ export const HOME = () => {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke-width="2"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -187,7 +187,7 @@ export const FILTER = () => {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke-width="2"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -204,7 +204,7 @@ export const X = () => {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke-width="2"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -333,7 +333,7 @@ export const CAMERA = () => {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke-width="2"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -430,9 +430,9 @@ export const USERS = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -450,9 +450,9 @@ export const MORE = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -469,9 +469,9 @@ export const TRASH = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -487,9 +487,9 @@ export const PEN = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -504,9 +504,9 @@ export const ADDUSER = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -524,9 +524,9 @@ export const FILE = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -542,9 +542,9 @@ export const FILES = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -574,9 +574,9 @@ export const USERADD = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -594,9 +594,9 @@ export const STAR = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -618,20 +618,33 @@ export const PARKING = () => {
   );
 };
 export const ANALYTICS = () => {
-  return(
-    <svg 
-      width="46" 
-      height="46" 
-      fill="none" 
-      stroke="currentColor" 
-      stroke-linecap="round" 
-      stroke-linejoin="round" 
-      stroke-width="1.5" 
-      viewBox="0 0 24 24" 
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M3 3v18h18"></path>
-        <path d="m7 17 4-8 5 4.5L21 3"></path>
+    >
+      <path d="M3 3v18h18"></path>
+      <path d="m7 17 4-8 5 4.5L21 3"></path>
     </svg>
-  )
-}
+  );
+};
+export const BOARD = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M8.586 17H3v-2h18v2h-5.586l3.243 3.243-1.414 1.414L13 17.414V20h-2v-2.586l-4.243 4.243-1.414-1.414L8.586 17ZM5 3h14a1 1 0 0 1 1 1v10H4V4a1 1 0 0 1 1-1Zm1 2v7h12V5H6Z"></path>
+    </svg>
+  );
+};

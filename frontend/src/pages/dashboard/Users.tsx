@@ -75,9 +75,9 @@ const Users = () => {
   const totalPages = Math.ceil(users.length / usersPerPage)
 
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setCurrentPage(value)
-  }
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+  setCurrentPage(page)
+}
 
   const handleDeleteRequest = (user: User) => {
     setUserToDelete(user)

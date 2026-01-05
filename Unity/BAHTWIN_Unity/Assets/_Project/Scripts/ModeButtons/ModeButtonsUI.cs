@@ -16,22 +16,36 @@ public class ModeButtonsUI : MonoBehaviour
     public Sprite emergencyNormalSprite;
     public Sprite emergencyStopSprite;
 
-    bool tourActive = false;
-    bool emergencyActive = false;
+    [Header("Controllers")]
+    public EmergencyModeController emergencyModeController;
+    public PeccyTourManager tourManager;
 
-    Image tourImage;
-    Image emergencyImage;
+    [Header("Emergency Logic")]
+    public EmergencyEvacuationController evacuationController;
+
+    [Header("Input Locks")]
+    public MapMenuToggle mapMenuToggle;
+    public RouteGuidanceController routeGuidanceController;
+
+    private bool tourActive = false;
+    private bool emergencyActive = false;
+
+    private Image tourImage;
+    private Image emergencyImage;
 
     void Awake()
     {
-        tourImage = tourButton.GetComponent<Image>();
-        emergencyImage = emergencyButton.GetComponent<Image>();
+        if (tourButton != null) tourImage = tourButton.GetComponent<Image>();
+        if (emergencyButton != null) emergencyImage = emergencyButton.GetComponent<Image>();
 
         UpdateAllVisuals();
     }
 
     void Update()
     {
+        // Always sync visuals with REAL state, even if UI buttons close panels
+        SyncVisualStatesFromControllers();
+
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
@@ -42,40 +56,133 @@ public class ModeButtonsUI : MonoBehaviour
             ToggleEmergency();
     }
 
-    // MODE TOGGLES
-    void ToggleTour()
+    // -------------------------
+    // Sync (fixes your issue)
+    // -------------------------
+
+    void SyncVisualStatesFromControllers()
     {
-        // Turn OFF emergency if it's active
-        if (!tourActive && emergencyActive)
+        bool realTourRunning = (tourManager != null && tourManager.tourRunning);
+
+        bool panelOpen = (emergencyModeController != null && emergencyModeController.IsPanelOpen);
+        bool evacuating = (evacuationController != null && evacuationController.IsEvacuating);
+        bool realEmergencyActive = panelOpen || evacuating;
+
+        bool changed = false;
+
+        if (tourActive != realTourRunning)
         {
-            emergencyActive = false;
+            tourActive = realTourRunning;
+            changed = true;
         }
 
-        tourActive = !tourActive;
+        if (emergencyActive != realEmergencyActive)
+        {
+            emergencyActive = realEmergencyActive;
+            changed = true;
+        }
 
-        UpdateAllVisuals();
-
-        // if (tourActive) StartTour();
-        // else StopTour();
+        if (changed)
+            UpdateAllVisuals();
     }
+
+    bool IsBlockedByUI()
+    {
+        return (mapMenuToggle != null && mapMenuToggle.IsMapOpen) ||
+               (routeGuidanceController != null && routeGuidanceController.IsRouteActive);
+    }
+
+    // -------------------------
+    // Mutual Exclusivity Helpers
+    // -------------------------
+
+    void StopTourIfRunning()
+    {
+        if (tourManager != null && tourManager.tourRunning)
+            tourManager.StopTour();
+
+        tourActive = false;
+        UpdateTourVisual();
+    }
+
+    void ExitEmergencyIfOpenOrRunning()
+    {
+        if (evacuationController != null && evacuationController.IsEvacuating)
+            evacuationController.StopEvacuation();
+
+        if (emergencyModeController != null && emergencyModeController.IsPanelOpen)
+            emergencyModeController.ExitEmergencyMode();
+
+        emergencyActive = false;
+        UpdateEmergencyVisual();
+    }
+
+    // -------------------------
+    // Tour
+    // -------------------------
+
+    void ToggleTour()
+    {
+        if (IsBlockedByUI())
+            return;
+
+        if (evacuationController != null && evacuationController.IsEvacuating)
+            return;
+
+        // If we're about to start tour, ensure emergency is fully off
+        bool willTurnOnTour = !(tourManager != null && tourManager.tourRunning);
+        if (willTurnOnTour)
+            ExitEmergencyIfOpenOrRunning();
+
+        if (tourManager != null)
+            tourManager.ToggleTour();
+        else
+            Debug.LogWarning("ModeButtonsUI: tourManager not assigned.");
+
+        // Sync visuals from real state immediately
+        SyncVisualStatesFromControllers();
+    }
+
+    // -------------------------
+    // Emergency
+    // -------------------------
 
     void ToggleEmergency()
     {
-        // Turn OFF tour if it's active
-        if (!emergencyActive && tourActive)
+        if (IsBlockedByUI())
+            return;
+
+        // If evacuation running -> stop it
+        if (evacuationController != null && evacuationController.IsEvacuating)
         {
-            tourActive = false;
+            evacuationController.StopEvacuation();
+            SyncVisualStatesFromControllers();
+            return;
         }
 
-        emergencyActive = !emergencyActive;
+        // If panel open -> close it
+        if (emergencyModeController != null && emergencyModeController.IsPanelOpen)
+        {
+            emergencyModeController.ExitEmergencyMode();
+            SyncVisualStatesFromControllers();
+            return;
+        }
 
-        UpdateAllVisuals();
+        // We are about to open emergency -> stop tour first
+        StopTourIfRunning();
 
-        // if (emergencyActive) StartEvacuation();
-        // else StopEvacuation();
+        if (emergencyModeController != null)
+            emergencyModeController.EnterEmergencyMode();
+        else
+            Debug.LogWarning("ModeButtonsUI: emergencyModeController not assigned.");
+
+        SyncVisualStatesFromControllers();
     }
 
-    // VISUAL UPDATES
+    // -------------------------
+    // Visuals
+    // -------------------------
+
     void UpdateAllVisuals()
     {
         UpdateTourVisual();
@@ -84,15 +191,37 @@ public class ModeButtonsUI : MonoBehaviour
 
     void UpdateTourVisual()
     {
-        tourImage.sprite = tourActive
-            ? tourStopSprite
-            : tourNormalSprite;
+        if (tourImage == null) return;
+        tourImage.sprite = tourActive ? tourStopSprite : tourNormalSprite;
     }
 
     void UpdateEmergencyVisual()
     {
-        emergencyImage.sprite = emergencyActive
-            ? emergencyStopSprite
-            : emergencyNormalSprite;
+        if (emergencyImage == null) return;
+        emergencyImage.sprite = emergencyActive ? emergencyStopSprite : emergencyNormalSprite;
+    }
+
+    // -------------------------
+    // External calls (optional)
+    // -------------------------
+
+    public void ForceExitEmergencyMode()
+    {
+        ExitEmergencyIfOpenOrRunning();
+        UpdateAllVisuals();
+    }
+
+    public void ForceEnterEmergencyMode()
+    {
+        StopTourIfRunning();
+        emergencyActive = true;
+        tourActive = false;
+        UpdateAllVisuals();
+    }
+
+    public void SetTourActiveVisual(bool active)
+    {
+        tourActive = active;
+        UpdateTourVisual();
     }
 }

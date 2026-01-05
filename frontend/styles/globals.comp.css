@@ -954,6 +954,7 @@ body {
   border-radius: 30px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  z-index: 10;
 }
 
 .chat-header {
@@ -1725,6 +1726,8 @@ body {
   display: grid;
   grid-template-columns: max-content 1fr;
   grid-template-rows: max-content 1fr;
+  min-height: 100vh;
+  overflow: hidden;
 }
 .dashboard__header {
   display: flex;
@@ -1740,6 +1743,8 @@ body {
 }
 .dashboard__container {
   padding: 2rem;
+  height: calc(100vh - 8rem);
+  overflow-y: auto;
 }
 .dashboard__container > button {
   margin-bottom: 2rem;
@@ -1813,6 +1818,70 @@ body {
 .dashboard__users--status[data-status=unverified] {
   background-color: rgba(255, 142, 60, 0.2);
   color: #ff8e3c;
+}
+.dashboard__users--form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+.dashboard__users--form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.dashboard__users--form .form-group label {
+  font-size: 1.3rem;
+  color: #6B6B6B;
+}
+.dashboard__users--form .form-group input,
+.dashboard__users--form .form-group select {
+  padding: 0.8rem 1rem;
+  font-size: 1.4rem;
+  border-radius: 0.6rem;
+  border: 1px solid #cfcfcf;
+  font-family: inherit;
+}
+.dashboard__users--form .form-group .input-disabled {
+  background-color: #D8D8D8;
+  cursor: not-allowed;
+}
+.dashboard__overview .overview__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.6rem;
+}
+.dashboard__overview .overview__card {
+  border: 1px solid #eaeaea;
+  border-radius: 1.2rem;
+  background: #F0F0F0;
+  padding: 1.4rem;
+  position: relative;
+}
+.dashboard__overview .overview__card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: #ff7614;
+  border-top-left-radius: 1.2rem;
+  border-bottom-left-radius: 1.2rem;
+}
+.dashboard__overview .overview__note {
+  font-size: 1.2rem;
+  color: #6B6B6B;
+  margin-bottom: 0.6rem;
+}
+.dashboard__overview .overview__canvas {
+  height: 320px;
+  width: 100%;
+  position: relative;
+}
+.dashboard__overview .overview__canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 .dashboard__webgl {
   display: flex;
@@ -1918,6 +1987,79 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-input {
+  padding-right: 3.5rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.password-toggle svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.text-input {
+  width: 100%;
+  height: 4.2rem;
+  padding: 0 1.2rem;
+  border: 1px solid #d9d9d9;
+  border-radius: 0.8rem;
+  font-size: 1.4rem;
+  outline: none;
+  background: #fff;
+}
+
+.text-input:focus {
+  border-color: #f59a3b;
+  box-shadow: 0 0 0 3px rgba(245, 154, 59, 0.2);
+}
+
+.field {
+  margin-top: 1rem;
+}
+
+.input-group {
+  position: relative;
+  width: 100%;
+}
+
+.input-group .text-input {
+  padding-right: 4.2rem;
+}
+
+.icon-btn {
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3rem;
+  height: 3rem;
+  border: none;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.icon-btn svg {
+  width: 2rem;
+  height: 2rem;
 }
 
 .sidebar {

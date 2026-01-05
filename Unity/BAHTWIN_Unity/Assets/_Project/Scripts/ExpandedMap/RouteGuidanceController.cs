@@ -34,6 +34,8 @@ public class RouteGuidanceController : MonoBehaviour
     private float[] cumulative = null;       // cumulative distance along path
 
     private readonly List<Vector3> trimmed = new();
+    public bool IsRouteActive => !string.IsNullOrEmpty(destinationKey);
+
 
     void Reset()
     {

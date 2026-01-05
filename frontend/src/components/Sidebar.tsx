@@ -10,6 +10,7 @@ import {
   STAR,
   ANALYTICS,
   PARKING,
+  BOARD,
 } from "../assets/icons";
 import logo from "../assets/logo.svg";
 import { Link, useLocation } from "react-router-dom";
@@ -85,6 +86,11 @@ export default function Sidebar() {
       name: "Parking",
       route: "/dashboard/parking",
       icon: PARKING,
+    },
+    {
+      name: "Whiteboard",
+      route: "/dashboard/whiteboard",
+      icon: BOARD,
     },
   ];
 
