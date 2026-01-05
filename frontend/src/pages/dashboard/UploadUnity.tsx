@@ -73,7 +73,7 @@ function UploadUnity() {
     setUploading(true);
     setError(null);
 
-    // Progress bar initialization
+    // Progress bar
     const initialProgress: UploadProgress[] = Array.from(files).map((file) => ({
       filename: file.name,
       progress: 0,
@@ -82,7 +82,6 @@ function UploadUnity() {
     setUploadProgress(initialProgress);
 
     try {
-      // STEP 1 — Request presigned URLs
       const fileRequests = Array.from(files).map((file) => ({
         filename: renameFile(file.name),
         contentType: file.type || "application/octet-stream",
@@ -107,7 +106,6 @@ function UploadUnity() {
 
       const urls = data.urls;
 
-      // STEP 2 — Upload each file using the returned order
       const uploadPromises = urls.map(async (urlData: any, index: number) => {
         const file = files[index];
 
@@ -245,7 +243,7 @@ function UploadUnity() {
   );
 }
 
-// Upload file with progress tracking using PUT to presigned URL
+// Upload file
 async function uploadFileToS3(
   file: File,
   presignedUrl: string,
