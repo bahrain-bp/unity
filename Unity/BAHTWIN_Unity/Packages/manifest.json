@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.cqf.urpoutline": "file:C:/Users/khadi/Downloads/Unity-URP-Outline-main/Unity-URP-Outline-main",
     "com.unity.2d.enhancers": "1.0.0",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.ai.assistant": "1.0.0-pre.12",
