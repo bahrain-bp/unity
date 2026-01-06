@@ -169,14 +169,13 @@ def handler(event, context):
                 {"count": len(active_users), "timestamp": timestamp}
             ]
         elif component == "users_today":
-            card_payload["data"] = [
-                {
-                    "count": users_today_count,
-                    "usersYesterday": users_yesterday_count,
-                    "usersTodayChangePct": users_today_change_pct,
-                    "timezone": "Asia/Bahrain",
-                }
-            ]
+            card_payload["data"] = {
+                "count": users_today_count,
+                "usersYesterday": users_yesterday_count,
+                "usersTodayChangePct": round(users_today_change_pct, 2),
+                "timezone": "Asia/Bahrain",
+            }
+
         else:
             card_payload["data"] = [
                 {"series": users_last_6_hours}
