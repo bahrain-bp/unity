@@ -26,6 +26,8 @@ public class EmergencyEvacuationController : MonoBehaviour
     public bool IsEvacuating => evacuating;
     [Header("Emergency Overlay")]
     public GameObject redOverlayPanel;
+    [Header("Door Badging Control")]
+    public GameObject doorBadgingRoot;
 
 
 
@@ -37,9 +39,7 @@ public class EmergencyEvacuationController : MonoBehaviour
 
         if (statusText != null)
             statusText.gameObject.SetActive(false);
-        if (redOverlayPanel != null)
-            redOverlayPanel.SetActive(false);
-
+            SetEmergencyOverrideOnDoors(false);
     }
 
     // Called from EmergencyModeController when "Start Evacuation" is pressed
@@ -62,6 +62,9 @@ public class EmergencyEvacuationController : MonoBehaviour
 
         if (redOverlayPanel != null)
             redOverlayPanel.SetActive(true);
+
+        SetEmergencyOverrideOnDoors(true);
+
 
 
         routeController.gameObject.SetActive(true);
@@ -104,14 +107,17 @@ public class EmergencyEvacuationController : MonoBehaviour
             routeController.ClearRoute();
             routeController.gameObject.SetActive(false);
         }
+        if (redOverlayPanel != null)
+            redOverlayPanel.SetActive(false);
+
+        SetEmergencyOverrideOnDoors(false);
+
 
         ShowTempMessage("Evacuation done successfully");
 
         if (modeButtonsUI != null)
             modeButtonsUI.ForceExitEmergencyMode();
 
-        if (redOverlayPanel != null)
-            redOverlayPanel.SetActive(false);
     }
 
     // Nearest-exit logic
@@ -214,6 +220,29 @@ public class EmergencyEvacuationController : MonoBehaviour
         if (redOverlayPanel != null)
             redOverlayPanel.SetActive(false);
 
+        SetEmergencyOverrideOnDoors(false);
+
+
     }
+
+void SetEmergencyOverrideOnDoors(bool enabled)
+{
+    if (doorBadgingRoot == null) return;
+
+    var doors = doorBadgingRoot.GetComponentsInChildren<BadgeDoorEntry>(true);
+
+    foreach (var door in doors)
+    {
+        if (enabled)
+        {
+            door.emergencyOverride = true;
+        }
+        else
+        {
+            door.ResetAfterEmergency(); //restore normal badging
+        }
+    }
+}
+
 
 }

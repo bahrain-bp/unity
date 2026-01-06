@@ -15,14 +15,12 @@ export class BuildUploadStack extends Stack {
   constructor(scope: Construct, id: string, props: BuildUploadStackProps) {
     super(scope, id, props);
 
-    // Reference existing bucket
     const frontendBucket = s3.Bucket.fromBucketName(
       this,
       "ExistingFrontendBucket",
       props.frontendBucketName
     );
 
-    // Lambda only generates presigned URLs
     const presignedUrlHandler = new NodejsFunction(
       this,
       "PresignedUrlHandler",
@@ -37,12 +35,11 @@ export class BuildUploadStack extends Stack {
           UPLOAD_DIRECTORY: "unity",
           MAX_FILES: "4",
           URL_EXPIRATION_SECONDS: "3600", // 1 hour
-          CLOUDFRONT_DISTRIBUTION_ID: "E10Z2Q2KTJ7IIS",
+          CLOUDFRONT_DISTRIBUTION_ID: "E8RMBHHUMVCJZ",
         },
       }
     );
 
-    // Lambda only needs permission to *create* presigned URLs
     frontendBucket.grantPut(presignedUrlHandler);
 
     presignedUrlHandler.addToRolePolicy(

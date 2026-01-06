@@ -11,6 +11,29 @@
   grid-row: 1 / -1;
   border-right: 1px solid $color-grey;
 
+  &_desktop {
+    @media only screen and (max-width: $bp-12) {
+      display: none;
+    }
+  }
+  &_mobile,
+  &_drawer,
+  &_trigger {
+    display: none;
+    @media only screen and (max-width: $bp-12) {
+      display: block;
+    }
+  }
+
+  &_trigger {
+    margin-left: auto;
+    svg {
+      stroke: $color-dark-grey;
+      width: 4rem;
+      height: 4rem;
+    }
+  }
+
   & a.active {
     color: $color-font;
     font-weight: 500;
@@ -64,7 +87,6 @@
       display: flex;
       column-gap: 1.5rem;
       align-items: center;
-
 
       & svg {
         width: 2rem;

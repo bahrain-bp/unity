@@ -1,6 +1,3 @@
-"use client";
-
-// import { usePathname } from "next/navigation";
 import {
   OVERVIEW,
   USERS,
@@ -18,14 +15,32 @@ import { useAuth } from "../auth/AuthHook";
 import { useEffect, useState } from "react";
 import { ImageClient } from "../services/api";
 import tmpUserImg from "../assets/user.png";
+import Drawer from "@mui/material/Drawer";
 
-export default function Sidebar() {
+type SidebarProps = {
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+};
+
+export default function Sidebar({
+  open,
+  onClose,
+}: SidebarProps) {
   const location = useLocation();
   const pathname = location.pathname;
   const { email, userId } = useAuth();
 
   const [userImg, setUserImg] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
+
+  /* MOBILE SIDEBAR */
+  // const toggleDrawer = (newOpen: boolean) => () => {
+  //   setOpen(newOpen);
+  // };
+  // const [open, setOpen] = useState(false);
+
+  /* ============= */
 
   const getUserImg = async () => {
     try {
@@ -94,8 +109,8 @@ export default function Sidebar() {
     },
   ];
 
-  return (
-    <div className="sidebar">
+  const sidebar_content = (
+    <>
       <Link to={"/"} className="sidebar__logo">
         <img src={logo} alt="logo" />
         <p>BAHTWIN</p>
@@ -119,6 +134,19 @@ export default function Sidebar() {
           <span>{username ? username : email.replace(/@.*/, "")}</span>
         </a>
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      <div className="sidebar sidebar_desktop">{sidebar_content}</div>
+      <Drawer
+        className="sidebar_drawer"
+        open={open}
+        onClose={onClose}
+      >
+        <div className="sidebar sidebar_mobile">{sidebar_content}</div>
+      </Drawer>
+    </>
   );
 }

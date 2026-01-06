@@ -29,6 +29,8 @@ public class BadgeDoorEntry : MonoBehaviour
 
     private InputAction interactAction;
     private bool playerInZone;
+    public bool emergencyOverride;
+
 
     void Start()
     {
@@ -46,6 +48,18 @@ public class BadgeDoorEntry : MonoBehaviour
 
     void Update()
     {
+        // Emergency override: allow free passage
+        if (emergencyOverride)
+        {
+            if (entryBlocker != null)
+                entryBlocker.enabled = false;
+
+            if (promptUI != null)
+                promptUI.SetActive(false);
+
+            return;
+        }
+
         // Block door badging while tour is running (tour owns badge flow)
         if (tourManager != null && tourManager.tourRunning)
         {
@@ -69,6 +83,14 @@ public class BadgeDoorEntry : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if (emergencyOverride)
+        {
+            playerInZone = false;
+            if (promptUI != null)
+                promptUI.SetActive(false);
+            return;
+        }
+
         if (!other.CompareTag("Player")) return;
 
         // Block showing prompt during tour
@@ -89,4 +111,12 @@ public class BadgeDoorEntry : MonoBehaviour
         playerInZone = false;
         if (promptUI != null) promptUI.SetActive(false);
     }
+    public void ResetAfterEmergency()
+{
+    emergencyOverride = false;
+
+    if (entryBlocker != null)
+        entryBlocker.enabled = true;
+}
+
 }
