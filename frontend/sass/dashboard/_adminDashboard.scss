@@ -139,24 +139,33 @@
   justify-content: flex-start;
 }
 
-
-/* Responsive design */
 @media (max-width: 1024px) {
-  .dashboard {
-    grid-template-columns: 1fr;
+  /* Force ALL boxes to take full width */
+  .dashboard_IoT > .box {
+    grid-column: 1 / -1;
   }
 
-  .box5 {
-    min-height: 250px;
-  }
-
+  /* Bottom row becomes single column */
   .bottom-row {
     grid-template-columns: 1fr;
   }
+}
 
-  .box7,
-  .box8,
-  .box9 {
-    height: 150px;
+@media (max-width: 768px) {
+  /* Increase text size in list-based cards */
+  p { font-size: 10rem; }
+
+  .card-title {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  /* Last two boxes become flexible height */
+ 
+  /* Paragraph text size */
+  .comments-box p {
+    font-size: 1.1rem !important;
+    line-height: 1.5 !important;
   }
 }
