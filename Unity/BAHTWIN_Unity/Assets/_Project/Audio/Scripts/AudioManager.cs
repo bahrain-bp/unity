@@ -339,7 +339,11 @@ public class AudioManager : MonoBehaviour
             currentMusicSource.volume = 0f;
             currentMusicSource.Play();
 
-            float targetVol = (audioMixer != null) ? 1f : musicVolume * masterVolume;
+            float baseVol = Mathf.Clamp01(current.volume);
+            float targetVol = (audioMixer != null)
+                ? baseVol
+                : baseVol * musicVolume * masterVolume;
+
 
             float t = 0f;
             float startVol = (fadingMusicSource != null) ? fadingMusicSource.volume : 0f;
@@ -382,8 +386,11 @@ public class AudioManager : MonoBehaviour
         if (musicMixerGroup != null)
             source.outputAudioMixerGroup = musicMixerGroup;
 
-        if (audioMixer == null)
-            source.volume = musicVolume * masterVolume;
+        float baseVol = Mathf.Clamp01(data.volume);
+
+        source.volume = (audioMixer != null)
+            ? baseVol
+            : baseVol * musicVolume * masterVolume;
 
         source.pitch = (data.pitch <= 0f) ? 1f : data.pitch;
     }
