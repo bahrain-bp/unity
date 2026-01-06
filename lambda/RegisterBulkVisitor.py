@@ -286,7 +286,7 @@ def send_invitation_email(name, email, formatted_visit_dt):
         </p>
 
         <p style="text-align:center;">
-        <a href="https://dks06xhy7s4u4.cloudfront.net" class="btn" style="color:#ffffff;">Access BAHTWIN Platform</a>
+        <a href="https://d3pah2wsw5ry03.cloudfront.net/" class="btn" style="color:#ffffff;">Access BAHTWIN Platform</a>
         </p>
 
         <p class="footer">
