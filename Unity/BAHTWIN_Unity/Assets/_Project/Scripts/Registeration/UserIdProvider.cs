@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Runtime.InteropServices;
 
 public class UserIdProvider : MonoBehaviour
 {
@@ -11,28 +10,22 @@ public class UserIdProvider : MonoBehaviour
     [SerializeField] private string userIdKey = "userId";
     [SerializeField] private string idTokenKey = "idToken";
 
-#if UNITY_WEBGL && !UNITY_EDITOR
-    [DllImport("__Internal")]
-    private static extern string GetLocalStorage(string key);
-#endif
-
     public string GetUserId()
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
-        string value = GetLocalStorage(userIdKey);
-        return string.IsNullOrEmpty(value) ? "" : value;
+        return WebGLLocalStorage.GetString(userIdKey);
 #else
-        return editorTestUserId;
+        // Editor/Standalone testing
+        return PlayerPrefs.GetString(userIdKey, editorTestUserId);
 #endif
     }
 
     public string GetIdToken()
     {
-#if UNITY_EDITOR
-        return editorTestIdToken;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        return WebGLLocalStorage.GetString(idTokenKey);
 #else
-    return WebGLLocalStorage.GetItem("idToken");
+        return PlayerPrefs.GetString(idTokenKey, editorTestIdToken);
 #endif
     }
-
 }

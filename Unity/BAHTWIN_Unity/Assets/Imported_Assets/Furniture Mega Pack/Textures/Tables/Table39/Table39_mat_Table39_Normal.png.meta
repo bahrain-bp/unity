@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 71bd1f25e6446f24c9d30852b80e0d08
+AssetOrigin:
+  serializedVersion: 1
+  productId: 330002
+  packageName: Furniture Mega Pack - Free
+  packageVersion: 1.0
+  assetPath: Assets/Furniture Mega Pack/Textures/Tables/Table39/Table39_mat_Table39_Normal.png
+  uploadId: 785398
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -106,6 +113,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 1024
+    resizeAlgorithm: 0
+    textureFormat: 47
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 1
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites: []
@@ -128,10 +148,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 330002
-  packageName: Furniture Mega Pack - Free
-  packageVersion: 1.0
-  assetPath: Assets/Furniture Mega Pack/Textures/Tables/Table39/Table39_mat_Table39_Normal.png
-  uploadId: 785398
