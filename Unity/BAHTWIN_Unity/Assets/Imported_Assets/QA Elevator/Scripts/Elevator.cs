@@ -12,6 +12,8 @@ public class Elevator : MonoBehaviour
 	private Rigidbody Player;
 	private Transform PlayerCam;
 
+	public TutorialManager Tutorial;
+
 	//Interaction for Unity Input System package
 #if ENABLE_INPUT_SYSTEM
     [SerializeField] private Key interactionKey = Key.F;
@@ -286,6 +288,9 @@ public class Elevator : MonoBehaviour
 
 					if (hit.transform.tag == "ElevatorNumericButton" && !Moving)
 					{
+						if (Tutorial != null) 
+							Tutorial.OnCorrectFloorPressed();
+							
 						InputFloor += hit.transform.name;
 						hit.transform.GetComponent<MeshRenderer>().enabled = true;
 						ElevatorNumericButtons.Add(hit.transform.GetComponent<MeshRenderer>());
