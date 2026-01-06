@@ -14,6 +14,9 @@ public class RoomMenuUI : MonoBehaviour
     public TMP_InputField searchInput;
     public Transform contentRoot; // RoomsScroll/Viewport/Content
 
+    [Header("Tutorial")]
+    public TutorialManager tutorial;
+
     [Header("Prefabs")]
     public TMP_Text categoryHeaderPrefab;
     public Button roomButtonPrefab;
@@ -120,6 +123,12 @@ public class RoomMenuUI : MonoBehaviour
             selectedRoom = entry.room;
             SetBottomButtons(true);
             UpdateButtonVisuals();
+
+            if (tutorial != null &&
+                entry.room.roomName.Equals("Reception", StringComparison.OrdinalIgnoreCase))
+            {
+                tutorial.OnReceptionSelected();
+            }
         });
     }
 
