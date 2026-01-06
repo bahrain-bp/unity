@@ -31,7 +31,7 @@ export class UnityWebSocketStack extends cdk.Stack {
     const plugActionsTable = props.dbStack.plugActionsTable;
 
     // ────────────────────────────────
-    // ✅ X-RAY HELPER
+    //  X-RAY HELPER
     // ────────────────────────────────
     const enableXRay = (fn: lambda.Function) => {
       fn.role?.addManagedPolicy(
@@ -55,7 +55,7 @@ export class UnityWebSocketStack extends cdk.Stack {
       environment: {
         CONNECTIONS_TABLE: this.connectionsTable.tableName,
       },
-      // ✅ X-Ray
+      // X-Ray
       tracing: lambda.Tracing.ACTIVE,
     });
     enableXRay(connectFn);
@@ -69,7 +69,7 @@ export class UnityWebSocketStack extends cdk.Stack {
       environment: {
         CONNECTIONS_TABLE: this.connectionsTable.tableName,
       },
-      // ✅ X-Ray
+      // X-Ray
       tracing: lambda.Tracing.ACTIVE,
     });
     enableXRay(disconnectFn);
@@ -88,7 +88,7 @@ export class UnityWebSocketStack extends cdk.Stack {
         PLUG_INDEX_NAME: "plug_id-ts-index",
         PLUG_IDS: JSON.stringify(["plug1", "plug2"]),
       },
-      // ✅ X-Ray
+      // X-Ray
       tracing: lambda.Tracing.ACTIVE,
     });
     enableXRay(defaultFn);

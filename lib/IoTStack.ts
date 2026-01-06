@@ -117,11 +117,9 @@ export class IoTStack extends cdk.Stack {
         WS_CONNECTIONS_TABLE: wsStack.connectionsTable.tableName,
         WS_MANAGEMENT_ENDPOINT: wsStack.managementEndpoint,
       },
-      // ✅ X-Ray: enable tracing for this lambda
       tracing: lambda.Tracing.ACTIVE,
     });
 
-    // ✅ X-Ray: allow publishing traces
     enableXRay(telemetryIngestFn);
 
     telemetryTable.grantReadWriteData(telemetryIngestFn);

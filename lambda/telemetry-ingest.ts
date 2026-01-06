@@ -38,7 +38,7 @@ const norm = (s?: string) =>
   typeof s === "string" ? s.trim().toLowerCase() : undefined;
 
 /**
- * ✅ Option A:
+ * Option A:
  * - Keep numeric values in `metrics`
  * - Keep string/boolean values in `attrs`
  * - Allow DB write if either metrics OR attrs has content
@@ -177,7 +177,7 @@ export const handler = async (event: any) => {
       if (event[key] !== undefined) item[key] = event[key];
     }
 
-    // ✅ TTL: only for dht11 items -> auto-delete ~24h after write
+    // TTL: only for dht11 items -> auto-delete ~24h after write
     if (norm(sensorType) === "dht11") {
       item[TTL_ATTRIBUTE] = ts + TTL_24H_SECONDS; // MUST be Number epoch seconds
     }
@@ -270,7 +270,6 @@ export const handler = async (event: any) => {
   } catch (err) {
     console.error("Failed to broadcast telemetry over WebSocket:", err);
   }
-
   // Skip DB write if status unchanged
   if (lastN === curN) {
     console.log(
@@ -283,7 +282,6 @@ export const handler = async (event: any) => {
       skippedBroadcast: false,
     };
   }
-
   // Write only on change
   const item: any = {
     device,
