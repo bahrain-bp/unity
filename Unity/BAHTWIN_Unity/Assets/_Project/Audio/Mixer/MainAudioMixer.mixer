@@ -35,6 +35,8 @@ AudioMixerController:
   m_EnableSuspend: 1
   m_UpdateMode: 0
   m_ExposedParameters:
+  - guid: 238c33cc44b54d0408d0dce9df5f2b5f
+    name: AmbianceVolume
   - guid: 2273154687722c44d8e39d2f2dcfeddf
     name: MasterVolume
   - guid: 42c8f517db3f9e44f9076218f426291e
@@ -61,8 +63,8 @@ AudioMixerGroupController:
   m_GroupID: 1535c4328541833449d089ae039d8c78
   m_Children:
   - {fileID: 8569642351457014206}
-  - {fileID: 1899205747740797706}
   - {fileID: -7352375339166369755}
+  - {fileID: 1899205747740797706}
   m_Volume: 2273154687722c44d8e39d2f2dcfeddf
   m_Pitch: 0f9c4ff40ddf98640b3cbe755c4508c3
   m_Send: 00000000000000000000000000000000
