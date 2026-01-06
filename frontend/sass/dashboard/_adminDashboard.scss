@@ -149,19 +149,9 @@
   .bottom-row {
     grid-template-columns: 1fr;
   }
-}
-
-@media (max-width: 768px) {
-  /* Increase text size in list-based cards */
-  p { font-size: 10rem; }
-
   .card-title {
     font-size: 1.4rem;
   }
-}
-
-@media (max-width: 1024px) {
-  /* Last two boxes become flexible height */
  
   /* Paragraph text size */
   .comments-box p {
@@ -169,3 +159,5 @@
     line-height: 1.5 !important;
   }
 }
+
+
