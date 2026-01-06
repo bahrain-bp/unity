@@ -1,0 +1,73 @@
+@use "../var" as *;
+
+.feedback-page {
+  min-height: 100vh;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+    .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 1400px;
+
+    input,
+    select,
+    .date-picker-input {
+      padding: 0.9rem 1.2rem;
+      border-radius: 10px;
+      border: 1px solid $color-grey;
+      font-size: 1.4rem;
+      min-width: 180px;
+      flex: 1 1 200px;
+      font-family: inherit;
+      background-color: $color-white;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: $color-dark-grey;
+      font-weight: 500;
+    }
+  }
+
+    .feedback-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1400px;
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: $color-dark-grey;
+      font-size: 1rem;
+      padding: 2rem 0;
+      margin: 0;     }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+    &.loading {
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 0;
+
+    .page-header {
+      margin-bottom: 1rem;     }
+
+    .empty-state {
+      padding: 0;
+      margin-top: 0.5rem;
+    }
+  }
+}

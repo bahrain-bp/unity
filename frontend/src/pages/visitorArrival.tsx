@@ -7,8 +7,8 @@ import {
   FaTimesCircle,
 } from "react-icons/fa";
 import { ImageClient } from "../services/api";
-import "../../sass/_visitorArrival.scss";
 import DashboardLayout from "./dashboard/DashboardLayout";
+import "../../sass/dashboard/_visitorArrival.scss"
 
 const Arrival: React.FC = () => {
   const webcamRef = useRef<Webcam>(null);
@@ -80,7 +80,7 @@ const Arrival: React.FC = () => {
   };
 
   return (
-    <DashboardLayout header="Visitor Arrival">
+    <DashboardLayout className="visitor-arrival" header="Visitor Arrival">
       <div className="auth-sec invite-page">
         <div className="auth">
           <div className="auth__logo auth__logo--center">

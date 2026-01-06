@@ -60,12 +60,8 @@ export const CreateUser = async (data: CreateUser): Promise<CreateUserRes> => {
   }
 }
 
-export const UpdateUser = async (
-  userId: string,
-  data: UpdateUser
-): Promise<UpdateUserRes> => {
+export const UpdateUser = async (userId: string, data: UpdateUser): Promise<UpdateUserRes> => {
   try {
-    // encodeURIComponent is used because userId is an email with special characters like @
     const res = await Client.put<UpdateUserRes>(
       `/users/${encodeURIComponent(userId)}`,
       data

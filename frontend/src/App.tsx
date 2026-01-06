@@ -1,15 +1,12 @@
 import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-} from "react-router-dom";
+BrowserRouter as Router,Route,Routes,Navigate,} from "react-router-dom";
 import "../styles/globals.css";
 import Landing from "./pages/Landing";
 import Info from "./pages/Info";
 import Navbar from "./components/Navbar";
 import Authentication from "./pages/Authentication";
 import Environment from "./pages/Environment";
+import type { PropsWithChildren } from "react";
 import Chatbot from "./components/ChatBot";
 import VisitorArrival from "./pages/visitorArrival";
 import InviteVisitor from "./pages/dashboard/InviteVisitor";
@@ -17,13 +14,18 @@ import VisitorFeedBack from "./pages/VisitorFeedback";
 import ErrorPage from "./pages/error";
 import ThankYouPage from "./pages/thank-you";
 import Users from "./pages/dashboard/Users";
-import IoT from "./pages/dashboard/IoT";
 import Footer from "./components/Footer";
 import { useAuth } from "./auth/AuthHook";
 import UploadUnity from "./pages/dashboard/UploadUnity";
+import Analytics from "./pages/dashboard/Analytics";
+import Parking from "./pages/dashboard/Parking";
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import { useEffect } from "react";
+import FeedbackPage from "./pages/dashboard/Feedback";
+import Whiteboard from "./pages/Whiteboard";
 
 // Protected Route Component for authenticated users
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children }:PropsWithChildren) {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
@@ -34,7 +36,7 @@ function ProtectedRoute({ children }) {
 }
 
 // Admin Only Route Component
-function AdminRoute({ children }) {
+function AdminRoute({ children }:PropsWithChildren) {
   const { userRole } = useAuth();
 
   if (userRole !== "admin") {
@@ -45,7 +47,7 @@ function AdminRoute({ children }) {
 }
 
 // Public Only Route (redirects authenticated users)
-function PublicOnlyRoute({ children }) {
+function PublicOnlyRoute({ children }:PropsWithChildren ) {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
@@ -56,11 +58,41 @@ function PublicOnlyRoute({ children }) {
 }
 
 function App() {
+  const { userId } = useAuth();
+  useEffect(() => {
+    if (!userId) return;
+
+    let lastHeartbeatSentAt = 0;
+    const HEARTBEAT_INTERVAL = 30_000; // 30 seconds
+
+    const maybeSendHeartbeat = () => {
+      const now = Date.now();
+      if (now - lastHeartbeatSentAt < HEARTBEAT_INTERVAL) return;
+
+      lastHeartbeatSentAt = now;
+
+      fetch(`${import.meta.env.VITE_IMAGE_API_URL}visitor/heartbeat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, timestamp: now }),
+      }).catch(() => {});
+    };
+
+    window.addEventListener("click", maybeSendHeartbeat);
+    window.addEventListener("scroll", maybeSendHeartbeat);
+    window.addEventListener("keydown", maybeSendHeartbeat);
+
+    return () => {
+      window.removeEventListener("click", maybeSendHeartbeat);
+      window.removeEventListener("scroll", maybeSendHeartbeat);
+      window.removeEventListener("keydown", maybeSendHeartbeat);
+    };
+  }, [userId]);
   return (
     <>
       <Router>
         <Routes>
-          {/* Public routes - accessible to everyone */}
+          {/* Public routes */}
           <Route
             path="/"
             element={
@@ -80,7 +112,8 @@ function App() {
             }
           />
 
-          {/* Auth route - only for non-authenticated users */}
+
+          {/* routes for non authenticated users */}
           <Route
             path="/auth"
             element={
@@ -91,25 +124,26 @@ function App() {
             }
           />
 
-          {/* Protected routes - for authenticated users only */}
+          {/* Protected routes for authenticated users only */}
           <Route
             path="/environment"
             element={
               <ProtectedRoute>
-                <Navbar />
                 <Environment />
               </ProtectedRoute>
             }
           />
 
+          {/* Admin only routes */}
           <Route
-            path="/dashboard"
+            path="/dashboard/analytics"
             element={
               <AdminRoute>
-                <IoT />
+                <Analytics />
               </AdminRoute>
             }
           />
+
           <Route
             path="/dashboard/users"
             element={
@@ -119,10 +153,34 @@ function App() {
             }
           />
           <Route
+            path="/dashboard/feedbacks"
+            element={
+              <AdminRoute>
+                <FeedbackPage />
+              </AdminRoute>
+            }
+          />
+          <Route
             path="/dashboard/upload-unity"
             element={
               <AdminRoute>
                 <UploadUnity />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/dashboard/parking"
+            element={
+              <AdminRoute>
+                <Parking />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/dashboard/whiteboard"
+            element={
+              <AdminRoute>
+                <Whiteboard />
               </AdminRoute>
             }
           />
@@ -142,8 +200,16 @@ function App() {
               </>
             }
           />
+          <Route
+            path="/dashboard"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
 
-          {/* Visitor routes - public access */}
+          {/* Utility routes */}
           <Route
             path="/VisitorFeedBack"
             element={
@@ -153,7 +219,6 @@ function App() {
             }
           />
 
-          {/* Utility routes */}
           <Route
             path="/error"
             element={

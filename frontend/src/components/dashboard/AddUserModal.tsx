@@ -4,6 +4,8 @@ import Backdrop from "@mui/material/Backdrop"
 import Fade from "@mui/material/Fade"
 import Box from "@mui/material/Box"
 import { MODAL_STYLE } from "./modalStyle"
+import { EYEO, EYEC } from "../../assets/icons"
+
 interface AddUserModalProps {
   isOpen: boolean
   isAdding: boolean
@@ -13,6 +15,7 @@ interface AddUserModalProps {
 
 const AddUserModal = ({ isOpen, isAdding, onClose, onSubmit }: AddUserModalProps) => {
   const [formVals, setFormVals] = useState({ email: "", temporaryPassword: "" })
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormVals({ ...formVals, [e.target.id]: e.target.value })
@@ -29,6 +32,7 @@ const AddUserModal = ({ isOpen, isAdding, onClose, onSubmit }: AddUserModalProps
   useEffect(() => {
     if (!isOpen) {
       setFormVals({ email: "", temporaryPassword: "" })
+      setShowPassword(false)
     }
   }, [isOpen])
 
@@ -53,22 +57,40 @@ const AddUserModal = ({ isOpen, isAdding, onClose, onSubmit }: AddUserModalProps
             Create a new user account
           </p>
           <div className="dashboard__users--form">
-            <input
-              id="email"
-              type="email"
-              value={formVals.email}
-              onChange={handleChange}
-              placeholder="Email (required)"
-              required
-            />
-            <input
-              id="temporaryPassword"
-              type="password"
-              value={formVals.temporaryPassword}
-              onChange={handleChange}
-              placeholder="Temporary Password (optional)"
-            />
+            <div className="field">
+              <input
+                id="email"
+                type="email"
+                value={formVals.email}
+                onChange={handleChange}
+                placeholder="Email (required)"
+                required
+                className="text-input"
+              />
+            </div>
+
+            <div className="field">
+              <div className="input-group">
+                <input
+                  id="temporaryPassword"
+                  type={showPassword ? "text" : "password"}
+                  value={formVals.temporaryPassword}
+                  onChange={handleChange}
+                  placeholder="Temporary Password (optional)"
+                  className="text-input"
+                />
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => setShowPassword(s => !s)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? EYEC() : EYEO()}
+                </button>
+              </div>
+            </div>
           </div>
+
           <div className="dashboard__users--modal-actions">
             <button
               className="dashboard__users--btn btn btn-secondary"

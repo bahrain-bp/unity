@@ -12,7 +12,6 @@ export const AwsConfigAuth = {
           required: true,
         },
       },
-      // allowGuestAccess: false,
       passwordFormat: {
         minLength: 8,
         requireLowercase: true,

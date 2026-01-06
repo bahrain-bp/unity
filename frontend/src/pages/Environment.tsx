@@ -6,7 +6,7 @@ export default function Environment() {
   useEffect(() => {
     // --- Unity loader script ---
     const loaderScript = document.createElement("script");
-    loaderScript.src = "/unity/Bahtwin_Unity_version1.loader.js";
+    loaderScript.src = "/unity/BAHTWIN_BUILD.loader.js";
     loaderScript.onload = () => {
       const w = window as any;
 
@@ -30,9 +30,9 @@ export default function Environment() {
         w
           .createUnityInstance(canvasRef.current, {
             arguments: [],
-            dataUrl: "/unity/Bahtwin_Unity_version1.data.unityweb",
-            frameworkUrl: "/unity/Bahtwin_Unity_version1.framework.js.unityweb",
-            codeUrl: "/unity/Bahtwin_Unity_version1.wasm.unityweb",
+            dataUrl: "/unity/BAHTWIN_BUILD.data.unityweb",
+            frameworkUrl: "/unity/BAHTWIN_BUILD.framework.js.unityweb",
+            codeUrl: "/unity/BAHTWIN_BUILD.wasm.unityweb",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "DefaultCompany",
             productName: "BAHTWIN_Unity",
@@ -52,6 +52,14 @@ export default function Environment() {
                 "initSmartPlugBridge not found. Is /js/unity-realtime-bridge.js loaded?"
               );
             }
+
+            // Chat bridge 
+            if (w.initChatBridge) {
+              console.log("Initializing Chat bridge…");
+              w.initChatBridge(instance);
+            } else {
+              console.warn("initChatBridge not found. Is unity-realtime-bridge.js loaded?");
+            }
           })
           .catch((message: any) => {
             console.error("Unity load error:", message);
@@ -67,6 +75,9 @@ export default function Environment() {
     bridgeScript.src = "/js/unity-realtime-bridge.js";
     document.body.appendChild(bridgeScript);
 
+    // ─────────────────────────────────────────────
+    // Cleanup (user leaves page)
+    // ─────────────────────────────────────────────
     return () => {
       if (loaderScript.parentNode) {
         loaderScript.parentNode.removeChild(loaderScript);

@@ -8,7 +8,6 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 VISITOR_TABLE = os.environ['VISITOR_TABLE']
 FEEDBACK_SECRET = os.environ['FEEDBACK_SECRET']
 
-
 # DynamoDB resource
 dynamodb = boto3.resource('dynamodb')
 visitor_table = dynamodb.Table(VISITOR_TABLE)
@@ -23,12 +22,12 @@ def handler(event, context):
         print(f"Token: {token}")
         
         if not token:
-            return response(401, {"error": "No token provided"})
+            return response(401, {"error": "Visitor not allowed"})
         
         token_used = used_tokens_table.get_item(Key={'token': token}).get('Item')
         
         if token_used:
-            return response(403, {"error": "Token already used"})
+            return response(403, {"error": "Feedback already submitted"})
 
         # Decode JWT
         payload = jwt.decode(token, FEEDBACK_SECRET, algorithms=['HS256'])
@@ -36,7 +35,7 @@ def handler(event, context):
         print(f"Visitor ID: {visitor_id}")
 
         if not visitor_id:
-            return response(403, {"error": "Invalid token"})
+            return response(403, {"error": "Visitor not allowed"})
 
         # Fetch visitor info from DynamoDB
         response_db = visitor_table.get_item(Key={"userId": visitor_id})
@@ -65,7 +64,7 @@ def response(status, body):
         "statusCode": status,
         "headers": {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",   # Allow requests from any origin
+            "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
             "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token"
         },

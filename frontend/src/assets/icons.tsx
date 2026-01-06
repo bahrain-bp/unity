@@ -91,7 +91,7 @@ export const HOME = () => {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke-width="2"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -187,7 +187,7 @@ export const FILTER = () => {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke-width="2"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -204,7 +204,7 @@ export const X = () => {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke-width="2"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -333,7 +333,7 @@ export const CAMERA = () => {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke-width="2"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -430,9 +430,9 @@ export const USERS = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -450,9 +450,9 @@ export const MORE = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -469,9 +469,9 @@ export const TRASH = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -487,9 +487,9 @@ export const PEN = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -504,9 +504,9 @@ export const ADDUSER = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -524,9 +524,9 @@ export const FILE = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -542,15 +542,126 @@ export const FILES = () => {
       height="46"
       fill="none"
       stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path d="M15 3v4a1 1 0 0 0 1 1h4"></path>
       <path d="M18 17h-7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4l5 5v7a2 2 0 0 1-2 2Z"></path>
       <path d="M16 17v2a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2"></path>
+    </svg>
+  );
+};
+export const INFO = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10Zm-1-11v6h2v-6h-2Zm0-4v2h2V7h-2Z"></path>
+    </svg>
+  );
+};
+export const USERADD = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <path d="M8.5 3a4 4 0 1 0 0 8 4 4 0 1 0 0-8z"></path>
+      <path d="M20 8v6"></path>
+      <path d="M23 11h-6"></path>
+    </svg>
+  );
+};
+export const STAR = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+    </svg>
+  );
+};
+export const PARKING = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm1 2v14h14V5H5Zm4 2h3.5a3.5 3.5 0 1 1 0 7H11v3H9V7Zm2 2v3h1.5a1.5 1.5 0 1 0 0-3H11Z"></path>
+    </svg>
+  );
+};
+export const ANALYTICS = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M3 3v18h18"></path>
+      <path d="m7 17 4-8 5 4.5L21 3"></path>
+    </svg>
+  );
+};
+export const BOARD = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M8.586 17H3v-2h18v2h-5.586l3.243 3.243-1.414 1.414L13 17.414V20h-2v-2.586l-4.243 4.243-1.414-1.414L8.586 17ZM5 3h14a1 1 0 0 1 1 1v10H4V4a1 1 0 0 1 1-1Zm1 2v7h12V5H6Z"></path>
+    </svg>
+  );
+};
+export const CHEVRON = () => {
+  return (
+    <svg
+      width="46"
+      height="46"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="m9 18 6-6-6-6"></path>
     </svg>
   );
 };

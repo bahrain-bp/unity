@@ -1,15 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  MAIL,
-  EYEC,
-  EYEO,
-  LOCK,
-  IMAGE,
-  CAMERA,
-  SUCCESS,
-  ERROR,
-  USER,
-} from "../assets/icons";
+import {MAIL,EYEC,EYEO,LOCK,IMAGE,CAMERA,SUCCESS,ERROR,USER,} from "../assets/icons";
 import imagePlaceholder from "../assets/image.svg";
 import { useAuth } from "../auth/AuthHook";
 import { useNavigate } from "react-router-dom";
@@ -21,9 +11,8 @@ function Authentication() {
   const [showPass1, setShowPass1] = useState<boolean>(false);
   const [showPass2, setShowPass2] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<boolean>(true);
-  // const [isSignedUp, setIsSignedUp] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
 
   const [error, setError] = useState("");
@@ -31,9 +20,10 @@ function Authentication() {
   const [message, setMessage] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [showVerification, setShowVerification] = useState(false);
-
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(false)
+  
   const navigate = useNavigate();
-  const { signUp, confirmSignUp, signIn } = useAuth();
+  const { signUp, confirmSignUp, signIn, changePassword } = useAuth();
 
   const [account, setAccount] = useState({
     email: "",
@@ -96,10 +86,10 @@ function Authentication() {
   const handleSubmit = async (event: React.ChangeEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (authMode) {
-      if (!userId) {
-        handleSignup();
-      } else {
+      if (userId) {
         handleImageUpload(userId);
+      } else {
+        handleSignup();
       }
     } else {
       handleSignIn();
@@ -111,20 +101,35 @@ function Authentication() {
     setMessage("");
     setLoading(true);
 
-    const result = await signIn(account.email, account.password);
-
+    if (needsPasswordChange) {
+    const result = await changePassword(account.password);
+    
     if (result.success) {
       navigate("/");
     } else {
       setError(result.message);
     }
+  } else {
+    const result = await signIn(account.email, account.password);
 
-    setLoading(false);
+    if (result.success) {
+      navigate("/");
+    } else if (result.message === "NEW_PASSWORD_REQUIRED") {
+      setNeedsPasswordChange(true);
+      setError("");
+      setMessage("Please set a new password");
+    } else {
+      setError(result.message);
+    }
+  }
+
+  setLoading(false);
   };
 
   const handleSignup = async () => {
     setError("");
     setMessage("");
+    setUserId(null);
 
     if (account.password !== account.confirmPassword) {
       setError("Passwords do not match");
@@ -136,8 +141,8 @@ function Authentication() {
       return;
     }
 
-    if (username.length < 1) {
-      setError("Please enter a username");
+    if (name.length < 1) {
+      setError("Please enter your name");
       return;
     }
 
@@ -151,19 +156,15 @@ function Authentication() {
     console.log(result);
 
     if (result.success) {
-      // setMessage(result.message);
       setUserId(result.userId ?? null);
       if (result.userId) {
         handleImageUpload(result.userId);
       }
       setError("");
-      localStorage.setItem("username", username);
-      //setShowVerification(true);
+      localStorage.setItem("username", name);
     } else {
       setError(result.message);
     }
-
-    // setLoading(false);
   };
 
   const handleImageUpload = async (userId: string) => {
@@ -174,7 +175,7 @@ function Authentication() {
       console.log(userId);
       await ImageClient.post("/visitor/register", {
         userId: userId,
-        name: username,
+        name: name,
         email: account.email,
         image_data: imageBase64,
       });
@@ -201,6 +202,8 @@ function Authentication() {
       setTimeout(() => {
         setShowVerification(false);
         setAuthMode(false);
+        setShowPass1(false);
+        setShowPass2(false);
         setError("");
         setMessage("");
         navigate("/auth");
@@ -223,15 +226,6 @@ function Authentication() {
               length={6}
               onChange={(value) => setVerificationCode(value)}
             />
-            {/* <input
-              type="email"
-              className="auth__form--input"
-              placeholder="Enter your email"
-              id="email"
-              name="email"
-              onChange={handleChange}
-            /> */}
-
             {error && <Message type="error" icon={ERROR()} message={error} />}
             {message && (
               <Message type="success" icon={SUCCESS()} message={message} />
@@ -312,7 +306,7 @@ function Authentication() {
                     className="auth__form--uploadPlaceholder"
                   >
                     {IMAGE()}
-                    <p>Upload your image here!</p>
+                    <p><b>IMPORTANT: </b>Please upload a clear photo of yourself. This image is used for pre-registration for your visit and will be linked to your account. The same face cannot be used by another user.</p>
                   </span>
                 )}
               </div>
@@ -320,18 +314,18 @@ function Authentication() {
           )}
           {authMode && (
             <>
-              <label htmlFor="username" className="auth__form--label">
-                Username
+              <label htmlFor="name" className="auth__form--label">
+                Name
               </label>
               <div className="auth__form--input">
                 {USER()}
                 <input
                   type="text"
                   className="auth__form--input"
-                  placeholder="Enter your username"
-                  id="username"
-                  name="username"
-                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your name"
+                  id="name"
+                  name="name"
+                  onChange={(e) => setName(e.target.value)}
                 />
               </div>
             </>
@@ -352,7 +346,7 @@ function Authentication() {
           </div>
 
           <label htmlFor="password" className="auth__form--label">
-            Password
+            {needsPasswordChange ? "New Password" : "Password"}
           </label>
           <div className="auth__form--input">
             {LOCK()}

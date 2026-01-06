@@ -7,9 +7,10 @@ import { BedrockStack } from '../lib/bedrock_stack';
 import { IndexStack } from '../lib/index_stack';
 import { FacialRecognitionStack } from "../lib/FacialRecognitionStack";
 import { VisitorFeedbackStack } from "../lib/VisitorFeedbackStack";
- 
+
 import { IoTStack } from "../lib/IoTStack";
 import { UnityWebSocketStack } from "../lib/unity-websocket-stack";
+import { BuildUploadStack } from "../lib/BuildUploadStack"; 
 
 const app = new cdk.App();
 
@@ -22,7 +23,10 @@ const env = {
 const dbStack = new DBStack(app, "Unity-DBStack", { env });
 
 // 2) WebSocket stack
-const wsStack = new UnityWebSocketStack(app, "UnityWebSocketStack", { env });
+const wsStack = new UnityWebSocketStack(app, "UnityWebSocketStack", {
+  env,
+  dbStack,
+});
 
 // 3) IoT stack (Things + policy + rule + ingest Lambda + WS broadcast)
 const iotStack = new IoTStack(app, "Unity-IoTStack", {
@@ -53,7 +57,16 @@ indexStack.addDependency(openSearchStack);
 bedrockStack.addDependency(indexStack);
 
 // 5) Frontend deployment
-new FrontendDeploymentStack(app, "Unity-FrontendDeploymentStack");
+const frontendStack = new FrontendDeploymentStack(
+  app,
+  "Unity-FrontendDeploymentStack",
+  {
+    env: {
+      account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: process.env.CDK_DEFAULT_REGION || "us-east-1",
+    },
+  }
+);
 
 // 6) API stack (Cognito + API Gateway + Lambdas)
 new APIStack(app, "Unity-APIStack", {
@@ -64,17 +77,24 @@ new APIStack(app, "Unity-APIStack", {
 });
 
 
-const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
-  },
-});
-
+// const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
+//   env: {
+//     account: process.env.CDK_DEFAULT_ACCOUNT,
+//     region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+//   },
+// });
 
 // new VisitorFeedbackStack(app, 'VisitorFeedbackStack', {
 //   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION || 'us-east-1' },
 //   userTable: FRStack.userTable, 
+//   broadcastLambda: FRStack.broadcastLambda
 // });
- 
-//new FrontendDeploymentStack(app, "Unity-FrontendDeploymentStack");
+
+// Build Upload Stack
+new BuildUploadStack(app, "Unity-BuildUploadStack", {
+  frontendBucketName: frontendStack.frontendBucket.bucketName,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || "us-east-1",
+  },
+});

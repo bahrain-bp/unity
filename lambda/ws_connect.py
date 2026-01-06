@@ -1,23 +1,43 @@
 import os
 import boto3
+import time
+from datetime import datetime
 
 dynamodb = boto3.resource("dynamodb")
-table_name = os.environ.get("TABLE_NAME")
-table = dynamodb.Table(table_name)
+table = dynamodb.Table(os.environ["TABLE_NAME"])
 
 def handler(event, context):
-    print("Received event:", event)  # <--- this will show the full event
-    connection_id = event.get("requestContext", {}).get("connectionId")
-    print("Connection ID:", connection_id)
+    print("Received event:", event)
 
-    if connection_id:
-        table.put_item(Item={"ConnectionId": connection_id})
-        print("Stored connection in DynamoDB")
-        resp = table.get_item(Key={"ConnectionId": connection_id})
-        print(f"Table ARN: {table.table_arn}")
-        print("Stored item:", resp.get("Item"))
+    # Token validation
+    params = event.get("queryStringParameters") or {}
+    token = params.get("token")
 
-    else:
-        print("No connection ID found!")
+    expected_token = os.environ.get("WS_TOKEN")
 
-    return {"statusCode": 200, "body": "Connected."}
+    if not token or token != expected_token:
+        print("Unauthorized WebSocket connection attempt")
+        return {
+            "statusCode": 401,
+            "body": "Unauthorized"
+        }
+
+    # Authorized connection
+    connection_id = event["requestContext"]["connectionId"]
+    now = int(time.time())
+
+    table.put_item(
+        Item={
+            "ConnectionId": connection_id,
+            "connectedAt": datetime.utcnow().isoformat(),
+            "lastSeen": now,
+            "ttl": now + 120  # expires after 2 minutes if no heartbeat
+        }
+    )
+
+    print("Stored connection:", connection_id)
+
+    return {
+        "statusCode": 200,
+        "body": "Connected"
+    }
