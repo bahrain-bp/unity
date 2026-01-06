@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.cqf.urpoutline": {
+      "version": "file:C:/Users/khadi/Downloads/Unity-URP-Outline-main/Unity-URP-Outline-main",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.2d.common": {
       "version": "11.0.1",
       "depth": 1,

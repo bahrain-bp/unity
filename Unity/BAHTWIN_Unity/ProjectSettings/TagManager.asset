@@ -48,8 +48,8 @@ TagManager:
     locked: 0
   m_RenderingLayers:
   - Default
-  - Light Layer 1
-  - Light Layer 2
+  - Outline_1
+  - Outline_2
   - Light Layer 3
   - Light Layer 4
   - Light Layer 5
