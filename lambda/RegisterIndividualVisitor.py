@@ -5,6 +5,7 @@ import json
 from datetime import datetime, timezone, timedelta
 import re
 import smtplib
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from boto3.dynamodb.conditions import Key
 
@@ -12,8 +13,13 @@ from boto3.dynamodb.conditions import Key
 lambda_client = boto3.client("lambda")
 BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 
-GMAIL_USER = os.environ['GMAIL_USER']      # Your Gmail address
+GMAIL_USER = os.environ['GMAIL_USER']      #  Gmail address
 GMAIL_PASS = os.environ['GMAIL_PASS']      # Gmail app password
+
+#WORKMAIL_USER = os.environ['WORKMAIL_USER']      
+#WORKMAIL_PASS = os.environ['WORKMAIL_PASS']    
+#WORKMAIL_SMTP = os.environ['WORKMAIL_SMTP']     
+  
 
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
@@ -176,7 +182,7 @@ def send_invitation_email(name, email, formatted_visit_dt):
         </p>
 
         <p style="text-align:center;">
-        <a href="http://localhost:5173" class="btn" style="color:#ffffff;">Access BAHTWIN Platform</a>
+        <a href="https://d3pah2wsw5ry03.cloudfront.net" class="btn" style="color:#ffffff;">Access BAHTWIN Platform</a>
         </p>
 
         <p class="footer">
@@ -192,15 +198,33 @@ def send_invitation_email(name, email, formatted_visit_dt):
         </html>
         """
         # Create MIME message
-        msg = MIMEText(body_html, 'html')
+        # Create multipart email
+        msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
-        msg['From'] = GMAIL_USER
+        msg['From'] = f"BAHTWIN Team <{GMAIL_USER}>"
         msg['To'] = email
+        msg['Reply-To'] = GMAIL_USER
+        msg.attach(MIMEText(body_html, 'html'))
+        #msg = MIMEText(body_html, 'html')
+        #msg['Subject'] = subject
+        #msg['From'] = GMAIL_USER
+        #msg['From'] = os.environ["WORKMAIL_USER"]
+        #msg['To'] = email
+
 
         # Send email via Gmail SMTP
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(GMAIL_USER, GMAIL_PASS)
             server.send_message(msg)
+        
+        #with smtplib.SMTP_SSL(
+         #   os.environ["WORKMAIL_SMTP"], 465
+        #) as server:
+         #   server.login(
+          #      os.environ["WORKMAIL_USER"],
+           #     os.environ["WORKMAIL_PASS"]
+            #)
+            #server.send_message(msg)
 
         print("Invitation email sent to:", email)
         return True

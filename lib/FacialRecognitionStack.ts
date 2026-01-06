@@ -144,7 +144,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       }),
       environment: {
         JWT_SECRET: 'secret',  // same as before
-        FRONTEND_URL: 'https://dks06xhy7s4u4.cloudfront.net/VisitorFeedBack',  //  frontend link 
+        FRONTEND_URL: 'https://d3pah2wsw5ry03.cloudfront.net/VisitorFeedBack',  //  frontend link 
         GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
         GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
         WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
