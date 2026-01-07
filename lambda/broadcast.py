@@ -5,67 +5,33 @@ import json
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['TABLE_NAME'])
 
-def handler(event, context):
+VALID_CARDS = {
+    "visitor_checkin",
+    "total_bahtwin_visitors",
+    "visitor_comment",
+    "avg_feedback_score",
+    "today_invitations",
+    "active_users_now",
+    "users_today",
+    "users_last_6_hours",
+}
 
+def handler(event, context):
     message = json.loads(event.get('body', json.dumps(event)))
     print(message)
+
     card_type = message.get("card")
     card_data = message.get("data")
 
-    if card_type == "visitor_checkin":
-        broadcast_message  = {
-        "card": card_type,
-        "data": card_data
-    }
-    elif card_type == "total_bahtwin_visitors":
-        broadcast_message  = {
-        "card": card_type,
-        "data": card_data
-    }
-    elif card_type == "visitor_comment":
+    if card_type in VALID_CARDS:
         print(card_data)
-        broadcast_message  = {
-        "card": card_type,
-        "data": card_data
-    }
-    elif card_type == "avg_feedback_score":
-        print(card_data)
-        broadcast_message  = {
-        "card": card_type,
-        "data": card_data
-    }
-    elif card_type == "active_sessions":
-        print(card_data)
-        broadcast_message  = {
-        "card": card_type,
-        "data": card_data
-    }
-    elif card_type == "today_invitations":
-        print(card_data)
-        broadcast_message  = {
-        "card": card_type,
-        "data": card_data
-    }
-    elif card_type == "active_users_now":
-        print(card_data)
-        broadcast_message  = {
-        "card": card_type,
-        "data": card_data
-    }
-    elif card_type =="users_today":
-        print(card_data)
-        broadcast_message  = {
-        "card": card_type,
-        "data": card_data
-    }
-    elif card_type =="users_last_6_hours":
-        print(card_data)
-        broadcast_message  = {
-        "card": card_type,
-        "data": card_data
-    }
-
-
+        broadcast_message = {
+            "card": card_type,
+            "data": card_data
+        }
+    else:
+        # Optional: ignore unknown cards
+        return {"statusCode": 400, "body": "Invalid card type"}
 
     # WebSocket Management API
     apigw = boto3.client(
@@ -73,7 +39,6 @@ def handler(event, context):
         endpoint_url=os.environ['WS_ENDPOINT']
     )
 
-    # Get all connected clients
     connections = table.scan().get('Items', [])
 
     for item in connections:
@@ -84,7 +49,6 @@ def handler(event, context):
                 Data=json.dumps(broadcast_message).encode("utf-8")
             )
         except apigw.exceptions.GoneException:
-            # client disconnected → remove from DynamoDB
             table.delete_item(Key={"ConnectionId": connection_id})
 
     return {"statusCode": 200}

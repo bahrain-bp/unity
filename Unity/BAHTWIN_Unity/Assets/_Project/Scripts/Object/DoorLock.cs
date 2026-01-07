@@ -3,6 +3,31 @@ using UnityEngine;
 
 public class DoorLock : MonoBehaviour
 {
+    [Header("Lock")]
+    public bool isLocked = false;
+
+    [Header("Who can open the door")]
+    public string[] allowedTags = { "Player", "Peccy" };
+
+
+    public void SetLocked(bool locked)
+    {
+        isLocked = locked;
+
+
+        // If we lock while it�s open, optionally force close:
+        if (isLocked)
+        {
+            if (openRoutine != null) { StopCoroutine(openRoutine); openRoutine = null; }
+            if (closeRoutine != null) { StopCoroutine(closeRoutine); closeRoutine = null; }
+            transform.rotation = closedRot;
+        }
+    }
+
+
+    [Tooltip("Optional sound when locked door is tried.")]
+    public AudioSource lockedSound;
+
     [Header("Audio")]
     public AudioSource doorOpenSound;   // optional
     public AudioSource doorCloseSound;  // optional
@@ -22,56 +47,50 @@ public class DoorLock : MonoBehaviour
 
     void Start()
     {
-        // Save start rotation as "closed"
         closedRot = transform.rotation;
-
-        // Open rotation relative to the closed one
         openRot = closedRot * Quaternion.Euler(0f, doorOpenAngle, 0f);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!IsAllowedOpener(other)) return;
+
+        if (isLocked)
+        {
+            if (lockedSound != null && !lockedSound.isPlaying)
+                lockedSound.Play();
+            return;
+        }
 
         playerInside = true;
 
-        // If it's trying to close, cancel that
         if (closeRoutine != null)
         {
             StopCoroutine(closeRoutine);
             closeRoutine = null;
         }
 
-        // Start opening if not already opening
         if (openRoutine == null)
-        {
             openRoutine = StartCoroutine(OpenDoorRoutine());
-        }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
+        if (!IsAllowedOpener(other)) return;
 
         playerInside = false;
 
-        // If the door is already fully open (no openRoutine running),
-        // we can start the "wait then close" straight away.
         if (openRoutine == null && closeRoutine == null)
-        {
             closeRoutine = StartCoroutine(CloseDoorAfterDelayRoutine());
-        }
     }
 
     private IEnumerator OpenDoorRoutine()
     {
-        if (doorOpenSound != null)
-            doorOpenSound.Play();
+        if (doorOpenSound != null) doorOpenSound.Play();
 
         Quaternion startRot = transform.rotation;
         float t = 0f;
 
-        // Always finish opening fully once started
         while (Quaternion.Angle(transform.rotation, openRot) > 0.1f)
         {
             t += Time.deltaTime * rotationSpeed;
@@ -79,35 +98,29 @@ public class DoorLock : MonoBehaviour
             yield return null;
         }
 
-        transform.rotation = openRot; // snap exactly
+        transform.rotation = openRot;
         openRoutine = null;
 
-        // If the player already left while it was opening,
-        // start the close-after-delay routine now.
         if (!playerInside && closeRoutine == null)
-        {
             closeRoutine = StartCoroutine(CloseDoorAfterDelayRoutine());
-        }
     }
 
     private IEnumerator CloseDoorAfterDelayRoutine()
     {
-        // Wait a bit; if player comes back, cancel closing
         float elapsed = 0f;
         while (elapsed < stayOpenDelay)
         {
             if (playerInside)
             {
                 closeRoutine = null;
-                yield break; // someone came back, stop closing
+                yield break;
             }
 
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        if (doorCloseSound != null)
-            doorCloseSound.Play();
+        if (doorCloseSound != null) doorCloseSound.Play();
 
         Quaternion startRot = transform.rotation;
         float t = 0f;
@@ -121,5 +134,17 @@ public class DoorLock : MonoBehaviour
 
         transform.rotation = closedRot;
         closeRoutine = null;
+    }
+
+    private bool IsAllowedOpener(Collider other)
+    {
+        if (allowedTags == null || allowedTags.Length == 0) return other.CompareTag("Player");
+
+        for (int i = 0; i < allowedTags.Length; i++)
+        {
+            if (!string.IsNullOrEmpty(allowedTags[i]) && other.CompareTag(allowedTags[i]))
+                return true;
+        }
+        return false;
     }
 }

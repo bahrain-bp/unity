@@ -113,7 +113,8 @@ def ArrivalRekognition(event, context):
                 if visit_date == today_bahrain:
                     invite_today = item
                     break
-            
+            if invite_today.get('checked_in') == "yes":
+                return response(409, {"error": f"Visitor {visitor['name']} already checked in"})
 
             SendSMS(visitor['name'])
 

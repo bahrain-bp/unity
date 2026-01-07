@@ -7,8 +7,8 @@ import {
   FaTimesCircle,
 } from "react-icons/fa";
 import { ImageClient } from "../services/api";
-import "../../sass/_visitorArrival.scss";
 import DashboardLayout from "./dashboard/DashboardLayout";
+import "../../sass/dashboard/_visitorArrival.scss"
 
 const Arrival: React.FC = () => {
   const webcamRef = useRef<Webcam>(null);

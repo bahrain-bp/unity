@@ -3,7 +3,12 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - Elevator
+  - ElevatorNumericButton
+  - ElevatorButtonOpen
+  - ElevatorGoButton
+  - Peccy
   layers:
   - Default
   - TransparentFX
@@ -14,6 +19,7 @@ TagManager:
   - MiniMapIcons
   - Doors
   - Furniture
+  - Floor
   - 
   - 
   - 
@@ -24,8 +30,7 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
+  - Minimap
   - 
   - 
   - 

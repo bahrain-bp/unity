@@ -1,0 +1,130 @@
+@use "../var" as *;
+
+.feedback-card {
+  background: $color-white;
+  padding: 2rem; // a bit more padding to feel bigger
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  border-left: 6px solid $color-orange;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+  }
+
+  &.positive { border-left-color: $color-green; }
+  &.neutral { border-left-color: $color-orange; }
+  &.negative { border-left-color: $color-red; }
+
+  .visitor-header {
+    grid-column: span 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+
+    .name-email {
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+
+      .name {
+        font-weight: 600;
+        font-size: 1.6rem;
+        $colorfont: color-;
+      }
+
+      .email {
+        font-size: 1.4rem;
+        color: $color-dark-grey;
+      }
+    }
+
+    .created-at {
+      font-size: 1.4rem;
+      color: $color-dark-grey;
+      white-space: nowrap;
+    }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+
+    label {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: $color-dark-grey;
+      margin-bottom: 3px;
+    }
+
+    span {
+      font-size: 1.4rem;
+      $colorfont: color-;
+      word-break: break-word;
+    }
+  }
+
+  .rating {
+    font-weight: 00;
+    letter-spacing: 1px;
+
+    &.positive { color: $color-green; }
+    &.neutral { color: $color-orange; }
+    &.negative { color: $color-red; }
+  }
+
+  .comments {
+    grid-column: span 2;
+    background: $color-bg;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid $color-grey;
+    font-style: italic;
+    color: $color-dark-grey;
+    line-height: 1.5;
+    font-size: 1.4rem;
+    word-break: break-word;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .feedback-card {
+    grid-template-columns: 1fr; // stack all fields
+
+    .visitor-header {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 0.25rem;
+
+      .name-email {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .created-at {
+        margin-top: 0.25rem;
+      }
+    }
+
+    .field {
+      label {
+        font-size: 0.8rem;
+      }
+      span {
+        font-size: 0.95rem;
+      }
+    }
+
+    .comments {
+      font-size: 0.95rem;
+    }
+  }
+}

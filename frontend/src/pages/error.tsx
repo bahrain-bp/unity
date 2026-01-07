@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import "../../sass/_feedback.scss";
 
 const ErrorPage = () => {
   const location = useLocation();

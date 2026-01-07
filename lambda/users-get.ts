@@ -12,12 +12,10 @@ export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    // ✅ Handle CORS preflight
     if (event.httpMethod === "OPTIONS") {
       return jsonResponse(200, {});
     }
 
-    // ✅ Auth check (still returns CORS headers)
     if (!isAdmin(event)) {
       return jsonResponse(403, {
         message: "Access denied. Not an Admin.",

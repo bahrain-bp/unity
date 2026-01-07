@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import "../../sass/_feedback.scss";
 import { useNavigate } from "react-router-dom";
 import { FeedbackClient } from "../services/api";
 
@@ -85,6 +84,7 @@ const Feedback = () => {
       digitalPref,
       faceHelp,
       overallRating,
+      commentText
     ];
 
     const hasEmpty = requiredFields.some(

@@ -27,3 +27,4 @@ dist-ssr
 #Enviroment Variables
 .env
 
+styles/globals.css.map

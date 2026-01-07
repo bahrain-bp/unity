@@ -1,76 +1,57 @@
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.InputSystem;
 
 public class PeccyFollower : MonoBehaviour
 {
     [Header("References")]
     public Transform player;
+
+    [Header("Behaviour")]
+    public bool followPlayer = false;
+    public float stopDistance = 8f;
+
     private NavMeshAgent agent;
     private Animator animator;
 
-    [Header("Behaviour")]
-    public bool followPlayer = false; // Start with false so Peccy is idle
-    public float stopDistance = 7f; // Distance to keep from the player
-
     private readonly int isWalkingHash = Animator.StringToHash("isWalking");
-
-    private InputAction toggleFollowAction;
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
-        if (agent == null)
-        {
-            Debug.LogError("PeccyFollower: No NavMeshAgent found on this GameObject.");
-        }
-
-        if (animator == null)
-        {
-            Debug.LogError("PeccyFollower: No Animator found on this GameObject.");
-        }
-
-        // Create a simple input action that listens to the P key
-        toggleFollowAction = new InputAction(
-            type: InputActionType.Button,
-            binding: "<Keyboard>/p"
-        );
-
-        toggleFollowAction.performed += OnToggleFollow;
-        toggleFollowAction.Enable();
+        if (agent == null) Debug.LogError("PeccyFollower: No NavMeshAgent found.");
+        if (animator == null) Debug.LogError("PeccyFollower: No Animator found.");
     }
 
-    void OnDestroy()
+    public void SetFollow(bool shouldFollow)
     {
-        if (toggleFollowAction != null)
-        {
-            toggleFollowAction.performed -= OnToggleFollow;
-            toggleFollowAction.Disable();
-        }
-    }
+        followPlayer = shouldFollow;
 
-    private void OnToggleFollow(InputAction.CallbackContext context)
-    {
-        followPlayer = !followPlayer;
+        if (agent == null) return;
+
+        // Only STOP ONCE when turning follow OFF
+        if (!followPlayer)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+            SetWalking(false);
+        }
     }
 
     void Update()
     {
-        // If not following or no player reference, stay idle
+        if (agent == null) return;
+
+        // IMPORTANT:
+        // If follow is OFF, do NOT keep forcing agent state every frame.
+        // Tour/other systems may need to move the agent.
         if (!followPlayer || player == null)
         {
-            if (!agent.isStopped)
-            {
-                agent.isStopped = true;
-            }
-
             SetWalking(false);
             return;
         }
 
-        // Follow the player using NavMeshAgent but keep a distance
         float distance = Vector3.Distance(transform.position, player.position);
 
         if (distance > stopDistance)
@@ -80,11 +61,10 @@ public class PeccyFollower : MonoBehaviour
         }
         else
         {
-            // Close enough, stop near the player
             agent.isStopped = true;
+            agent.ResetPath();
         }
 
-        // Decide if Peccy should play walk or idle animation
         bool isMoving = !agent.isStopped && agent.velocity.sqrMagnitude > 0.01f;
         SetWalking(isMoving);
     }
@@ -92,8 +72,6 @@ public class PeccyFollower : MonoBehaviour
     private void SetWalking(bool value)
     {
         if (animator != null)
-        {
             animator.SetBool(isWalkingHash, value);
-        }
     }
 }

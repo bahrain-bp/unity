@@ -30,7 +30,7 @@ def handler(event, context):
         items = response_feedback.get('Items', [])
 
         if items:
-            sorted_feedback = sorted(items, key=lambda x: x['createdAt'], reverse=True)
+            sorted_feedback = sorted(items, key=lambda x: x['createdAt'], reverse=False)
             card_payload['data'] = [
                 {"comment": f'"{f["commentText"]}" - {f["name"]}'}
                 for f in sorted_feedback[:10]

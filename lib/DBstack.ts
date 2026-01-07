@@ -5,12 +5,20 @@ import { Stack, StackProps, RemovalPolicy } from "aws-cdk-lib";
 import { Construct } from "constructs";
 
 export class DBStack extends Stack {
-  public readonly table: dynamodb.Table;             // UnityBahtwin
-  public readonly plugActionsTable: dynamodb.Table;  // PlugActions
-  public readonly iotTelemetryTable: dynamodb.Table; // IoTDeviceTelemetry
+  public readonly table: dynamodb.Table;
   public readonly userManagementTable: dynamodb.Table;
-  public readonly chatbotTable: dynamodb.Table;
   public readonly preRegBucket: s3.Bucket;
+
+  public readonly chatbotTable: dynamodb.Table; 
+
+  public readonly activeConnectionsTable: dynamodb.Table;
+  public readonly whiteboardStrokesTable: dynamodb.Table;
+  public readonly websiteActivityTable: dynamodb.Table;
+  public readonly dailySummariesTable: dynamodb.Table;
+  public readonly alexaUsersTable: dynamodb.Table;
+
+  public readonly plugActionsTable: dynamodb.Table;
+  public readonly iotTelemetryTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -50,6 +58,63 @@ export class DBStack extends Stack {
           allowedHeaders: ["*"],
         },
       ],
+    });
+
+    this.preRegBucket.addCorsRule({
+      allowedOrigins: ["*"],
+      allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.POST, s3.HttpMethods.PUT],
+      allowedHeaders: ["*"],
+    });
+
+    // Active WebSocket connections
+    this.activeConnectionsTable = new dynamodb.Table(this, "ActiveConnectionsTable", {
+      tableName: "ActiveConnections",
+      partitionKey: { name: "connectionId", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+      timeToLiveAttribute: "ttl",
+    });
+
+    // Whiteboard strokes history table
+    this.whiteboardStrokesTable = new dynamodb.Table(this, "WhiteboardStrokesTable", {
+      tableName: "WhiteboardStrokes",
+      partitionKey: { name: "boardId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "timestamp", type: dynamodb.AttributeType.NUMBER },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Website activity analytics table
+    this.websiteActivityTable = new dynamodb.Table(this, "WebsiteActivityTable", {
+      tableName: "WebsiteActivity",
+      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+      timeToLiveAttribute: "ttl",
+    });
+
+    // Daily summaries
+    this.dailySummariesTable = new dynamodb.Table(this, "DailySummariesTable", {
+      tableName: "bahtwin-daily-summaries",
+      partitionKey: { name: "date", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "timestamp", type: dynamodb.AttributeType.NUMBER },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      timeToLiveAttribute: "ttl",
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    });
+
+    // Alexa users table
+    this.alexaUsersTable = new dynamodb.Table(this, "AlexaUsersTable", {
+      tableName: "alexa-users",
+      partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    new cdk.CfnOutput(this, "AlexaUsersTableName", {
+      value: this.alexaUsersTable.tableName,
+      exportName: "AlexaUsersTableName",
     });
 
     // 4) PlugActions
