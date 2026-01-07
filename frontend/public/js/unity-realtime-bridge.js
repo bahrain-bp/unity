@@ -431,16 +431,13 @@ function sendPirOccupancyToUnity(payload, msgTs) {
 // Unity – Backend HTTP (Chat Assistant Bridge)
 // ============================================================
 
-// Store Unity WebGL instance ONLY for chat
 window.__CHAT_UNITY_INSTANCE__ = null;
 
-// Called once after Unity loads
 window.initChatBridge = function (unityInstance) {
   window.__CHAT_UNITY_INSTANCE__ = unityInstance;
   console.log("[ChatBridge] Unity instance registered");
 };
 
-// Chat assistant endpoint
 const ASSISTANT_ENDPOINT = `${API_BASE}/assistant`;
 
 // Unity calls:

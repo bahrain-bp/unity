@@ -29,8 +29,6 @@ public class PeccyFollower : MonoBehaviour
         followPlayer = shouldFollow;
 
         if (agent == null) return;
-
-        // Only STOP ONCE when turning follow OFF
         if (!followPlayer)
         {
             agent.isStopped = true;
@@ -43,9 +41,6 @@ public class PeccyFollower : MonoBehaviour
     {
         if (agent == null) return;
 
-        // IMPORTANT:
-        // If follow is OFF, do NOT keep forcing agent state every frame.
-        // Tour/other systems may need to move the agent.
         if (!followPlayer || player == null)
         {
             SetWalking(false);

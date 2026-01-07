@@ -32,17 +32,15 @@ public class ChatMessageItem : MonoBehaviour
     {
         if (messageText) messageText.text = text;
 
-        // Limit bubble width so long text wraps
+      
         if (bubbleLayout) bubbleLayout.preferredWidth = maxBubbleWidth;
 
-        // Apply bubble sprite style
         if (bubbleBackground)
         {
             bubbleBackground.sprite = isBot ? botBubbleSprite : userBubbleSprite;
-            bubbleBackground.type = Image.Type.Sliced; // requires sprite borders set in Sprite Editor
+            bubbleBackground.type = Image.Type.Sliced; 
         }
 
-        // Align bubble using spacers
         if (isBot)
         {
             if (leftSpacer) leftSpacer.flexibleWidth = 0f;

@@ -46,7 +46,6 @@ public class ChatUIController : MonoBehaviour
     [Header("Input Locks")]
     public MapMenuToggle mapMenuToggle;
 
-    // Conversation thread id (backend returns it, we send it back next time)
     private string sessionId = null;
 
     private bool waitingForReply = false;
@@ -93,30 +92,23 @@ public class ChatUIController : MonoBehaviour
 
     public void Open()
     {
-        // Block chat ONLY if expanded map is open
         if (mapMenuToggle != null && mapMenuToggle.IsMapOpen)
             return;
 
         if (chatPanel == null) return;
         if (IsOpen) return;
 
-        // Mark open first so other systems can react immediately
         IsOpen = true;
 
-        // Show panel first so UI exists for focus/select
         chatPanel.SetActive(true);
 
-        // Disable gameplay systems first (including any camera look scripts you put in the arrays)
         ApplyDisableTargets(disable: true);
 
-        // Disable FPS look script BEFORE any camera snap to avoid a 1-frame "flinch"
         if (fpsLookScript != null) fpsLookScript.enabled = false;
 
-        // Cursor
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // Snap camera to Peccy/chat anchor after gameplay/camera scripts are disabled
         if (chatFocus != null) chatFocus.SnapFocus();
 
         if (peccyDialogue != null) peccyDialogue.OnChatOpened();
@@ -130,24 +122,18 @@ public class ChatUIController : MonoBehaviour
         if (chatPanel == null) return;
         if (!IsOpen) return;
 
-        // Hide panel first
         chatPanel.SetActive(false);
         IsOpen = false;
 
-        // Restore gameplay stuff
         ApplyDisableTargets(disable: false);
 
-        // Cursor
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // Restore FPS look
         if (fpsLookScript != null) fpsLookScript.enabled = true;
 
-        // Stop camera focus smoothing (if any)
         if (chatFocus != null) chatFocus.StopFocus();
 
-        // Let PeccyDialogue decide what bubble should show now
         if (peccyDialogue != null) peccyDialogue.OnChatClosed();
     }
 
@@ -197,6 +183,7 @@ public class ChatUIController : MonoBehaviour
 #if UNITY_WEBGL && !UNITY_EDITOR
         try
         {
+            // WebGL bridge, send question to browser JS, which calls backend and returns result via OnAssistantResponseJson
             AskPeccyAssistantFromUnity(question, sessionId ?? "", gameObject.name);
         }
         catch (Exception e)
@@ -208,6 +195,7 @@ public class ChatUIController : MonoBehaviour
 #endif
     }
 
+    // Callback entry point from JavaScript (SendMessage). Expects JSON with { answer, sessionId }
     public void OnAssistantResponseJson(string json)
     {
         HideTyping();
@@ -337,10 +325,6 @@ public class ChatUIController : MonoBehaviour
         }
     }
 
-    // -------------------------
-    // Disable Targets (Simple)
-    // -------------------------
-
     void CacheDisableTargetsInitialStates()
     {
         if (disableBehavioursWhileChatOpen != null)
@@ -366,7 +350,6 @@ public class ChatUIController : MonoBehaviour
 
     void ApplyDisableTargets(bool disable)
     {
-        // Behaviours
         if (disableBehavioursWhileChatOpen != null)
         {
             for (int i = 0; i < disableBehavioursWhileChatOpen.Length; i++)
@@ -374,7 +357,6 @@ public class ChatUIController : MonoBehaviour
                 var b = disableBehavioursWhileChatOpen[i];
                 if (b == null) continue;
 
-                // Safety: do not disable anything that lives under the chat UI
                 if (chatPanel != null && b.transform.IsChildOf(chatPanel.transform)) continue;
                 if (b == this) continue;
 
@@ -393,7 +375,6 @@ public class ChatUIController : MonoBehaviour
             }
         }
 
-        // GameObjects
         if (disableGameObjectsWhileChatOpen != null)
         {
             for (int i = 0; i < disableGameObjectsWhileChatOpen.Length; i++)
@@ -401,7 +382,6 @@ public class ChatUIController : MonoBehaviour
                 var go = disableGameObjectsWhileChatOpen[i];
                 if (go == null) continue;
 
-                // Safety: do not disable chat itself
                 if (chatPanel != null && (go == chatPanel || go.transform.IsChildOf(chatPanel.transform))) continue;
 
                 if (disable)
@@ -420,6 +400,7 @@ public class ChatUIController : MonoBehaviour
         }
     }
 
+    // Must be [Serializable] so JsonUtility can map JSON fields into this object
     [Serializable]
     private class AssistantResponse
     {
