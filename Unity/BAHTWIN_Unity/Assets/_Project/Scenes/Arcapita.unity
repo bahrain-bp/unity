@@ -10502,65 +10502,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0.253, z: 0}
---- !u!1 &289696610
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 289696612}
-  - component: {fileID: 289696611}
-  - component: {fileID: 289696613}
-  m_Layer: 0
-  m_Name: UIManagers
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &289696611
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 289696610}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d8f4c5033b05d44dbced57606613b28, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ClockUI
-  timeText: {fileID: 535510655}
---- !u!4 &289696612
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 289696610}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 25.20828, y: 0, z: -87.38533}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &289696613
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 289696610}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b78666553074d1b4c8745d2f6079aeaa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WeatherUI
-  weatherText: {fileID: 1128474323}
 --- !u!43 &294292775
 Mesh:
   m_ObjectHideFlags: 0
@@ -36219,6 +36160,65 @@ Transform:
   m_LocalRotation: {x: 1.11022296e-17, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -5.07, y: 10.51, z: -13.6161}
   m_LocalScale: {x: 1, y: 0.8887, z: 1.4161806}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &796401667
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 796401670}
+  - component: {fileID: 796401669}
+  - component: {fileID: 796401668}
+  m_Layer: 0
+  m_Name: UIManagers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &796401668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 796401667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b78666553074d1b4c8745d2f6079aeaa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeatherUI
+  weatherText: {fileID: 1128474323}
+--- !u!114 &796401669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 796401667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d8f4c5033b05d44dbced57606613b28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ClockUI
+  timeText: {fileID: 535510655}
+--- !u!4 &796401670
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 796401667}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 25.20828, y: 0, z: -87.38533}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -61977,4 +61977,4 @@ SceneRoots:
   - {fileID: 1305073038}
   - {fileID: 128411532}
   - {fileID: 1284212783}
-  - {fileID: 289696612}
+  - {fileID: 796401670}

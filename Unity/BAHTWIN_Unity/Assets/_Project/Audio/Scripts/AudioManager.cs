@@ -151,20 +151,25 @@ public class AudioManager : MonoBehaviour
         if (source == null) return;
 
         activeAudioSources.Remove(source);
+
         source.Stop();
-        source.clip = null;
+
+        // Only touch time if a real clip exists
+        if (source.clip != null)
+            source.time = 0f;
+
         source.loop = false;
-        source.time = 0f;
+        source.clip = null;
 
         source.transform.SetParent(transform);
         source.transform.localPosition = Vector3.zero;
 
-        // restore SFX mixer group
         if (sfxMixerGroup != null)
             source.outputAudioMixerGroup = sfxMixerGroup;
 
         audioSourcePool.Enqueue(source);
     }
+
 
     public AudioSource PlayLoopWithRandomStart(AudioData data, Transform parent = null)
     {
