@@ -9,33 +9,20 @@ public class DoorLock : MonoBehaviour
     [Header("Who can open the door")]
     public string[] allowedTags = { "Player", "Peccy" };
 
-
-    public void SetLocked(bool locked)
-    {
-        isLocked = locked;
-
-
-        // If we lock while it�s open, optionally force close:
-        if (isLocked)
-        {
-            if (openRoutine != null) { StopCoroutine(openRoutine); openRoutine = null; }
-            if (closeRoutine != null) { StopCoroutine(closeRoutine); closeRoutine = null; }
-            transform.rotation = closedRot;
-        }
-    }
-
+    [Header("Door Visual (HINGE to rotate)")]
+    public Transform doorHinge;   // <-- ASSIGN DoorHinge HERE
 
     [Tooltip("Optional sound when locked door is tried.")]
     public AudioSource lockedSound;
 
     [Header("Audio")]
-    public AudioSource doorOpenSound;   // optional
-    public AudioSource doorCloseSound;  // optional
+    public AudioSource doorOpenSound;
+    public AudioSource doorCloseSound;
 
     [Header("Rotation Settings")]
-    public float doorOpenAngle = 90f;   // use 90 or -90 for direction
-    public float rotationSpeed = 2f;    // how fast it opens/closes
-    public float stayOpenDelay = 1f;    // time to wait after player leaves
+    public float doorOpenAngle = 90f;
+    public float rotationSpeed = 2f;
+    public float stayOpenDelay = 1f;
 
     private Quaternion closedRot;
     private Quaternion openRot;
@@ -47,8 +34,20 @@ public class DoorLock : MonoBehaviour
 
     void Start()
     {
-        closedRot = transform.rotation;
+        closedRot = doorHinge.localRotation;
         openRot = closedRot * Quaternion.Euler(0f, doorOpenAngle, 0f);
+    }
+
+    public void SetLocked(bool locked)
+    {
+        isLocked = locked;
+
+        if (isLocked)
+        {
+            if (openRoutine != null) { StopCoroutine(openRoutine); openRoutine = null; }
+            if (closeRoutine != null) { StopCoroutine(closeRoutine); closeRoutine = null; }
+            doorHinge.localRotation = closedRot;
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -88,17 +87,17 @@ public class DoorLock : MonoBehaviour
     {
         if (doorOpenSound != null) doorOpenSound.Play();
 
-        Quaternion startRot = transform.rotation;
+        Quaternion startRot = doorHinge.localRotation;
         float t = 0f;
 
-        while (Quaternion.Angle(transform.rotation, openRot) > 0.1f)
+        while (Quaternion.Angle(doorHinge.localRotation, openRot) > 0.1f)
         {
             t += Time.deltaTime * rotationSpeed;
-            transform.rotation = Quaternion.Slerp(startRot, openRot, t);
+            doorHinge.localRotation = Quaternion.Slerp(startRot, openRot, t);
             yield return null;
         }
 
-        transform.rotation = openRot;
+        doorHinge.localRotation = openRot;
         openRoutine = null;
 
         if (!playerInside && closeRoutine == null)
@@ -122,23 +121,24 @@ public class DoorLock : MonoBehaviour
 
         if (doorCloseSound != null) doorCloseSound.Play();
 
-        Quaternion startRot = transform.rotation;
+        Quaternion startRot = doorHinge.localRotation;
         float t = 0f;
 
-        while (Quaternion.Angle(transform.rotation, closedRot) > 0.1f)
+        while (Quaternion.Angle(doorHinge.localRotation, closedRot) > 0.1f)
         {
             t += Time.deltaTime * rotationSpeed;
-            transform.rotation = Quaternion.Slerp(startRot, closedRot, t);
+            doorHinge.localRotation = Quaternion.Slerp(startRot, closedRot, t);
             yield return null;
         }
 
-        transform.rotation = closedRot;
+        doorHinge.localRotation = closedRot;
         closeRoutine = null;
     }
 
     private bool IsAllowedOpener(Collider other)
     {
-        if (allowedTags == null || allowedTags.Length == 0) return other.CompareTag("Player");
+        if (allowedTags == null || allowedTags.Length == 0)
+            return other.CompareTag("Player");
 
         for (int i = 0; i < allowedTags.Length; i++)
         {
