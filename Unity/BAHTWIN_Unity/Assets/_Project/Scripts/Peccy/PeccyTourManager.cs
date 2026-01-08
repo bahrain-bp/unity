@@ -133,6 +133,17 @@ public class PeccyTourManager : MonoBehaviour
     private int stopIndex = 0;
     private int lineIndex = 0;
 
+    [Header("Disable Gameplay While Tour Running")]
+    [Tooltip("Drag gameplay scripts here (teleport, map toggle, interaction, etc.). Do NOT put EventSystem, PeccyTourManager, PeccyDialogue, or bubble UI scripts here.")]
+    public Behaviour[] disableBehavioursWhileTourRunning;
+
+    [Tooltip("Optional: drag gameplay GameObjects here (crosshair, prompts, gameplay panels). Do NOT put the tour bubble or chat UI here.")]
+    public GameObject[] disableGameObjectsWhileTourRunning;
+
+    private bool[] cachedTourBehaviourStates;
+    private bool[] cachedTourGameObjectStates;
+
+
     void Awake()
     {
         isWalkingHash = Animator.StringToHash(isWalkingParam);
@@ -148,6 +159,9 @@ public class PeccyTourManager : MonoBehaviour
         nextAction.Enable();
         chatAction.Enable();
         doneAction.Enable();
+
+        CacheTourDisableTargetsInitialStates();
+
     }
 
     void OnDestroy()
@@ -183,6 +197,8 @@ public class PeccyTourManager : MonoBehaviour
         nextPressed = chatPressed = donePressed = false;
 
         tourRunning = true;
+        ApplyTourDisableTargets(disable: true);
+
         if (modeButtonsUI != null) modeButtonsUI.SetTourActiveVisual(true);
 
         if (peccyAgent != null)
@@ -240,6 +256,8 @@ public class PeccyTourManager : MonoBehaviour
         if (!tourRunning) return;
 
         tourRunning = false;
+        ApplyTourDisableTargets(disable: false);
+
         if (modeButtonsUI != null) modeButtonsUI.SetTourActiveVisual(false);
 
         StopAllCoroutines();
@@ -631,4 +649,90 @@ public class PeccyTourManager : MonoBehaviour
             yield return null;
         }
     }
+
+    void CacheTourDisableTargetsInitialStates()
+    {
+        if (disableBehavioursWhileTourRunning != null)
+        {
+            cachedTourBehaviourStates = new bool[disableBehavioursWhileTourRunning.Length];
+            for (int i = 0; i < disableBehavioursWhileTourRunning.Length; i++)
+            {
+                var b = disableBehavioursWhileTourRunning[i];
+                cachedTourBehaviourStates[i] = (b != null && b.enabled);
+            }
+        }
+
+        if (disableGameObjectsWhileTourRunning != null)
+        {
+            cachedTourGameObjectStates = new bool[disableGameObjectsWhileTourRunning.Length];
+            for (int i = 0; i < disableGameObjectsWhileTourRunning.Length; i++)
+            {
+                var go = disableGameObjectsWhileTourRunning[i];
+                cachedTourGameObjectStates[i] = (go != null && go.activeSelf);
+            }
+        }
+    }
+
+    void ApplyTourDisableTargets(bool disable)
+    {
+        // Behaviours
+        if (disableBehavioursWhileTourRunning != null)
+        {
+            for (int i = 0; i < disableBehavioursWhileTourRunning.Length; i++)
+            {
+                var b = disableBehavioursWhileTourRunning[i];
+                if (b == null) continue;
+
+                // Safety guards
+                if (b == this) continue;
+                if (peccyDialogue != null && b.transform.IsChildOf(peccyDialogue.transform)) continue;
+                if (bubble != null && b.transform.IsChildOf(bubble.transform)) continue;
+
+                if (disable)
+                {
+                    b.enabled = false;
+                }
+                else
+                {
+                    bool original = (cachedTourBehaviourStates != null && i < cachedTourBehaviourStates.Length)
+                        ? cachedTourBehaviourStates[i]
+                        : true;
+
+                    b.enabled = original;
+                }
+            }
+        }
+
+        // GameObjects
+        if (disableGameObjectsWhileTourRunning != null)
+        {
+            for (int i = 0; i < disableGameObjectsWhileTourRunning.Length; i++)
+            {
+                var go = disableGameObjectsWhileTourRunning[i];
+                if (go == null) continue;
+
+                // Safety guards: don't disable tour UI / chat
+                if (bubble != null && (go == bubble.gameObject || go.transform.IsChildOf(bubble.transform))) continue;
+                if (peccyDialogue != null && peccyDialogue.chatUI != null)
+                {
+                    var chatPanel = peccyDialogue.chatUI.chatPanel;
+                    if (chatPanel != null && (go == chatPanel || go.transform.IsChildOf(chatPanel.transform))) continue;
+                }
+
+                if (disable)
+                {
+                    go.SetActive(false);
+                }
+                else
+                {
+                    bool original = (cachedTourGameObjectStates != null && i < cachedTourGameObjectStates.Length)
+                        ? cachedTourGameObjectStates[i]
+                        : true;
+
+                    go.SetActive(original);
+                }
+            }
+        }
+    }
+
 }
