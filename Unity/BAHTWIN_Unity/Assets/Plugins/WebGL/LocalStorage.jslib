@@ -4,9 +4,17 @@ mergeInto(LibraryManager.library, {
       var key = UTF8ToString(keyPtr);
       var value = window.localStorage.getItem(key);
       if (value === null || value === undefined) value = "";
-      return allocateUTF8(value);
+
+      var lengthBytes = lengthBytesUTF8(value) + 1;
+      var ptr = _malloc(lengthBytes);
+      stringToUTF8(value, ptr, lengthBytes);
+      return ptr;
+
     } catch (e) {
-      return allocateUTF8("");
+      var lengthBytes = 1;
+      var ptr = _malloc(lengthBytes);
+      stringToUTF8("", ptr, lengthBytes);
+      return ptr;
     }
   }
 });
