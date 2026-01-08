@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
@@ -21,6 +22,13 @@ public class PlayerInteractorZoom : MonoBehaviour
 
     [Header("Optional: freeze player scripts while zoomed")]
     public Behaviour[] disableWhileZoomed;
+
+    [Header("UI to hide while zoomed (restore original states on exit)")]
+    [Tooltip("Drag any UI roots here: map panel, map labels, HUD, etc.")]
+    public GameObject[] hideUIWhileZoomed;
+
+    private readonly Dictionary<GameObject, bool> uiWasActive = new Dictionary<GameObject, bool>();
+    private bool uiStateCached;
 
     private InputAction interactAction;
 
@@ -59,15 +67,14 @@ public class PlayerInteractorZoom : MonoBehaviour
     {
         if (cam == null || interactAction == null) return;
 
-        // If we are currently zoomed, pressing F exits zoom
+        // If zoomed, pressing F exits zoom
         if (zoomedTarget != null)
         {
             SetPrompt(true, zoomedTarget.promptExit);
 
             if (!isTransitioning && interactAction.WasPressedThisFrame())
-            {
                 ExitZoom();
-            }
+
             return;
         }
 
@@ -75,15 +82,12 @@ public class PlayerInteractorZoom : MonoBehaviour
         currentBadge = FindBadge();
         currentZoomTarget = FindZoomTarget();
 
-        // Priority: ZoomTarget first, then badge (you can swap if you want)
         if (currentZoomTarget != null && currentZoomTarget.zoomPoint != null)
         {
             SetPrompt(true, currentZoomTarget.promptLook);
 
             if (!isTransitioning && interactAction.WasPressedThisFrame())
-            {
                 EnterZoom(currentZoomTarget);
-            }
         }
         else if (currentBadge != null)
         {
@@ -133,6 +137,7 @@ public class PlayerInteractorZoom : MonoBehaviour
         camRot0 = cam.transform.rotation;
         camFov0 = cam.fieldOfView;
 
+        CacheAndHideUI();
         FreezePlayer(true);
 
         StartZoomTransition(
@@ -155,10 +160,49 @@ public class PlayerInteractorZoom : MonoBehaviour
             onDone: () =>
             {
                 zoomedTarget = null;
+
+                RestoreUI();
                 FreezePlayer(false);
+
                 SetPrompt(false, "");
             }
         );
+    }
+
+    void CacheAndHideUI()
+    {
+        uiWasActive.Clear();
+        uiStateCached = true;
+
+        if (hideUIWhileZoomed == null) return;
+
+        foreach (var go in hideUIWhileZoomed)
+        {
+            if (go == null) continue;
+
+            // activeSelf = the object's own local enabled state
+            uiWasActive[go] = go.activeSelf;
+
+            // hide it while zoomed
+            go.SetActive(false);
+        }
+    }
+
+    void RestoreUI()
+    {
+        if (!uiStateCached) return;
+
+        foreach (var kv in uiWasActive)
+        {
+            var go = kv.Key;
+            if (go == null) continue;
+
+            // restore exactly what it was before zoom
+            go.SetActive(kv.Value);
+        }
+
+        uiWasActive.Clear();
+        uiStateCached = false;
     }
 
     void StartZoomTransition(Vector3 toPos, Quaternion toRot, float toFov, float seconds, System.Action onDone = null)
@@ -206,7 +250,6 @@ public class PlayerInteractorZoom : MonoBehaviour
             }
         }
 
-        // Optional: unlock cursor when zoomed
         Cursor.visible = freeze;
         Cursor.lockState = freeze ? CursorLockMode.None : CursorLockMode.Locked;
     }
