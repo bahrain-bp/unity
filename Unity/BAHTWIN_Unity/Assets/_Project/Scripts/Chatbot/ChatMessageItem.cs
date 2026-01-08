@@ -7,10 +7,10 @@ public class ChatMessageItem : MonoBehaviour
     [Header("Refs")]
     public TMP_Text messageText;
 
-    [Tooltip("The Image on the Bubble object (not the root).")]
+    [Tooltip("The Image on the Bubble object")]
     public Image bubbleBackground;
 
-    [Tooltip("Spacer objects with LayoutElement (FlexibleWidth).")]
+    [Tooltip("Spacer objects with LayoutElement")]
     public LayoutElement leftSpacer;
     public LayoutElement rightSpacer;
 
@@ -30,32 +30,38 @@ public class ChatMessageItem : MonoBehaviour
 
     public void Set(string text, bool isBot)
     {
-        if (messageText) messageText.text = text;
+        if (!messageText) return;
 
-        // Limit bubble width so long text wraps
-        if (bubbleLayout) bubbleLayout.preferredWidth = maxBubbleWidth;
+        messageText.enableWordWrapping = true;
+        messageText.text = text;
 
-        // Apply bubble sprite style
+        if (bubbleLayout)
+        {
+            bubbleLayout.preferredWidth = maxBubbleWidth;
+
+            if (bubbleLayout.preferredHeight > 0) bubbleLayout.preferredHeight = -1;
+        }
+
         if (bubbleBackground)
         {
             bubbleBackground.sprite = isBot ? botBubbleSprite : userBubbleSprite;
-            bubbleBackground.type = Image.Type.Sliced; // requires sprite borders set in Sprite Editor
+            bubbleBackground.type = Image.Type.Sliced;
         }
 
-        // Align bubble using spacers
         if (isBot)
         {
             if (leftSpacer) leftSpacer.flexibleWidth = 0f;
             if (rightSpacer) rightSpacer.flexibleWidth = 1f;
-
-            if (messageText) messageText.alignment = TextAlignmentOptions.Left;
+            messageText.alignment = TextAlignmentOptions.Left;
         }
         else
         {
             if (leftSpacer) leftSpacer.flexibleWidth = 1f;
             if (rightSpacer) rightSpacer.flexibleWidth = 0f;
-
-            if (messageText) messageText.alignment = TextAlignmentOptions.Left;
+            messageText.alignment = TextAlignmentOptions.Left;
         }
+
+        messageText.ForceMeshUpdate(true);
+        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)transform);
     }
 }
