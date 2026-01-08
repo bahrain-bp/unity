@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -76,19 +75,6 @@ public class RegistrationZoneTrigger : MonoBehaviour
     public float flashInSeconds = 0.05f;
     public float flashOutSeconds = 0.20f;
 
-    [Header("Registration Locked UI (disable until passedRegistration = true)")]
-    [Tooltip("If your badge-doors show a prompt, drag the PROMPT GameObject(s) here to hide them before registration.")]
-    public GameObject[] hideObjectsWhenNotRegistered;
-
-    [Tooltip("Optional: drag TMP_Text components here if you want to disable only the text component.")]
-    public TMP_Text[] disableTextsWhenNotRegistered;
-
-    [Tooltip("Optional: drag any Behaviour (scripts, colliders, etc.) you want disabled before registration.")]
-    public Behaviour[] disableBehavioursWhenNotRegistered;
-
-    private readonly Dictionary<TMP_Text, bool> _textWasEnabled = new();
-    private bool _gatesCached;
-
     private bool running;
     private bool playerInside;
 
@@ -121,93 +107,25 @@ public class RegistrationZoneTrigger : MonoBehaviour
         // Peccy start state
         if (peccyRoot != null && hidePeccyOnStart)
             peccyRoot.SetActive(false);
-
-        CacheGatedUIInitialState();
     }
 
     private void Start()
     {
         CacheActions();
-        StartCoroutine(InitFromSession());
+        StartCoroutine(InitPeccyVisibilityFromSession());
     }
 
-    private void CacheGatedUIInitialState()
+    private IEnumerator InitPeccyVisibilityFromSession()
     {
-        if (_gatesCached) return;
-        _gatesCached = true;
-
-        if (disableTextsWhenNotRegistered != null)
-        {
-            foreach (var t in disableTextsWhenNotRegistered)
-            {
-                if (!t) continue;
-                if (!_textWasEnabled.ContainsKey(t))
-                    _textWasEnabled.Add(t, t.enabled);
-            }
-        }
-    }
-
-    private IEnumerator InitFromSession()
-    {
+        // Wait until VisitorSession is loaded (so we can read passedRegistration)
         while (VisitorSession.Instance == null || !VisitorSession.Instance.IsLoaded)
             yield return null;
 
         var profile = VisitorSession.Instance.Profile;
         bool passed = profile != null && profile.passedRegistration;
 
-        // Keep everything consistent on load
-        ApplyRegistrationState(passed);
-
         if (peccyRoot != null)
             peccyRoot.SetActive(passed);
-    }
-
-    private void ApplyRegistrationState(bool passed)
-    {
-        // 1) Tell your access gate (colliders / navmesh blockers etc.)
-        accessGate?.SetRegistrationPassed(passed);
-
-        // 2) Hide / show prompt objects
-        if (hideObjectsWhenNotRegistered != null)
-        {
-            foreach (var go in hideObjectsWhenNotRegistered)
-            {
-                if (!go) continue;
-                go.SetActive(passed);
-            }
-        }
-
-        // 3) Disable / enable specific TMP texts
-        if (disableTextsWhenNotRegistered != null)
-        {
-            foreach (var t in disableTextsWhenNotRegistered)
-            {
-                if (!t) continue;
-
-                if (passed)
-                {
-                    // restore the enabled state it originally had
-                    if (_textWasEnabled.TryGetValue(t, out bool wasEnabled))
-                        t.enabled = wasEnabled;
-                    else
-                        t.enabled = true;
-                }
-                else
-                {
-                    t.enabled = false;
-                }
-            }
-        }
-
-        // 4) Disable / enable any behaviours
-        if (disableBehavioursWhenNotRegistered != null)
-        {
-            foreach (var b in disableBehavioursWhenNotRegistered)
-            {
-                if (!b) continue;
-                b.enabled = passed;
-            }
-        }
     }
 
     private void CacheActions()
@@ -240,8 +158,9 @@ public class RegistrationZoneTrigger : MonoBehaviour
 
         if (profile != null && profile.passedRegistration)
         {
-            ApplyRegistrationState(true);
+            accessGate?.SetRegistrationPassed(true);
 
+            // If already registered, ensure Peccy is visible
             if (peccyRoot != null) peccyRoot.SetActive(true);
 
             ShowBubbleFaded(replayLine, replayOptions);
@@ -251,8 +170,7 @@ public class RegistrationZoneTrigger : MonoBehaviour
             return;
         }
 
-        // Not registered state
-        ApplyRegistrationState(false);
+        // Not registered: keep Peccy hidden
         if (peccyRoot != null) peccyRoot.SetActive(false);
 
         StartCoroutine(Flow(isReplay: false));
@@ -286,6 +204,7 @@ public class RegistrationZoneTrigger : MonoBehaviour
                 yield return Flow(isReplay: true);
                 yield break;
             }
+
             yield return null;
         }
     }
@@ -297,17 +216,14 @@ public class RegistrationZoneTrigger : MonoBehaviour
         if (isReplay && badgeHud != null)
             badgeHud.SetForceHidden(true);
 
-        // During registration, treat as not passed
-        ApplyRegistrationState(false);
+        accessGate?.SetRegistrationPassed(false);
 
         if (!isReplay)
             SnapPlayerToPoint();
 
-        // Enable/Disable input actions (Input System)
         if (moveAction != null) moveAction.Disable();
         if (lookAction != null) lookAction.Enable();
         if (nextAction != null) nextAction.Enable();
-        // InputAction Enable/Disable is the supported approach in the new Input System. :contentReference[oaicite:1]{index=1}
 
         yield return ShowBubbleTypewriter(firstLine, firstOptions);
         yield return WaitForNextPressed();
@@ -347,12 +263,8 @@ public class RegistrationZoneTrigger : MonoBehaviour
             yield return badgePickup.WaitUntilPickedUp();
         }
 
-        // Mark registration as passed in the session profile (so next time it loads correctly)
-        if (VisitorSession.Instance != null && VisitorSession.Instance.Profile != null)
-            VisitorSession.Instance.Profile.passedRegistration = true;
-
-        // Registration passed -> allow access + show Peccy + re-enable door texts
-        ApplyRegistrationState(true);
+        // Registration passed -> allow access + show Peccy
+        accessGate?.SetRegistrationPassed(true);
         if (peccyRoot != null) peccyRoot.SetActive(true);
 
         if (isReplay && badgeHud != null)
@@ -473,19 +385,22 @@ public class RegistrationZoneTrigger : MonoBehaviour
         speechBubbleGroup.blocksRaycasts = show;
 
         bubbleFadeRoutine = StartCoroutine(FadeCanvasGroup(speechBubbleGroup, from, to, dur));
-        // CanvasGroup controls visibility and interactability for UI groups. :contentReference[oaicite:2]{index=2}
     }
 
     private IEnumerator ShowBubbleTypewriter(string line, string options)
     {
+        // Fade out
         FadeBubble(false);
         if (bubbleFadeOut > 0f) yield return new WaitForSeconds(bubbleFadeOut);
 
+        // Show bubble with empty text first
         if (speechBubble != null) speechBubble.Show("", options);
 
+        // Fade in
         FadeBubble(true);
         if (bubbleFadeIn > 0f) yield return new WaitForSeconds(bubbleFadeIn);
 
+        // Typewriter if possible
         if (bubbleText != null)
             yield return Typewriter(bubbleText, line, bubbleTypeSecondsPerChar);
         else if (speechBubble != null)
