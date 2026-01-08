@@ -51,6 +51,13 @@ public class PeccyTourManager : MonoBehaviour
     private float originalAngularSpeed;
     private bool speedSaved = false;
 
+    [Header("Start: Teleport to Reception")]
+    public bool teleportPlayerToReceptionOnStart = true;
+    public TeleportController teleportController;
+    public RoomSO receptionRoom;           // drag your Reception RoomSO here
+    public Transform receptionFallback;    // optional: empty transform placed at reception
+
+
     [Header("Stop Accuracy (NavMesh projection)")]
     public float stopSampleRadius = 0.25f;
     public float stopSampleFallbackRadius = 1.25f;
@@ -267,6 +274,25 @@ public class PeccyTourManager : MonoBehaviour
 
     private IEnumerator TourRoutine()
     {
+
+        // NEW: teleport to reception before tour intro
+        if (teleportPlayerToReceptionOnStart && teleportController != null)
+        {
+            bool didTeleport = false;
+
+            if (receptionRoom != null)
+                didTeleport = teleportController.ForceTeleportToRoom(receptionRoom);
+            else if (receptionFallback != null)
+            {
+                teleportController.ForceTeleportToWorld(receptionFallback.position);
+                didTeleport = true;
+            }
+
+            // tiny settle frame (helps some controllers/agents after warp)
+            if (didTeleport)
+                yield return null;
+        }
+
         yield return ShowTyped(introLine, introOptions);
         yield return WaitNext();
 
