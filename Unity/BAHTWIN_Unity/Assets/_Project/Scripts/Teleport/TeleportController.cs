@@ -211,4 +211,29 @@ public class TeleportController : MonoBehaviour
         fadeCanvasGroup.alpha = targetAlpha;
         fadeCanvasGroup.blocksRaycasts = targetAlpha > 0.001f;
     }
+
+    public bool ForceTeleportToRoom(RoomSO room)
+    {
+        if (room == null || playerRoot == null) return false;
+        if (NavigationManager.Instance == null) return false;
+
+        string key = BuildRoomKey(room);
+
+        if (!NavigationManager.Instance.TryGetRoomPosition(key, out Vector3 roomPos))
+        {
+            Debug.LogWarning($"[TeleportController] No room position found for key '{key}' ({room.roomName}).");
+            return false;
+        }
+
+        StartCoroutine(TeleportRoutine(roomPos));
+        return true;
+    }
+
+    public void ForceTeleportToWorld(Vector3 worldPos)
+    {
+        if (playerRoot == null) return;
+        StartCoroutine(TeleportRoutine(worldPos));
+    }
+
+
 }
