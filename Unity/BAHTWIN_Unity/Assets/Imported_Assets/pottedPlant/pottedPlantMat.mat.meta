@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8472ec8938d84b548a4dd7a21bbecaaf
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 249570
+  packageName: potted plant
+  packageVersion: 1.0
+  assetPath: Assets/pottedPlant/pottedPlantMat.mat
+  uploadId: 569936

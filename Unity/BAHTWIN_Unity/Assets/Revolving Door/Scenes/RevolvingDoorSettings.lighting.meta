@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9209a2ba58e8afe4f9a472a6f5acbb25
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 153549
+  packageName: Automatic Revolving Door
+  packageVersion: 1.2
+  assetPath: Assets/Revolving Door/Scenes/RevolvingDoorSettings.lighting
+  uploadId: 722818

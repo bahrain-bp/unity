@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: fb72cc81254f07241b07fcc6986eb510
+timeCreated: 1557744284
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 153549
+  packageName: Automatic Revolving Door
+  packageVersion: 1.2
+  assetPath: Assets/Revolving Door/Prefabs/RevolvingDoor .prefab
+  uploadId: 722818
