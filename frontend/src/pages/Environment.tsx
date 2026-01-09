@@ -112,24 +112,24 @@ const UnityPlayer = () => {
   }, []);
 
   return (
-    <div
-      style={{
-        textAlign: "center",
-        padding: 0,
-        border: 0,
-        margin: 0,
-      }}
-    >
+    <div id="unity-container" className="unity-desktop">
       <canvas
         ref={canvasRef}
         id="unity-canvas"
+        // width={960}
+        // height={600}
         tabIndex={-1}
         style={{
-          // width: "100%",
-          // height: "100vh",
           background: "#231F20",
         }}
-      ></canvas>
+      />
+
+      <div ref={loadingBarRef} id="unity-loading-bar">
+        <p>Loading 3D Environment...</p>
+        <div id="unity-progress-bar-empty">
+          <div ref={progressBarRef} id="unity-progress-bar-full" />
+        </div>
+      </div>
     </div>
   );
 };
