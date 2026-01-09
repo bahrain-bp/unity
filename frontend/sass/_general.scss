@@ -236,7 +236,7 @@ a {
   transform: translate(-50%, -50%);
 
     & p {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     text-align: center;
     margin-bottom: 1rem;
     color: $color-white;
@@ -253,5 +253,5 @@ a {
 
 #unity-progress-bar-full {
   height: calc(2rem - 2px);
-  background-color: $color-orange;
+  background-color: $color-orange-2;
 }

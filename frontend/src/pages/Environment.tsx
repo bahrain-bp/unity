@@ -1,9 +1,13 @@
 import { useEffect, useRef } from "react";
+import Spinner from "../components/Spinner";
 
 declare global {
   interface Window {
     createUnityInstance: any;
     unityDiagnostics: any;
+    unityInstance?: any;
+    initSmartPlugBridge?: (instance: any) => void;
+    initChatBridge?: (instance: any) => void;
   }
 }
 
@@ -20,12 +24,14 @@ const UnityPlayer = () => {
 
     const canvas = canvasRef.current;
 
+    // ─────────────────────────────────────────────
+    // Unity banner (errors / warnings)
+    // ─────────────────────────────────────────────
     const unityShowBanner = (msg: string, type?: "error" | "warning") => {
       if (!warningRef.current) return;
 
       const div = document.createElement("div");
       div.innerHTML = msg;
-      // div.style.padding = "10px";
 
       if (type === "error") div.style.background = "red";
       if (type === "warning") div.style.background = "yellow";
@@ -33,12 +39,13 @@ const UnityPlayer = () => {
       warningRef.current.appendChild(div);
 
       if (type !== "error") {
-        setTimeout(() => {
-          div.remove();
-        }, 5000);
+        setTimeout(() => div.remove(), 5000);
       }
     };
 
+    // ─────────────────────────────────────────────
+    // Unity build config
+    // ─────────────────────────────────────────────
     const buildUrl = "/unity";
     const loaderUrl = `${buildUrl}/BAHTWIN_BUILD.loader.js`;
 
@@ -54,6 +61,9 @@ const UnityPlayer = () => {
       showBanner: unityShowBanner,
     };
 
+    // ─────────────────────────────────────────────
+    // Mobile handling
+    // ─────────────────────────────────────────────
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
       const meta = document.createElement("meta");
       meta.name = "viewport";
@@ -62,6 +72,9 @@ const UnityPlayer = () => {
       document.head.appendChild(meta);
 
       canvas.className = "unity-mobile";
+      canvas.style.width = "100%";
+      canvas.style.height = "100vh";
+      document.body.style.textAlign = "left";
     } else {
       canvas.style.width = "100%";
       canvas.style.height = "100vh";
@@ -71,11 +84,14 @@ const UnityPlayer = () => {
       loadingBarRef.current.style.display = "block";
     }
 
-    const script = document.createElement("script");
-    script.src = loaderUrl;
-    script.async = true;
+    // ─────────────────────────────────────────────
+    // Load Unity loader script
+    // ─────────────────────────────────────────────
+    const unityLoaderScript = document.createElement("script");
+    unityLoaderScript.src = loaderUrl;
+    unityLoaderScript.async = true;
 
-    script.onload = () => {
+    unityLoaderScript.onload = () => {
       window
         .createUnityInstance(canvas, config, (progress: number) => {
           if (progressBarRef.current) {
@@ -83,31 +99,70 @@ const UnityPlayer = () => {
           }
         })
         .then((unityInstance: any) => {
+          // Hide loading UI
           if (loadingBarRef.current) {
             loadingBarRef.current.style.display = "none";
           }
 
+          // Expose globally
+          window.unityInstance = unityInstance;
+
+          // Fullscreen
           if (fullscreenBtnRef.current) {
             fullscreenBtnRef.current.onclick = () => {
               unityInstance.SetFullscreen(1);
             };
           }
 
-          if (diagnosticsIconRef.current) {
+          // Diagnostics
+          if (diagnosticsIconRef.current && window.unityDiagnostics) {
             diagnosticsIconRef.current.onclick = () => {
               window.unityDiagnostics.openDiagnosticsDiv(
                 unityInstance.GetMetricsInfo
               );
             };
           }
+
+          // ─────────────────────────────────────────────
+          // Initialize external bridges
+          // ─────────────────────────────────────────────
+          if (window.initSmartPlugBridge) {
+            console.log("Initializing SmartPlug bridge…");
+            window.initSmartPlugBridge(unityInstance);
+          } else {
+            console.warn(
+              "initSmartPlugBridge not found. Is unity-realtime-bridge.js loaded?"
+            );
+          }
+
+          if (window.initChatBridge) {
+            console.log("Initializing Chat bridge…");
+            window.initChatBridge(unityInstance);
+          } else {
+            console.warn(
+              "initChatBridge not found. Is unity-realtime-bridge.js loaded?"
+            );
+          }
         })
         .catch(alert);
     };
 
-    document.body.appendChild(script);
+    document.body.appendChild(unityLoaderScript);
 
+    // ─────────────────────────────────────────────
+    // Load bridge script
+    // ─────────────────────────────────────────────
+    const bridgeScript = document.createElement("script");
+    bridgeScript.src = "/js/unity-realtime-bridge.js";
+    bridgeScript.async = true;
+    document.body.appendChild(bridgeScript);
+
+    // ─────────────────────────────────────────────
+    // Cleanup
+    // ─────────────────────────────────────────────
     return () => {
-      document.body.removeChild(script);
+      unityLoaderScript.remove();
+      bridgeScript.remove();
     };
   }, []);
 
@@ -116,15 +171,12 @@ const UnityPlayer = () => {
       <canvas
         ref={canvasRef}
         id="unity-canvas"
-        // width={960}
-        // height={600}
         tabIndex={-1}
-        style={{
-          background: "#231F20",
-        }}
+        style={{ background: "#231F20" }}
       />
 
       <div ref={loadingBarRef} id="unity-loading-bar">
+        <Spinner />
         <p>Loading 3D Environment...</p>
         <div id="unity-progress-bar-empty">
           <div ref={progressBarRef} id="unity-progress-bar-full" />
