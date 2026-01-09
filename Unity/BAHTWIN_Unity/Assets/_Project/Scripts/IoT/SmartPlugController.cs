@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
-using TMPro;   // for TextMeshPro
+using TMPro;
+using UnityEngine.InputSystem; // New Input System
 
 [Serializable]
 public class PlugStatePayload
@@ -14,12 +15,13 @@ public class PlugStatePayload
     public int retryAfter;     // cooldown seconds (for 429)
 }
 
+[RequireComponent(typeof(Collider))]
 public class SmartPlugController : MonoBehaviour
 {
     [Header("Config")]
     public string deviceId = "plug1";
     public bool startsOn = false;
-    public string plugDisplayName = "Plug 1";   // shown on label
+    public string plugDisplayName = "Plug 1";
 
     [Header("Visuals")]
     public Renderer targetRenderer;
@@ -27,76 +29,104 @@ public class SmartPlugController : MonoBehaviour
     public Color offColor = Color.red;
 
     [Header("Label (optional)")]
-    public TextMeshPro label;                  // drag your TextMeshPro here
+    public TextMeshPro label;
 
-    [Header("Interaction (Proximity + Key)")]
-    public Transform player;                   // assign Main Camera / FPS Controller transform
-    public float interactDistance = 2f;
-    public KeyCode interactKey = KeyCode.F;
-    public bool allowMouseClick = true;        // keep mouse click toggle too
+    [Header("Interaction (Trigger + Interact Action)")]
+    [Tooltip("Set this to your Player tag. Your player root should be tagged Player.")]
+    public string playerTag = "Player";
+
+    [Tooltip("Drag your Input Action here (recommended): Player/Interact (F).")]
+    public InputActionReference interactAction;
+
+    [Tooltip("Keep mouse click working too (optional).")]
+    public bool allowMouseClick = true;
 
     // --- state ---
     private bool isOn;
     private bool isBusy;
-
-    // per-plug cooldown timer (seconds)
     private float localCooldownRemaining = 0f;
+
+    // trigger state
+    private bool playerInRange;
 
     private void Awake()
     {
         isOn = startsOn;
         ApplyVisualState();
+
+        // Ensure our collider is trigger (interaction zone)
+        var col = GetComponent<Collider>();
+        if (col != null && !col.isTrigger)
+        {
+            // You can leave it off if you want, but then OnTrigger won't fire.
+            // Better to force it for this interaction style.
+            col.isTrigger = true;
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (interactAction != null) interactAction.action.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if (interactAction != null) interactAction.action.Disable();
     }
 
     private void Update()
     {
-        // update label countdown if we are in cooldown
+        // Cooldown timer
         if (localCooldownRemaining > 0f)
         {
             localCooldownRemaining -= Time.deltaTime;
-            if (localCooldownRemaining < 0f)
-                localCooldownRemaining = 0f;
+            if (localCooldownRemaining < 0f) localCooldownRemaining = 0f;
 
             if (label != null)
             {
                 int remaining = Mathf.CeilToInt(localCooldownRemaining);
-                if (remaining > 0)
-                {
-                    label.text = $"{plugDisplayName} : COOLDOWN {remaining}s";
-                }
-                else
-                {
-                    // cooldown finished → restore normal label
-                    ApplyVisualState();
-                }
+                if (remaining > 0) label.text = $"{plugDisplayName} : COOLDOWN {remaining}s";
+                else ApplyVisualState();
             }
         }
 
-        // --- Proximity + F key interaction ---
-        if (player != null && !isBusy && localCooldownRemaining <= 0f)
+        if (isBusy || localCooldownRemaining > 0f) return;
+
+        // Show hint only when player is inside trigger
+        if (label != null)
         {
-            float distance = Vector3.Distance(player.position, transform.position);
+            label.text = playerInRange
+                ? $"{plugDisplayName} : Press [F]"
+                : $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
+        }
 
-            // optional: show hint when close
-            if (label != null && distance <= interactDistance)
-            {
-                label.text = $"{plugDisplayName} : Press [F]";
-            }
-            else if (label != null && localCooldownRemaining <= 0f)
-            {
-                // if not close, keep normal state label
-                label.text = $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
-            }
-
-            if (distance <= interactDistance && Input.GetKeyDown(interactKey))
-            {
-                Debug.Log($"[SmartPlug] {interactKey} pressed near {deviceId}");
-                OnClick();
-            }
+        // Press F (Interact Action) while in range
+        if (playerInRange && interactAction != null && interactAction.action.WasPressedThisFrame())
+        {
+            Debug.Log($"[SmartPlug] Interact pressed in trigger for {deviceId}");
+            OnClick();
         }
     }
 
-    // Call this from Button / OnMouseDown / Proximity Key
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag(playerTag))
+        {
+            playerInRange = true;
+            // Debug.Log($"[SmartPlug] Player entered trigger for {deviceId}");
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag(playerTag))
+        {
+            playerInRange = false;
+            // Debug.Log($"[SmartPlug] Player exited trigger for {deviceId}");
+        }
+    }
+
+    // Call this from Button / OnMouseDown / Trigger+Key
     public void OnClick()
     {
         if (isBusy) return;
@@ -109,10 +139,8 @@ public class SmartPlugController : MonoBehaviour
         Debug.Log($"[SmartPlug] Toggle → deviceId={deviceId}, desired={desiredState}");
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-        // Call the JS global function window.ToggleSmartPlug(deviceId, state)
         Application.ExternalCall("ToggleSmartPlug", deviceId, desiredState);
 #else
-        // In Editor / non-WebGL → just simulate backend
         SimulateBackendResponse(desiredState);
 #endif
     }
@@ -150,39 +178,31 @@ public class SmartPlugController : MonoBehaviour
 
         if (!string.Equals(payload.id, deviceId, StringComparison.OrdinalIgnoreCase))
         {
-            // Not for this plug
             isBusy = false;
             return;
         }
 
-        // Handle cooldown / error
+        // Handle error/cooldown
         if (payload.status != 200 && payload.status != 0)
         {
             Debug.LogWarning($"[SmartPlug] Backend status {payload.status}: {payload.message}");
 
             if (payload.status == 429 && payload.retryAfter > 0)
             {
-                Debug.Log($"[SmartPlug] Cooldown, retry after {payload.retryAfter} seconds");
-
-                // start per-plug countdown
                 localCooldownRemaining = payload.retryAfter;
-
-                if (label != null)
-                {
-                    label.text = $"{plugDisplayName} : COOLDOWN {payload.retryAfter}s";
-                }
+                if (label != null) label.text = $"{plugDisplayName} : COOLDOWN {payload.retryAfter}s";
             }
 
             isBusy = false;
             return;
         }
 
-        // Normal success
+        // Success
         bool newState = string.Equals(payload.state, "on", StringComparison.OrdinalIgnoreCase);
-
         isOn = newState;
+
         isBusy = false;
-        localCooldownRemaining = 0f;   // clear cooldown on success
+        localCooldownRemaining = 0f;
         ApplyVisualState();
     }
 
@@ -196,7 +216,6 @@ public class SmartPlugController : MonoBehaviour
 
         if (label != null && localCooldownRemaining <= 0f)
         {
-            // Only show ON/OFF when not in cooldown
             label.text = $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
         }
 
