@@ -22,7 +22,8 @@ import Parking from "./pages/dashboard/Parking";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import { useEffect } from "react";
 import FeedbackPage from "./pages/dashboard/Feedback";
-import Whiteboard from "./pages/Whiteboard";
+import Whiteboard from "./pages/UserWhiteboard";
+import UserWhiteboard from "./pages/UserWhiteboard";
 
 // Protected Route Component for authenticated users
 function ProtectedRoute({ children }:PropsWithChildren) {
@@ -130,6 +131,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Environment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/whiteboard"
+            element={
+              <ProtectedRoute>
+                <UserWhiteboard />
               </ProtectedRoute>
             }
           />

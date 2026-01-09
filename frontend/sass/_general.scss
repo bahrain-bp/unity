@@ -227,3 +227,31 @@ a {
   justify-content: center;
   align-items: center;
 }
+
+#unity-loading-bar {
+  position: absolute;
+  width: 40rem;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+    & p {
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: $color-white;
+  }
+}
+
+#unity-progress-bar-empty {
+  height: 2rem;
+  background-color: $color-bg;
+  border: 1px solid $color-grey;
+  border-radius: 10rem;
+  overflow: hidden;
+}
+
+#unity-progress-bar-full {
+  height: calc(2rem - 2px);
+  background-color: $color-orange-2;
+}
