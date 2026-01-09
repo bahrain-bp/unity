@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
-
+using System.Runtime.InteropServices;
 public class PauseMenu : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -79,5 +79,28 @@ public class PauseMenu : MonoBehaviour
         isPaused = true;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+    }
+
+    public void ExitGame()
+    {
+        Time.timeScale = 1f;
+        WebGLRedirect.GoToHomepage("https://d3pah2wsw5ry03.cloudfront.net");
+    }
+
+    public static class WebGLRedirect
+    {
+        [DllImport("__Internal")]
+        private static extern void RedirectToURL(string urlPtr);
+
+        public static void GoToHomepage(string url)
+        {
+            #if UNITY_WEBGL && !UNITY_EDITOR
+                RedirectToURL(url);
+            #else
+                // Fallback for testing in the Unity Editor
+                Application.OpenURL(url);
+                Debug.Log("Redirecting to: " + url);
+            #endif
+        }
     }
 }

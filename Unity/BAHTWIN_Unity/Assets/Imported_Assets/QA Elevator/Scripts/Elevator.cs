@@ -470,13 +470,19 @@ public class Elevator : MonoBehaviour
 				SoundFX.Stop();
 				TargetBellSoundPlay();
 
-				if (!isRigidbodyCharacter)
+				if (playerController != null)
 				{
 					playerController.enabled = false;
+				}
+
+				if (!isRigidbodyCharacter)
+				{
 					Player.isKinematic = false;
 				}
 
 				Player.transform.position = new Vector3(Player.transform.position.x, TargetElvAnim.transform.position.y + PlayerHeight, Player.transform.position.z);
+
+				Physics.SyncTransforms();
 
 				if (isReflectionProbe)
 				{
@@ -487,9 +493,13 @@ public class Elevator : MonoBehaviour
 					}
 				}
 
-				if (!isRigidbodyCharacter)
+				if (playerController != null)
 				{
 					playerController.enabled = true;
+				}
+
+				if (!isRigidbodyCharacter)
+				{
 					Player.isKinematic = true;
 				}
 
