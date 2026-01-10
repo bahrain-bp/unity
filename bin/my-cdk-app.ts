@@ -72,13 +72,6 @@ const frontendStack = new FrontendDeploymentStack(
   }
 );
 
-// 6) API stack (Cognito + API Gateway + Lambdas)
-new APIStack(app, `${stackNamePrefix}-Unity-APIStack`, {
-  dbStack,
-  bedrockStack,
-  wsStack,
-  env,
-});
 
 
 const FRStack = new FacialRecognitionStack(app, `${stackNamePrefix}-Unity-FacialRecognitionStack`, {
@@ -88,18 +81,31 @@ const FRStack = new FacialRecognitionStack(app, `${stackNamePrefix}-Unity-Facial
   },
 });
 
-new VisitorFeedbackStack(app, `${stackNamePrefix}-VisitorFeedbackStack`, {
-  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION || 'us-east-1' },
-  userTable: FRStack.userTable, 
+
+// 6) API stack (Cognito + API Gateway + Lambdas)
+const apistack = new APIStack(app, `${stackNamePrefix}-Unity-APIStack`, {
+  dbStack,
+  bedrockStack,
+  wsStack,
+  frontendStack,
+  env,
   broadcastLambda: FRStack.broadcastLambda
 });
 
+apistack.addDependency(frontendStack);
+
+// new VisitorFeedbackStack(app, `${stackNamePrefix}-VisitorFeedbackStack`, {
+//   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION || 'us-east-1' },
+//   userTable: FRStack.userTable, 
+//   broadcastLambda: FRStack.broadcastLambda
+// });
+
 // Build Upload Stack
-new BuildUploadStack(app, `${stackNamePrefix}-Unity-BuildUploadStack`, {
-  frontendBucketName: frontendStack.frontendBucket.bucketName,
-  cloudfrontDistributionId: frontendStack.distribution.distributionId,  // ✅
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || "us-east-1",
-  },
-});
+// new BuildUploadStack(app, `${stackNamePrefix}-Unity-BuildUploadStack`, {
+//   frontendBucketName: frontendStack.frontendBucket.bucketName,
+//   cloudfrontDistributionId: frontendStack.distribution.distributionId,  // ✅
+//   env: {
+//     account: process.env.CDK_DEFAULT_ACCOUNT,
+//     region: process.env.CDK_DEFAULT_REGION || "us-east-1",
+//   },
+// });

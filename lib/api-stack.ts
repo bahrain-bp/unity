@@ -10,11 +10,16 @@ import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as path from "path";
 import { BedrockStack } from "./bedrock_stack";
 import { UnityWebSocketStack } from "./unity-websocket-stack";
+import { FrontendDeploymentStack } from "./frontend-deployment-stack";
+import * as logs from "aws-cdk-lib/aws-logs";             
+
 
 interface APIStackProps extends cdk.StackProps {
   dbStack: DBStack;
   bedrockStack: BedrockStack;
   wsStack: UnityWebSocketStack;
+  frontendStack: FrontendDeploymentStack;
+  broadcastLambda: lambda.IFunction;
 }
 
 export class APIStack extends cdk.Stack {
@@ -26,9 +31,14 @@ export class APIStack extends cdk.Stack {
     const wsStack = props.wsStack;
     const dbStack = props.dbStack;
     const bedrockStack = props.bedrockStack;
+    const frontendStack = props.frontendStack;
+    const broadcastLambda = props.broadcastLambda;
 
     const preRegBucket = dbStack.preRegBucket;
     const userTable = dbStack.userManagementTable;
+
+    const feedbackTable = dbStack.visitorFeedbackTable;
+    const usedTokensTable = dbStack.usedTokensTable;
 
     // Ensure DBStack is created before APIStack
     this.addDependency(dbStack);
@@ -675,6 +685,197 @@ export class APIStack extends cdk.Stack {
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
+    const presignedUrlHandler = new NodejsFunction(
+          this,
+          "PresignedUrlHandler",
+          {
+            runtime: lambda.Runtime.NODEJS_20_X,
+            handler: "handler",
+            entry: path.join(__dirname, "..", "lambda", "uploadBuildHandler.ts"),
+            timeout: cdk.Duration.seconds(10),
+            memorySize: 256,
+            environment: {
+              BUCKET_NAME: frontendStack.frontendBucket.bucketName,
+              UPLOAD_DIRECTORY: "unity",
+              MAX_FILES: "4",
+              URL_EXPIRATION_SECONDS: "3600", // 1 hour
+              //CLOUDFRONT_DISTRIBUTION_ID: "E8RMBHHUMVCJZ",
+              CLOUDFRONT_DISTRIBUTION_ID: frontendStack.distribution.distributionId,
+    
+            },
+          }
+        );
+
+        frontendStack.frontendBucket.grantPut(presignedUrlHandler);
+
+
+        presignedUrlHandler.addToRolePolicy(
+              new iam.PolicyStatement({
+                actions: ["cloudfront:CreateInvalidation"],
+                resources: ["*"],
+              })
+            );
+    const uploadResource = api.root.addResource("generate-upload-urls");
+
+            uploadResource.addMethod(
+                  "POST",
+                  new apigw.LambdaIntegration(presignedUrlHandler)
+                );
+
+
+                //sara stacks
+
+                // ────────────────────────────────────────────────
+    // Visitor Feedback API (moved from VisitorFeedbackStack)
+    // ────────────────────────────────────────────────
+ 
+    // Helper to create Python lambdas with requirements bundling
+    const createPythonLambda = (
+      id: string,
+      handlerFile: string,
+      functionName: string,
+      env: { [key: string]: string }
+    ) => {
+      const fn = new lambda.Function(this, id, {
+        runtime: lambda.Runtime.PYTHON_3_11,
+        handler: `${handlerFile}.handler`,
+        code: lambda.Code.fromAsset(path.join(__dirname, "../lambda"), {
+          bundling: {
+            image: lambda.Runtime.PYTHON_3_11.bundlingImage,
+            command: [
+              "bash",
+              "-c",
+              `
+              pip install -r requirements.txt -t /asset-output &&
+              cp -r . /asset-output
+              `,
+            ],
+          },
+        }),
+        environment: env,
+        timeout: cdk.Duration.seconds(30),
+        functionName,
+        logRetention: logs.RetentionDays.ONE_DAY,
+        tracing: lambda.Tracing.ACTIVE,
+      });
+ 
+      enableXRay(fn);
+      return fn;
+    };
+ 
+    const commonEnv = {
+      FEEDBACK_TABLE: feedbackTable.tableName,
+      VISITOR_TABLE: userTable.tableName,
+      FEEDBACK_SECRET: "secret",
+      used_tokens_table: usedTokensTable.tableName,
+      BROADCAST_LAMBDA: broadcastLambda.functionArn,
+    };
+ 
+    // 1) Lambdas
+    const getVisitorInfoLambda = createPythonLambda(
+      "GetVisitorInfoLambda",
+      "getVisitorInfo",
+      "GetVisitorInfoLambda",
+      commonEnv
+    );
+ 
+    const submitFeedbackLambda = createPythonLambda(
+      "SubmitFeedbackLambda",
+      "submitFeedback",
+      "SubmitFeedbackLambda",
+      commonEnv
+    );
+ 
+    const getFeedbackLambda = createPythonLambda(
+      "GetFeedbackLambda",
+      "getFeedback",
+      "GetFeedbackLambda",
+      commonEnv
+    );
+ 
+    // LoadFeedback (simple python lambda without bundling)
+    const loadFeedbackLambda = new lambda.Function(this, "LoadFeedback", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "LoadFeedback.handler",
+      code: lambda.Code.fromAsset("lambda"),
+      environment: {
+        FEEDBACK_TABLE: feedbackTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      functionName: "LoadFeedback",
+      logRetention: logs.RetentionDays.ONE_DAY,
+      tracing: lambda.Tracing.ACTIVE,
+    });
+    enableXRay(loadFeedbackLambda);
+ 
+    // 2) Permissions
+    userTable.grantReadWriteData(getVisitorInfoLambda);
+    userTable.grantReadData(submitFeedbackLambda);
+ 
+    feedbackTable.grantReadWriteData(submitFeedbackLambda);
+    feedbackTable.grantReadData(getFeedbackLambda);
+    feedbackTable.grantReadData(loadFeedbackLambda);
+ 
+    usedTokensTable.grantReadWriteData(getVisitorInfoLambda);
+    usedTokensTable.grantReadWriteData(submitFeedbackLambda);
+ 
+    // allow submitFeedback lambda to invoke broadcast lambda
+    broadcastLambda.grantInvoke(submitFeedbackLambda.role!);
+ 
+    // 3) Routes (ALL endpoints authorized — visitor included)
+    const getVisitorInfoResource = api.root.addResource("getVisitorInfo");
+    getVisitorInfoResource.addMethod("GET", new apigw.LambdaIntegration(getVisitorInfoLambda), {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    });
+ 
+    const submitFeedbackResource = api.root.addResource("submitFeedback");
+    submitFeedbackResource.addMethod("POST", new apigw.LambdaIntegration(submitFeedbackLambda), {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    });
+ 
+    // Admin routes (still Cognito-protected)
+    const adminResource = api.root.addResource("admin");
+ 
+    const getFeedbackResource = adminResource.addResource("getFeedback");
+    getFeedbackResource.addMethod("GET", new apigw.LambdaIntegration(getFeedbackLambda), {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    });
+ 
+    const loadFeedbackResource = adminResource.addResource("loadFeedback");
+    loadFeedbackResource.addMethod("POST", new apigw.LambdaIntegration(loadFeedbackLambda), {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    });
+ 
+    // 4) CORS (APIStack style)
+    const corsOrigins = ["http://localhost:8080", "http://localhost:5173"];
+ 
+    getVisitorInfoResource.addCorsPreflight({
+      allowOrigins: corsOrigins,
+      allowMethods: ["OPTIONS", "GET"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    });
+ 
+    submitFeedbackResource.addCorsPreflight({
+      allowOrigins: corsOrigins,
+      allowMethods: ["OPTIONS", "POST"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    });
+ 
+    getFeedbackResource.addCorsPreflight({
+      allowOrigins: corsOrigins,
+      allowMethods: ["OPTIONS", "GET"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    });
+ 
+    loadFeedbackResource.addCorsPreflight({
+      allowOrigins: corsOrigins,
+      allowMethods: ["OPTIONS", "POST"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    });
 
   }
 }

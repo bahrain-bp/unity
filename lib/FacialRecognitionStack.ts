@@ -201,6 +201,7 @@ export class FacialRecognitionStack extends cdk.Stack {
 
 // Create websocket API for real time admin dashboard
   const wsAPI = new apigatewayv2.WebSocketApi(this, "AdminDashboardWS",{
+    apiName: `${prefixname}-AdminDashboardWS`,
               connectRouteOptions:{
                   integration: new WebSocketLambdaIntegration(
                       'ws-connect-integration',
