@@ -431,8 +431,6 @@ function sendPirOccupancyToUnity(payload, msgTs) {
 // Unity – Backend HTTP (Chat Assistant Bridge)
 // ============================================================
 
-const API_ASSISTANT = import.meta.env.VITE_API_ASSISTANT;
-
 // Store Unity WebGL instance ONLY for chat
 window.__CHAT_UNITY_INSTANCE__ = null;
 
@@ -443,7 +441,7 @@ window.initChatBridge = function (unityInstance) {
 };
 
 // Chat assistant endpoint
-const ASSISTANT_ENDPOINT = `${API_ASSISTANT}/assistant`;
+const ASSISTANT_ENDPOINT = `${API_BASE}/assistant`;
 
 // Unity calls:
 // AskPeccyAssistant(question, sessionId, unityObjectName)
