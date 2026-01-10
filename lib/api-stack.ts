@@ -12,7 +12,8 @@ import { BedrockStack } from "./bedrock_stack";
 import { UnityWebSocketStack } from "./unity-websocket-stack";
 import { FrontendDeploymentStack } from "./frontend-deployment-stack";
 import * as logs from "aws-cdk-lib/aws-logs";             
-
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 
 interface APIStackProps extends cdk.StackProps {
   dbStack: DBStack;
@@ -39,7 +40,7 @@ export class APIStack extends cdk.Stack {
 
     const feedbackTable = dbStack.visitorFeedbackTable;
     const usedTokensTable = dbStack.usedTokensTable;
-
+    const REKOG_COLLECTION_ID = dbStack.visitorFaceCollection.collectionId!;
     // Ensure DBStack is created before APIStack
     this.addDependency(dbStack);
 
@@ -726,10 +727,8 @@ export class APIStack extends cdk.Stack {
                 //sara stacks
 
                 // ────────────────────────────────────────────────
-    // Visitor Feedback API (moved from VisitorFeedbackStack)
+    // Visitor Feedback API (python)
     // ────────────────────────────────────────────────
- 
-    // Helper to create Python lambdas with requirements bundling
     const createPythonLambda = (
       id: string,
       handlerFile: string,
@@ -745,10 +744,7 @@ export class APIStack extends cdk.Stack {
             command: [
               "bash",
               "-c",
-              `
-              pip install -r requirements.txt -t /asset-output &&
-              cp -r . /asset-output
-              `,
+              `pip install -r requirements.txt -t /asset-output && cp -r . /asset-output`,
             ],
           },
         }),
@@ -758,11 +754,11 @@ export class APIStack extends cdk.Stack {
         logRetention: logs.RetentionDays.ONE_DAY,
         tracing: lambda.Tracing.ACTIVE,
       });
- 
+
       enableXRay(fn);
       return fn;
     };
- 
+
     const commonEnv = {
       FEEDBACK_TABLE: feedbackTable.tableName,
       VISITOR_TABLE: userTable.tableName,
@@ -770,112 +766,329 @@ export class APIStack extends cdk.Stack {
       used_tokens_table: usedTokensTable.tableName,
       BROADCAST_LAMBDA: broadcastLambda.functionArn,
     };
- 
-    // 1) Lambdas
+
     const getVisitorInfoLambda = createPythonLambda(
       "GetVisitorInfoLambda",
       "getVisitorInfo",
       "GetVisitorInfoLambda",
       commonEnv
     );
- 
+
     const submitFeedbackLambda = createPythonLambda(
       "SubmitFeedbackLambda",
       "submitFeedback",
       "SubmitFeedbackLambda",
       commonEnv
     );
- 
+
     const getFeedbackLambda = createPythonLambda(
       "GetFeedbackLambda",
       "getFeedback",
       "GetFeedbackLambda",
       commonEnv
     );
- 
-    // LoadFeedback (simple python lambda without bundling)
+
     const loadFeedbackLambda = new lambda.Function(this, "LoadFeedback", {
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: "LoadFeedback.handler",
       code: lambda.Code.fromAsset("lambda"),
-      environment: {
-        FEEDBACK_TABLE: feedbackTable.tableName,
-      },
+      environment: { FEEDBACK_TABLE: feedbackTable.tableName },
       timeout: cdk.Duration.seconds(30),
-      functionName: "LoadFeedback",
+      functionName: `${prefixname}-LoadFeedback`,
       logRetention: logs.RetentionDays.ONE_DAY,
       tracing: lambda.Tracing.ACTIVE,
     });
     enableXRay(loadFeedbackLambda);
- 
-    // 2) Permissions
+
     userTable.grantReadWriteData(getVisitorInfoLambda);
     userTable.grantReadData(submitFeedbackLambda);
- 
     feedbackTable.grantReadWriteData(submitFeedbackLambda);
     feedbackTable.grantReadData(getFeedbackLambda);
     feedbackTable.grantReadData(loadFeedbackLambda);
- 
     usedTokensTable.grantReadWriteData(getVisitorInfoLambda);
     usedTokensTable.grantReadWriteData(submitFeedbackLambda);
- 
-    // allow submitFeedback lambda to invoke broadcast lambda
+
+    // allow submitFeedback -> broadcast
     broadcastLambda.grantInvoke(submitFeedbackLambda.role!);
- 
-    // 3) Routes (ALL endpoints authorized — visitor included)
+
     const getVisitorInfoResource = api.root.addResource("getVisitorInfo");
     getVisitorInfoResource.addMethod("GET", new apigw.LambdaIntegration(getVisitorInfoLambda), {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
- 
+
     const submitFeedbackResource = api.root.addResource("submitFeedback");
     submitFeedbackResource.addMethod("POST", new apigw.LambdaIntegration(submitFeedbackLambda), {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
- 
-    // Admin routes (still Cognito-protected)
+
     const adminResource = api.root.addResource("admin");
- 
-    const getFeedbackResource = adminResource.addResource("getFeedback");
-    getFeedbackResource.addMethod("GET", new apigw.LambdaIntegration(getFeedbackLambda), {
+
+    adminResource.addResource("getFeedback").addMethod("GET", new apigw.LambdaIntegration(getFeedbackLambda), {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
- 
-    const loadFeedbackResource = adminResource.addResource("loadFeedback");
-    loadFeedbackResource.addMethod("POST", new apigw.LambdaIntegration(loadFeedbackLambda), {
+
+    adminResource.addResource("loadFeedback").addMethod("POST", new apigw.LambdaIntegration(loadFeedbackLambda), {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
- 
-    // 4) CORS (APIStack style)
+
     const corsOrigins = ["http://localhost:8080", "http://localhost:5173"];
- 
     getVisitorInfoResource.addCorsPreflight({
       allowOrigins: corsOrigins,
       allowMethods: ["OPTIONS", "GET"],
       allowHeaders: ["Content-Type", "Authorization"],
     });
- 
     submitFeedbackResource.addCorsPreflight({
       allowOrigins: corsOrigins,
       allowMethods: ["OPTIONS", "POST"],
       allowHeaders: ["Content-Type", "Authorization"],
     });
- 
-    getFeedbackResource.addCorsPreflight({
-      allowOrigins: corsOrigins,
-      allowMethods: ["OPTIONS", "GET"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
- 
-    loadFeedbackResource.addCorsPreflight({
-      allowOrigins: corsOrigins,
-      allowMethods: ["OPTIONS", "POST"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
 
+    // ────────────────────────────────────────────────
+    // Facial Recognition REST API
+    // ────────────────────────────────────────────────
+    const invitedVisitorTable = dbStack.invitedVisitorTable;
+    const websiteActivityTable = dbStack.websiteActivityTable;
+    const facialBucket = dbStack.bahtwinTestingBucket;
+
+    const visitorResource = api.root.addResource("visitor");
+    const facialCorsOrigins = ["http://localhost:8080", "http://localhost:5173"];
+
+    const publicOpts: apigw.MethodOptions = {
+      authorizationType: apigw.AuthorizationType.NONE,
+      apiKeyRequired: false,
+    };
+
+    const adminOpts: apigw.MethodOptions = {
+      authorizer,
+      authorizationType: apigw.AuthorizationType.COGNITO,
+    };
+
+    const arrivalTopic = new sns.Topic(this, "VisitorArrivalTopic", {
+      topicName: `${prefixname}-VisitorArrivalNotifications`,
+    });
+    arrivalTopic.addSubscription(new subscriptions.SmsSubscription("+97332233417"));
+
+    new cdk.CfnOutput(this, "ArrivalTopicArnOutput", { value: arrivalTopic.topicArn });
+
+    const sendFeedbackLambda = new lambda.Function(this, "SendFeedbackLambda", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "sendFeedbackLambda.handler",
+      code: lambda.Code.fromAsset(path.join(__dirname, "../lambda"), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_11.bundlingImage,
+          command: ["bash", "-c", `pip install -r requirements.txt -t /asset-output && cp -r . /asset-output`],
+        },
+      }),
+      environment: {
+        JWT_SECRET: "secret",
+        FRONTEND_URL: "https://d3pah2wsw5ry03.cloudfront.net/VisitorFeedBack",
+        GMAIL_USER: "bahtwinnoreply@gmail.com",
+        GMAIL_PASS: "zdjl cdgw kxzb okny",
+        WORKMAIL_USER: "no-reply@bahtwin.awsapps.com",
+        WORKMAIL_PASS: "Test1234*",
+        WORKMAIL_SMTP: "smtp.mail.us-east-1.awsapps.com",
+      },
+      timeout: cdk.Duration.seconds(30),
+      functionName: `${prefixname}-SendFeedbackLambda`,
+      logRetention: logs.RetentionDays.ONE_DAY,
+      tracing: lambda.Tracing.ACTIVE,
+    });
+    enableXRay(sendFeedbackLambda);
+
+    const arrivalRekognitionFn = new lambda.Function(this, "ArrivalRekognitionHandler", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "ArrivalRekognition.ArrivalRekognition",
+      code: lambda.Code.fromAsset("lambda"),
+      timeout: cdk.Duration.seconds(30),
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        BUCKET_NAME: facialBucket.bucketName,
+        COLLECTION_ID: REKOG_COLLECTION_ID,
+        USER_TABLE: userTable.tableName,
+        InviteTable: invitedVisitorTable.tableName,
+        BROADCAST_LAMBDA: broadcastLambda.functionArn,
+        TOPIC_ARN: arrivalTopic.topicArn, 
+        SEND_FEEDBACK_LAMBDA: sendFeedbackLambda.functionArn, 
+      },
+    });
+    enableXRay(arrivalRekognitionFn);
+
+    const visitorPreRegisterFn = new lambda.Function(this, "VisitorPreRegisterHandler", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "PreRegisterCheck.PreRegisterCheck",
+      code: lambda.Code.fromAsset("lambda"),
+      timeout: cdk.Duration.seconds(30),
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        BUCKET_NAME: facialBucket.bucketName,
+        COLLECTION_ID: REKOG_COLLECTION_ID, 
+        USER_TABLE: userTable.tableName,
+        BROADCAST_LAMBDA: broadcastLambda.functionArn,
+      },
+    });
+    enableXRay(visitorPreRegisterFn);
+
+    const registerVisitorIndividualFn = new lambda.Function(this, "RegisterVisitorIndividualHandler", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "RegisterIndividualVisitor.handler",
+      code: lambda.Code.fromAsset("lambda"),
+      timeout: cdk.Duration.seconds(30),
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        InviteTable: invitedVisitorTable.tableName,
+        BROADCAST_LAMBDA: broadcastLambda.functionArn,
+      },
+    });
+    enableXRay(registerVisitorIndividualFn);
+
+    const registerVisitorBulkFn = new lambda.Function(this, "RegisterVisitorBulkHandler", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "RegisterBulkVisitor.handler",
+      code: lambda.Code.fromAsset("lambda"),
+      timeout: cdk.Duration.seconds(30),
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        InviteTable: invitedVisitorTable.tableName,
+        BROADCAST_LAMBDA: broadcastLambda.functionArn,
+      },
+    });
+    enableXRay(registerVisitorBulkFn);
+
+    const loadDashboardFn = new lambda.Function(this, "LoadDashboardHandlerV2", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "LoadDashboard.handler",
+      code: lambda.Code.fromAsset("lambda"),
+      timeout: cdk.Duration.seconds(30),
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        InviteTable: invitedVisitorTable.tableName,
+        USER_TABLE: userTable.tableName,
+        WEBSITE_ACTIVITY_TABLE: websiteActivityTable.tableName,
+      },
+    });
+    enableXRay(loadDashboardFn);
+
+    const getImageUrlFn = new NodejsFunction(this, "GeneratePresignedImageUrlHandlerV2", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/generatePresignedDownloadUrl.ts"),
+      handler: "handler",
+      bundling: { target: "node18", minify: true, sourceMap: false },
+      timeout: cdk.Duration.seconds(30),
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        BUCKET_NAME: facialBucket.bucketName,
+        USER_TABLE: userTable.tableName,
+      },
+    });
+    enableXRay(getImageUrlFn);
+
+    const websiteHeartbeatFn = new NodejsFunction(this, "WebsiteHeartbeatHandlerV2", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/heartbeat.ts"),
+      handler: "handler",
+      bundling: { target: "node18", minify: true, sourceMap: false },
+      timeout: cdk.Duration.seconds(30),
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        WEBSITE_ACTIVITY_TABLE: websiteActivityTable.tableName,
+        BROADCAST_LAMBDA: broadcastLambda.functionArn,
+      },
+    });
+    enableXRay(websiteHeartbeatFn);
+
+    const getUserBadgeInfoFn = new NodejsFunction(this, "GetUserBadgeInfoHandlerV2", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/getUserBadgeInfo.ts"),
+      handler: "handler",
+      bundling: { target: "node18", minify: true, sourceMap: false },
+      timeout: cdk.Duration.seconds(30),
+      tracing: lambda.Tracing.ACTIVE,
+      environment: {
+        USER_TABLE: userTable.tableName,
+        BUCKET_NAME: facialBucket.bucketName,
+      },
+    });
+    enableXRay(getUserBadgeInfoFn);
+
+    // Permissions
+    facialBucket.grantReadWrite(arrivalRekognitionFn);
+    facialBucket.grantReadWrite(visitorPreRegisterFn);
+    facialBucket.grantRead(getImageUrlFn);
+    facialBucket.grantRead(getUserBadgeInfoFn);
+
+    userTable.grantReadWriteData(arrivalRekognitionFn);
+    userTable.grantReadWriteData(visitorPreRegisterFn);
+    userTable.grantReadData(getImageUrlFn);
+    userTable.grantReadWriteData(getUserBadgeInfoFn);
+
+    invitedVisitorTable.grantReadWriteData(registerVisitorIndividualFn);
+    invitedVisitorTable.grantReadWriteData(registerVisitorBulkFn);
+    invitedVisitorTable.grantReadWriteData(arrivalRekognitionFn);
+    invitedVisitorTable.grantReadWriteData(loadDashboardFn);
+
+    websiteActivityTable.grantReadWriteData(loadDashboardFn);
+    websiteActivityTable.grantReadWriteData(websiteHeartbeatFn);
+
+    for (const fn of [visitorPreRegisterFn, arrivalRekognitionFn]) {
+      fn.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ["rekognition:IndexFaces", "rekognition:SearchFacesByImage", "rekognition:DetectFaces"],
+          resources: ["*"],
+        })
+      );
+    }
+
+    arrivalTopic.grantPublish(arrivalRekognitionFn);
+    sendFeedbackLambda.grantInvoke(arrivalRekognitionFn.role!);
+
+    broadcastLambda.grantInvoke(arrivalRekognitionFn.role!);
+    broadcastLambda.grantInvoke(visitorPreRegisterFn.role!);
+    broadcastLambda.grantInvoke(registerVisitorIndividualFn.role!);
+    broadcastLambda.grantInvoke(registerVisitorBulkFn.role!);
+    broadcastLambda.grantInvoke(websiteHeartbeatFn.role!);
+
+    // Routes + CORS
+    const addCors = (res: apigw.IResource, methods: string[]) =>
+      res.addCorsPreflight({
+        allowOrigins: facialCorsOrigins,
+        allowMethods: ["OPTIONS", ...methods],
+        allowHeaders: ["Content-Type", "Authorization"],
+      });
+
+    const visitorArrivalRes = visitorResource.addResource("arrival");
+    visitorArrivalRes.addMethod("POST", new apigw.LambdaIntegration(arrivalRekognitionFn), publicOpts);
+    addCors(visitorArrivalRes, ["POST"]);
+
+    const visitorRegisterRes = visitorResource.addResource("register");
+    visitorRegisterRes.addMethod("POST", new apigw.LambdaIntegration(visitorPreRegisterFn), publicOpts);
+    addCors(visitorRegisterRes, ["POST"]);
+
+    const visitorGetImageUrlRes = visitorResource.addResource("get-image-url");
+    visitorGetImageUrlRes.addMethod("GET", new apigw.LambdaIntegration(getImageUrlFn), publicOpts);
+    addCors(visitorGetImageUrlRes, ["GET"]);
+
+    const visitorHeartbeatRes = visitorResource.addResource("heartbeat");
+    visitorHeartbeatRes.addMethod("POST", new apigw.LambdaIntegration(websiteHeartbeatFn), publicOpts);
+    addCors(visitorHeartbeatRes, ["POST"]);
+
+    const visitorBadgeRes = visitorResource.addResource("badge");
+    visitorBadgeRes.addMethod("POST", new apigw.LambdaIntegration(getUserBadgeInfoFn), publicOpts);
+    addCors(visitorBadgeRes, ["POST"]);
+
+    const adminRegisterIndividualRes = adminResource.addResource("registerVisitorIndividual");
+    adminRegisterIndividualRes.addMethod("POST", new apigw.LambdaIntegration(registerVisitorIndividualFn), adminOpts);
+    addCors(adminRegisterIndividualRes, ["POST"]);
+
+    const adminRegisterBulkRes = adminResource.addResource("registerVisitorBulk");
+    adminRegisterBulkRes.addMethod("POST", new apigw.LambdaIntegration(registerVisitorBulkFn), adminOpts);
+    addCors(adminRegisterBulkRes, ["POST"]);
+
+    const adminLoadDashboardRes = adminResource.addResource("loadDashboard");
+    adminLoadDashboardRes.addMethod("POST", new apigw.LambdaIntegration(loadDashboardFn), adminOpts);
+    addCors(adminLoadDashboardRes, ["POST"]);
   }
 }

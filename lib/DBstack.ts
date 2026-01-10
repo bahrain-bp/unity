@@ -3,6 +3,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cdk from "aws-cdk-lib";
 import { Stack, StackProps, RemovalPolicy } from "aws-cdk-lib";
 import { Construct } from "constructs";
+import { aws_rekognition as rekognition } from "aws-cdk-lib";
 
 export class DBStack extends Stack {
   public readonly table: dynamodb.Table;
@@ -26,6 +27,13 @@ export class DBStack extends Stack {
 
   public readonly visitorImagesBucket: s3.Bucket;
 
+  //sara additions
+  public readonly bahtwinTestingBucket: s3.Bucket;
+
+  public readonly visitorFaceCollection: rekognition.CfnCollection;
+
+  public readonly facialWsConnectionsTable: dynamodb.Table;
+
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
@@ -47,20 +55,19 @@ export class DBStack extends Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
     });
-
-    // Required GSIs
+ 
     this.userManagementTable.addGlobalSecondaryIndex({
       indexName: "EmailIndex",
       partitionKey: { name: "email", type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     });
-
+ 
     this.userManagementTable.addGlobalSecondaryIndex({
       indexName: "FaceIdIndex",
       partitionKey: { name: "faceId", type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     });
-
+ 
     this.userManagementTable.addGlobalSecondaryIndex({
       indexName: "visitedIndex",
       partitionKey: { name: "visited", type: dynamodb.AttributeType.STRING },
@@ -224,7 +231,7 @@ export class DBStack extends Stack {
       this,
       "VisitorFeedbackTable",
       {
-        tableName: "VisitorFeedback",
+        tableName: `${prefixname}-VisitorFeedback`,
         partitionKey: { name: "id", type: dynamodb.AttributeType.STRING },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         removalPolicy: RemovalPolicy.DESTROY,
@@ -270,7 +277,7 @@ export class DBStack extends Stack {
 
     // ───────────────────── Used Tokens ─────────────────────
     this.usedTokensTable = new dynamodb.Table(this, "UsedTokensTable", {
-      tableName: "used_tokens_table",
+      tableName: `${prefixname}-UsedTokensTable`,
       partitionKey: {
         name: "token",
         type: dynamodb.AttributeType.STRING,
@@ -302,6 +309,50 @@ export class DBStack extends Stack {
     new cdk.CfnOutput(this, "VisitorImagesBucketName", {
       value: this.visitorImagesBucket.bucketName,
       exportName: `${prefixname}-VisitorImagesBucketName`,
+    });
+
+
+
+    //sara additions
+    this.bahtwinTestingBucket = new s3.Bucket(this, "BahtwinTestingBucket", {
+      // bucketName: `bahtwin-testing-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+      removalPolicy: RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    new cdk.CfnOutput(this, "BahtwinTestingBucketNameOutput", {
+      value: this.bahtwinTestingBucket.bucketName,
+      exportName: `${prefixname}-BahtwinTestingBucketName`,
+    });
+
+    // ───────────────────── Rekognition Collection ─────────────────────
+    this.visitorFaceCollection = new rekognition.CfnCollection(this, "VisitorFaceCollection", {
+      collectionId: `${prefixname}-visitor-face-collection`,
+    });
+
+    new cdk.CfnOutput(this, "VisitorFaceCollectionIdOutput", {
+      value: this.visitorFaceCollection.collectionId!,
+      exportName: `${prefixname}-VisitorFaceCollectionId`,
+    });
+
+    // ───────────────────── Facial WS Connection Table ─────────────────────
+    this.facialWsConnectionsTable = new dynamodb.Table(this, "FacialWsConnectionTable", {
+      // tableName: `${prefixname}-FacialWsConnectionTable`,
+      partitionKey: { name: "ConnectionId", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+      timeToLiveAttribute: "ttl",
+    });
+
+    new cdk.CfnOutput(this, "FacialWsConnectionTableNameOutput", {
+      value: this.facialWsConnectionsTable.tableName,
+      exportName: `${prefixname}-FacialWsConnectionTableName`,
+    });
+
+    //modified based on sara additions above
+    new cdk.CfnOutput(this, "UserManagementTableNameOutput", {
+      value: this.userManagementTable.tableName,
+      exportName: `${prefixname}-UserManagementTableName`,
     });
   }
 }

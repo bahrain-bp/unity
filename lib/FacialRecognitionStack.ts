@@ -1,727 +1,857 @@
-import * as cdk from 'aws-cdk-lib/core';
-import { Construct } from 'constructs';
-import * as s3 from 'aws-cdk-lib/aws-s3'
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { Effect } from "aws-cdk-lib/aws-iam";
-import { aws_rekognition as rekognition } from 'aws-cdk-lib';
-import * as apigw from 'aws-cdk-lib/aws-apigateway';
-import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
-import { WebSocketLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
-import * as logs from 'aws-cdk-lib/aws-logs';
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import * as sns from 'aws-cdk-lib/aws-sns';
-import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
-import * as path from 'path';
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+// import * as cdk from 'aws-cdk-lib/core';
+// import { Construct } from 'constructs';
+// import * as s3 from 'aws-cdk-lib/aws-s3'
+// import * as lambda from 'aws-cdk-lib/aws-lambda';
+// import * as iam from 'aws-cdk-lib/aws-iam';
+// import { Effect } from "aws-cdk-lib/aws-iam";
+// import { aws_rekognition as rekognition } from 'aws-cdk-lib';
+// import * as apigw from 'aws-cdk-lib/aws-apigateway';
+// import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
+// import { WebSocketLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+// import * as logs from 'aws-cdk-lib/aws-logs';
+// import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+// import * as sns from 'aws-cdk-lib/aws-sns';
+// import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
+// import * as path from 'path';
+// import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 
-export class FacialRecognitionStack extends cdk.Stack {
-  public readonly userTable: dynamodb.Table;
-  public readonly broadcastLambda: lambda.Function;
-  public readonly PreRegisterCheckExport: lambda.Function;
- // restApi: apigw.RestApi; 
+// export class FacialRecognitionStack extends cdk.Stack {
+//   public readonly userTable: dynamodb.Table;
+//   public readonly broadcastLambda: lambda.Function;
+//   public readonly PreRegisterCheckExport: lambda.Function;
+//  // restApi: apigw.RestApi; 
 
   
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+//   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+//     super(scope, id, props);
 
 
-    const prefixname = this.stackName.split('-')[0].toLowerCase();  // ✅ Add this
-    //////////// DynamoDB Resources ////////////
+//     const prefixname = this.stackName.split('-')[0].toLowerCase();  // ✅ Add this
+//     //////////// DynamoDB Resources ////////////
 
     
-    // Users Table
-    this.userTable = new dynamodb.Table(this, 'userTable', {
-      tableName: `${prefixname}-UserManagementTable1`,
-      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // serverless
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // only for dev/testing
-        });
+//     // Users Table
+//     this.userTable = new dynamodb.Table(this, 'userTable', {
+//       tableName: `${prefixname}-UserManagementTable1`,
+//       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+//       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // serverless
+//       removalPolicy: cdk.RemovalPolicy.DESTROY, // only for dev/testing
+//         });
 
-    // Ensure user record is extractable using the email field
-    this.userTable.addGlobalSecondaryIndex({
-      indexName: 'EmailIndex',
-      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
-      projectionType: dynamodb.ProjectionType.ALL,
-      });
+//     // Ensure user record is extractable using the email field
+//     this.userTable.addGlobalSecondaryIndex({
+//       indexName: 'EmailIndex',
+//       partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+//       projectionType: dynamodb.ProjectionType.ALL,
+//       });
 
-    // Ensure user record is extractable using the faceId
-    this.userTable.addGlobalSecondaryIndex({
-      indexName: 'FaceIdIndex',
-      partitionKey: { name: 'faceId', type: dynamodb.AttributeType.STRING },
-      projectionType: dynamodb.ProjectionType.ALL, // include all columns
-      });
+//     // Ensure user record is extractable using the faceId
+//     this.userTable.addGlobalSecondaryIndex({
+//       indexName: 'FaceIdIndex',
+//       partitionKey: { name: 'faceId', type: dynamodb.AttributeType.STRING },
+//       projectionType: dynamodb.ProjectionType.ALL, // include all columns
+//       });
           
-    // Add extra attributes 
-    this.userTable.addGlobalSecondaryIndex({
-      indexName: 'visitedIndex',
-      partitionKey: { name: 'visited', type: dynamodb.AttributeType.STRING },
-      projectionType: dynamodb.ProjectionType.ALL,
-      });
+//     // Add extra attributes 
+//     this.userTable.addGlobalSecondaryIndex({
+//       indexName: 'visitedIndex',
+//       partitionKey: { name: 'visited', type: dynamodb.AttributeType.STRING },
+//       projectionType: dynamodb.ProjectionType.ALL,
+//       });
 
-    // create table for invited visitors
-    const InvitedVisitorTable = new dynamodb.Table(this, 'InvitedVisitorTable', {
-      tableName: `${prefixname}-InvitedVisitorTable`,
-      partitionKey: { name: 'visitorId', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // serverless
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // only for dev/testing
-      });
+//     // create table for invited visitors
+//     const InvitedVisitorTable = new dynamodb.Table(this, 'InvitedVisitorTable', {
+//       tableName: `${prefixname}-InvitedVisitorTable`,
+//       partitionKey: { name: 'visitorId', type: dynamodb.AttributeType.STRING },
+//       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // serverless
+//       removalPolicy: cdk.RemovalPolicy.DESTROY, // only for dev/testing
+//       });
 
-    // Ensure visitor record is extractable using the email field
-    InvitedVisitorTable.addGlobalSecondaryIndex({
-        indexName: 'EmailVisitDateIndex',
-        partitionKey: {
-          name: 'email',
-          type: dynamodb.AttributeType.STRING,
-        },
-        sortKey: {
-          name: 'visitDate',
-          type: dynamodb.AttributeType.STRING,
-        },
-        projectionType: dynamodb.ProjectionType.ALL,
-      });
+//     // Ensure visitor record is extractable using the email field
+//     InvitedVisitorTable.addGlobalSecondaryIndex({
+//         indexName: 'EmailVisitDateIndex',
+//         partitionKey: {
+//           name: 'email',
+//           type: dynamodb.AttributeType.STRING,
+//         },
+//         sortKey: {
+//           name: 'visitDate',
+//           type: dynamodb.AttributeType.STRING,
+//         },
+//         projectionType: dynamodb.ProjectionType.ALL,
+//       });
 
-      // create connection table
-      const connection = new dynamodb.Table(this, "ConnectionTable",{
-            tableName: `${prefixname}-ConnectionTable`,
-            partitionKey:{
-                name: "ConnectionId",
-                type: dynamodb.AttributeType.STRING,
-            },
-             removalPolicy: cdk.RemovalPolicy.DESTROY,
-        });   
+//       // create connection table
+//       const connection = new dynamodb.Table(this, "ConnectionTable",{
+//             tableName: `${prefixname}-ConnectionTable`,
+//             partitionKey:{
+//                 name: "ConnectionId",
+//                 type: dynamodb.AttributeType.STRING,
+//             },
+//              removalPolicy: cdk.RemovalPolicy.DESTROY,
+//         });   
         
-      // Active Users analytics table
-      const websiteActivityTable = new dynamodb.Table(this, "WebsiteActivityTable", {
-        tableName: `${prefixname}-WebsiteActivityTable`,
-        partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
-        sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
-        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        timeToLiveAttribute: "ttl",
-      });
+//       // Active Users analytics table
+//       const websiteActivityTable = new dynamodb.Table(this, "WebsiteActivityTable", {
+//         tableName: `${prefixname}-WebsiteActivityTable`,
+//         partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+//         sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+//         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+//         removalPolicy: cdk.RemovalPolicy.DESTROY,
+//         timeToLiveAttribute: "ttl",
+//       });
 
-    //////////// S3 Resources ////////////
+//     //////////// S3 Resources ////////////
 
-    //create S3 Bucket for images and static files
-    const bucket = new s3.Bucket(this, 'BahtwinTestBucket',{
-      bucketName: `${prefixname}-bahtwin-testing`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects:true,
-      });
+//     //create S3 Bucket for images and static files
+//     const bucket = new s3.Bucket(this, 'BahtwinTestBucket',{
+//       bucketName: `${prefixname}-bahtwin-testing`,
+//       removalPolicy: cdk.RemovalPolicy.DESTROY,
+//       autoDeleteObjects:true,
+//       });
     
-    //////////// Rekognition Resources ////////////
+//     //////////// Rekognition Resources ////////////
 
-    // Create an Amazon Rekognition Collection
-    const collection= new rekognition.CfnCollection(this, 'bahtwin-testing-collection', {
-      collectionId: `${prefixname}-bahtwin-testing-collection`, 
-    });
+//     // Create an Amazon Rekognition Collection
+//     const collection= new rekognition.CfnCollection(this, 'bahtwin-testing-collection', {
+//       collectionId: `${prefixname}-bahtwin-testing-collection`, 
+//     });
 
-    //////////// SNS Resources ////////////
+//     //////////// SNS Resources ////////////
 
-    // Create an SNS topic
-    const arrivalTopic = new sns.Topic(this, 'VisitorArrivalTopic', {
-      topicName: `${prefixname}-VisitorArrivalNotifications`,
-    });
-    arrivalTopic.addSubscription(
-  new subscriptions.SmsSubscription("+97332233417")
-);
+//     // Create an SNS topic
+//     const arrivalTopic = new sns.Topic(this, 'VisitorArrivalTopic', {
+//       topicName: `${prefixname}-VisitorArrivalNotifications`,
+//     });
+//     arrivalTopic.addSubscription(
+//   new subscriptions.SmsSubscription("+97332233417")
+// );
 
-    //////////// Lambda Resources ////////////
+//     //////////// Lambda Resources ////////////
 
-    //create lambda to send feedback
-    const sendFeedbackLambda = new lambda.Function(this, 'SendFeedbackLambda', {
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'sendFeedbackLambda.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda'), {
-        bundling: {
-          image: lambda.Runtime.PYTHON_3_11.bundlingImage,
-          command: [
-            "bash", "-c",
-            `
-            pip install -r requirements.txt -t /asset-output &&
-            cp -r . /asset-output
-            `
-          ],
-        },
-      }),
-      environment: {
-        JWT_SECRET: 'secret',  // same as before
-        FRONTEND_URL: 'https://d3pah2wsw5ry03.cloudfront.net/VisitorFeedBack',  //  frontend link 
-        GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
-        GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
-        WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
-        WORKMAIL_PASS: 'Test1234*',
-        WORKMAIL_SMTP: 'smtp.mail.us-east-1.awsapps.com',
+//     //create lambda to send feedback
+//     const sendFeedbackLambda = new lambda.Function(this, 'SendFeedbackLambda', {
+//       runtime: lambda.Runtime.PYTHON_3_11,
+//       handler: 'sendFeedbackLambda.handler',
+//       code: lambda.Code.fromAsset(path.join(__dirname, '../lambda'), {
+//         bundling: {
+//           image: lambda.Runtime.PYTHON_3_11.bundlingImage,
+//           command: [
+//             "bash", "-c",
+//             `
+//             pip install -r requirements.txt -t /asset-output &&
+//             cp -r . /asset-output
+//             `
+//           ],
+//         },
+//       }),
+//       environment: {
+//         JWT_SECRET: 'secret',  // same as before
+//         FRONTEND_URL: 'https://d3pah2wsw5ry03.cloudfront.net/VisitorFeedBack',  //  frontend link 
+//         GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
+//         GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
+//         WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
+//         WORKMAIL_PASS: 'Test1234*',
+//         WORKMAIL_SMTP: 'smtp.mail.us-east-1.awsapps.com',
         
-      },
-      timeout: cdk.Duration.seconds(30),
-      //functionName: 'SendFeedbackLambda',
-      logRetention: logs.RetentionDays.ONE_DAY
-    });
+//       },
+//       timeout: cdk.Duration.seconds(30),
+//       //functionName: 'SendFeedbackLambda',
+//       logRetention: logs.RetentionDays.ONE_DAY
+//     });
 
-        //create lambda to load dashboard
-    const LoadDashboard = new lambda.Function(this, 'LoadDashboard',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'LoadDashboard.handler',
-      code: lambda.Code.fromAsset('lambda'),
-      environment:{
-        InviteTable: InvitedVisitorTable.tableName,
-        USER_TABLE: this.userTable.tableName,
-        WEBSITE_ACTIVITY_TABLE: websiteActivityTable.tableName
-      },
-      timeout:cdk.Duration.seconds(30),
-      //functionName: 'LoadDashboard', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-    });
+//         //create lambda to load dashboard
+//     const LoadDashboard = new lambda.Function(this, 'LoadDashboard',{
+//       runtime: lambda.Runtime.PYTHON_3_11,
+//       handler:'LoadDashboard.handler',
+//       code: lambda.Code.fromAsset('lambda'),
+//       environment:{
+//         InviteTable: InvitedVisitorTable.tableName,
+//         USER_TABLE: this.userTable.tableName,
+//         WEBSITE_ACTIVITY_TABLE: websiteActivityTable.tableName
+//       },
+//       timeout:cdk.Duration.seconds(30),
+//       //functionName: 'LoadDashboard', 
+//       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+//     });
 
 
-    //connect lambda function
-    const wsConnectLambda =new lambda.Function(this, 'ws-connect-lambda',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'ws_connect.handler',
-      code: lambda.Code.fromAsset('lambda'),
-      timeout:cdk.Duration.seconds(30),
-      //functionName: 'connect-lambda', 
-        environment: {
-          TABLE_NAME: connection.tableName,
-          WS_TOKEN: "YZ0CLr6sRvWwTjPAccFHj6JdHY6HetrDq39ogV75TDDqijQsYJkO1LDgqYERCbLS"
-        },
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-      });
-      //disable lambda function
-    const wsDisconnectLambda =new lambda.Function(this, 'ws-disconnect-lambda',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'ws_disable.handler',
-      code: lambda.Code.fromAsset('lambda'),
-      timeout:cdk.Duration.seconds(30),
-      //functionName: 'disconnect-lambda', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-      });
+//     //connect lambda function
+//     const wsConnectLambda =new lambda.Function(this, 'ws-connect-lambda',{
+//       runtime: lambda.Runtime.PYTHON_3_11,
+//       handler:'ws_connect.handler',
+//       code: lambda.Code.fromAsset('lambda'),
+//       timeout:cdk.Duration.seconds(30),
+//       //functionName: 'connect-lambda', 
+//         environment: {
+//           TABLE_NAME: connection.tableName,
+//           WS_TOKEN: "YZ0CLr6sRvWwTjPAccFHj6JdHY6HetrDq39ogV75TDDqijQsYJkO1LDgqYERCbLS"
+//         },
+//       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+//       });
+//       //disable lambda function
+//     const wsDisconnectLambda =new lambda.Function(this, 'ws-disconnect-lambda',{
+//       runtime: lambda.Runtime.PYTHON_3_11,
+//       handler:'ws_disable.handler',
+//       code: lambda.Code.fromAsset('lambda'),
+//       timeout:cdk.Duration.seconds(30),
+//       //functionName: 'disconnect-lambda', 
+//       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+//       });
 
-// Create websocket API for real time admin dashboard
-  const wsAPI = new apigatewayv2.WebSocketApi(this, "AdminDashboardWS",{
-    apiName: `${prefixname}-AdminDashboardWS`,
-              connectRouteOptions:{
-                  integration: new WebSocketLambdaIntegration(
-                      'ws-connect-integration',
-                      wsConnectLambda
-                  ),
-              },
-              disconnectRouteOptions:{
-                  integration: new WebSocketLambdaIntegration(
-                      'ws-disconnect-integration',
-                      wsDisconnectLambda
-                  ),
-              },
-          });
+// // Create websocket API for real time admin dashboard
+//   const wsAPI = new apigatewayv2.WebSocketApi(this, "AdminDashboardWS",{
+//     apiName: `${prefixname}-AdminDashboardWS`,
+//               connectRouteOptions:{
+//                   integration: new WebSocketLambdaIntegration(
+//                       'ws-connect-integration',
+//                       wsConnectLambda
+//                   ),
+//               },
+//               disconnectRouteOptions:{
+//                   integration: new WebSocketLambdaIntegration(
+//                       'ws-disconnect-integration',
+//                       wsDisconnectLambda
+//                   ),
+//               },
+//           });
   
-          const apiStage = new apigatewayv2.WebSocketStage(this, 'dev', {
-              webSocketApi: wsAPI,
-              stageName: 'dev',
-              autoDeploy: true,
-              });
+//           const apiStage = new apigatewayv2.WebSocketStage(this, 'dev', {
+//               webSocketApi: wsAPI,
+//               stageName: 'dev',
+//               autoDeploy: true,
+//               });
   
-          const managementApiEndpoint = cdk.Fn.join("", [
-    "https://",
-    cdk.Fn.select(2, cdk.Fn.split("/", wsAPI.apiEndpoint)),
-    "/", 
-    apiStage.stageName
-  ]);
+//           const managementApiEndpoint = cdk.Fn.join("", [
+//     "https://",
+//     cdk.Fn.select(2, cdk.Fn.split("/", wsAPI.apiEndpoint)),
+//     "/", 
+//     apiStage.stageName
+//   ]);
 
-  //boradcast lambda
-  this.broadcastLambda = new lambda.Function(this, 'ws-broadcast-lambda', {
-    runtime: lambda.Runtime.PYTHON_3_11,
-    handler: 'broadcast.handler',
-    code: lambda.Code.fromAsset('lambda'),
-    timeout: cdk.Duration.seconds(30),
-    //functionName: 'broadcast-lambda',
-    environment: {
-      TABLE_NAME: connection.tableName,
-      WS_ENDPOINT: managementApiEndpoint,
-      },
-      initialPolicy:[
-      new iam.PolicyStatement({
-        effect: Effect.ALLOW,
-          actions: ["execute-api:ManageConnections"],
-          resources:[`arn:aws:execute-api:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:${wsAPI.apiId}/${apiStage.stageName}/*/@connections/*`],
-          }),
-          ],
-      logRetention: logs.RetentionDays.ONE_DAY,
-          });
-    //create lambda for arrivals picture
-    const ArrivalRekognition = new lambda.Function(this, 'Arrival_Handler',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'ArrivalRekognition.ArrivalRekognition',
-      code: lambda.Code.fromAsset('lambda'),
-      environment:{
-        BUCKET_NAME: bucket.bucketName,
-        COLLECTION_ID: collection.collectionId,
-        USER_TABLE: this.userTable.tableName,
-        TOPIC_ARN: arrivalTopic.topicArn,
-        InviteTable: InvitedVisitorTable.tableName,
-        BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
-      },
-      timeout:cdk.Duration.seconds(30),
-      //functionName: 'ArrivalRekognition', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-    });
+//   //boradcast lambda
+//   this.broadcastLambda = new lambda.Function(this, 'ws-broadcast-lambda', {
+//     runtime: lambda.Runtime.PYTHON_3_11,
+//     handler: 'broadcast.handler',
+//     code: lambda.Code.fromAsset('lambda'),
+//     timeout: cdk.Duration.seconds(30),
+//     //functionName: 'broadcast-lambda',
+//     environment: {
+//       TABLE_NAME: connection.tableName,
+//       WS_ENDPOINT: managementApiEndpoint,
+//       },
+//       initialPolicy:[
+//       new iam.PolicyStatement({
+//         effect: Effect.ALLOW,
+//           actions: ["execute-api:ManageConnections"],
+//           resources:[`arn:aws:execute-api:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:${wsAPI.apiId}/${apiStage.stageName}/*/@connections/*`],
+//           }),
+//           ],
+//       logRetention: logs.RetentionDays.ONE_DAY,
+//           });
+//     //create lambda for arrivals picture
+//     const ArrivalRekognition = new lambda.Function(this, 'Arrival_Handler',{
+//       runtime: lambda.Runtime.PYTHON_3_11,
+//       handler:'ArrivalRekognition.ArrivalRekognition',
+//       code: lambda.Code.fromAsset('lambda'),
+//       environment:{
+//         BUCKET_NAME: bucket.bucketName,
+//         COLLECTION_ID: collection.collectionId,
+//         USER_TABLE: this.userTable.tableName,
+//         TOPIC_ARN: arrivalTopic.topicArn,
+//         InviteTable: InvitedVisitorTable.tableName,
+//         BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
+//       },
+//       timeout:cdk.Duration.seconds(30),
+//       //functionName: 'ArrivalRekognition', 
+//       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+//     });
 
-        //create lambda for pre registration
-    const PreRegisterCheck =new lambda.Function(this, 'lambda_pre_register_check_Handler',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'PreRegisterCheck.PreRegisterCheck',
-      code: lambda.Code.fromAsset('lambda'),
-      environment:{
-        BUCKET_NAME: bucket.bucketName,
-        COLLECTION_ID: collection.collectionId,
-        USER_TABLE:this.userTable.tableName,
-        BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
-      },
-      timeout:cdk.Duration.seconds(30),
-      //functionName: 'PreRegisterCheck', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-    });
-    this.PreRegisterCheckExport = PreRegisterCheck;
-    //create lambda to save individual visitor invite
-    const RegisterIndividualVisitor = new lambda.Function(this, 'RegisterIndividualVisitor',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'RegisterIndividualVisitor.handler',
-      code: lambda.Code.fromAsset('lambda'),
-      environment:{
-        GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
-        GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
-        WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
-        WORKMAIL_PASS: 'Test1234*',
-        WORKMAIL_SMTP: 'smtp.mail.us-east-1.awsapps.com',
-        InviteTable: InvitedVisitorTable.tableName,
-        BROADCAST_LAMBDA: this.broadcastLambda.functionArn
-      },
-      timeout:cdk.Duration.seconds(30),
-      //functionName: 'RegisterIndividualVisitor', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-    });
-    //create lambda for bulk upload invites
-    const RegisterBulkVisitor = new lambda.Function(this, 'RegisterBulkVisitor',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'RegisterBulkVisitor.handler',
-      code: lambda.Code.fromAsset('lambda'),
-      environment:{
-        GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
-        GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
-        WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
-        WORKMAIL_PASS: 'Test1234*',
-        WORKMAIL_SMTP: 'smtp.mail.us-east-1.awsapps.com',
-        InviteTable: InvitedVisitorTable.tableName,
-        BROADCAST_LAMBDA: this.broadcastLambda.functionArn
-      },
-      timeout:cdk.Duration.seconds(30),
-      //functionName: 'RegisterBulkVisitor', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-    });
+//         //create lambda for pre registration
+//     const PreRegisterCheck =new lambda.Function(this, 'lambda_pre_register_check_Handler',{
+//       runtime: lambda.Runtime.PYTHON_3_11,
+//       handler:'PreRegisterCheck.PreRegisterCheck',
+//       code: lambda.Code.fromAsset('lambda'),
+//       environment:{
+//         BUCKET_NAME: bucket.bucketName,
+//         COLLECTION_ID: collection.collectionId,
+//         USER_TABLE:this.userTable.tableName,
+//         BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
+//       },
+//       timeout:cdk.Duration.seconds(30),
+//       //functionName: 'PreRegisterCheck', 
+//       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+//     });
+//     this.PreRegisterCheckExport = PreRegisterCheck;
+//     //create lambda to save individual visitor invite
+//     const RegisterIndividualVisitor = new lambda.Function(this, 'RegisterIndividualVisitor',{
+//       runtime: lambda.Runtime.PYTHON_3_11,
+//       handler:'RegisterIndividualVisitor.handler',
+//       code: lambda.Code.fromAsset('lambda'),
+//       environment:{
+//         GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
+//         GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
+//         WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
+//         WORKMAIL_PASS: 'Test1234*',
+//         WORKMAIL_SMTP: 'smtp.mail.us-east-1.awsapps.com',
+//         InviteTable: InvitedVisitorTable.tableName,
+//         BROADCAST_LAMBDA: this.broadcastLambda.functionArn
+//       },
+//       timeout:cdk.Duration.seconds(30),
+//       //functionName: 'RegisterIndividualVisitor', 
+//       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+//     });
+//     //create lambda for bulk upload invites
+//     const RegisterBulkVisitor = new lambda.Function(this, 'RegisterBulkVisitor',{
+//       runtime: lambda.Runtime.PYTHON_3_11,
+//       handler:'RegisterBulkVisitor.handler',
+//       code: lambda.Code.fromAsset('lambda'),
+//       environment:{
+//         GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
+//         GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
+//         WORKMAIL_USER: 'no-reply@bahtwin.awsapps.com',
+//         WORKMAIL_PASS: 'Test1234*',
+//         WORKMAIL_SMTP: 'smtp.mail.us-east-1.awsapps.com',
+//         InviteTable: InvitedVisitorTable.tableName,
+//         BROADCAST_LAMBDA: this.broadcastLambda.functionArn
+//       },
+//       timeout:cdk.Duration.seconds(30),
+//       //functionName: 'RegisterBulkVisitor', 
+//       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+//     });
 
-    //get user info lambda
-    const GetUserInfo = new lambda.Function(this, 'GetUserInfo',{
-      runtime: lambda.Runtime.PYTHON_3_11,
-      handler:'GetUserInfo.handler',
-      code: lambda.Code.fromAsset('lambda'),
-      environment:{
-        USER_TABLE:this.userTable.tableName,
-        BUCKET_NAME: bucket.bucketName
-      },
-      timeout:cdk.Duration.seconds(30),
-      //functionName: 'GetUserInfo', 
-      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
-    });
-    bucket.grantRead(GetUserInfo);
+//     //get user info lambda
+//     const GetUserInfo = new lambda.Function(this, 'GetUserInfo',{
+//       runtime: lambda.Runtime.PYTHON_3_11,
+//       handler:'GetUserInfo.handler',
+//       code: lambda.Code.fromAsset('lambda'),
+//       environment:{
+//         USER_TABLE:this.userTable.tableName,
+//         BUCKET_NAME: bucket.bucketName
+//       },
+//       timeout:cdk.Duration.seconds(30),
+//       //functionName: 'GetUserInfo', 
+//       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+//     });
+//     bucket.grantRead(GetUserInfo);
 
 
-    //////////// Grant permissions to Resources ////////////
+//     //////////// Grant permissions to Resources ////////////
 
-    // Grant permissions for lambdas to S3 and the user table
-    bucket.grantReadWrite(PreRegisterCheck);
-    bucket.grantReadWrite(ArrivalRekognition);
-    this.userTable.grantReadWriteData(PreRegisterCheck);
-    this.userTable.grantReadWriteData(ArrivalRekognition);
-    this.userTable.grantReadWriteData(LoadDashboard);
-    websiteActivityTable.grantReadWriteData(LoadDashboard);
-    this.userTable.grantReadWriteData(GetUserInfo);
-    const registerRole = PreRegisterCheck.role!;
-    const arrivalRole = ArrivalRekognition.role!;
-    sendFeedbackLambda.grantInvoke(arrivalRole);
-    InvitedVisitorTable.grantReadWriteData(RegisterIndividualVisitor);
-    InvitedVisitorTable.grantReadWriteData(RegisterBulkVisitor);
-    InvitedVisitorTable.grantReadWriteData(ArrivalRekognition);
-    InvitedVisitorTable.grantReadWriteData(LoadDashboard);
-    const individualRegisterRole = RegisterIndividualVisitor.role!;
-    const BulkRegisterRole = RegisterBulkVisitor.role!;
-    // Grant Lambda permission to publish to SNS
-    arrivalTopic.grantPublish(ArrivalRekognition);
+//     // Grant permissions for lambdas to S3 and the user table
+//     bucket.grantReadWrite(PreRegisterCheck);
+//     bucket.grantReadWrite(ArrivalRekognition);
+//     this.userTable.grantReadWriteData(PreRegisterCheck);
+//     this.userTable.grantReadWriteData(ArrivalRekognition);
+//     this.userTable.grantReadWriteData(LoadDashboard);
+//     websiteActivityTable.grantReadWriteData(LoadDashboard);
+//     this.userTable.grantReadWriteData(GetUserInfo);
+//     const registerRole = PreRegisterCheck.role!;
+//     const arrivalRole = ArrivalRekognition.role!;
+//     sendFeedbackLambda.grantInvoke(arrivalRole);
+//     InvitedVisitorTable.grantReadWriteData(RegisterIndividualVisitor);
+//     InvitedVisitorTable.grantReadWriteData(RegisterBulkVisitor);
+//     InvitedVisitorTable.grantReadWriteData(ArrivalRekognition);
+//     InvitedVisitorTable.grantReadWriteData(LoadDashboard);
+//     const individualRegisterRole = RegisterIndividualVisitor.role!;
+//     const BulkRegisterRole = RegisterBulkVisitor.role!;
+//     // Grant Lambda permission to publish to SNS
+//     arrivalTopic.grantPublish(ArrivalRekognition);
 
-    // Give permissions for PreRegisterCheck lambda to use Amazon Rekognition 
-    PreRegisterCheck.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: [
-          'rekognition:IndexFaces',
-          'rekognition:SearchFacesByImage',
-          'rekognition:DetectFaces',
-        ],
-        resources: ['*'], 
+//     // Give permissions for PreRegisterCheck lambda to use Amazon Rekognition 
+//     PreRegisterCheck.addToRolePolicy(
+//       new iam.PolicyStatement({
+//         actions: [
+//           'rekognition:IndexFaces',
+//           'rekognition:SearchFacesByImage',
+//           'rekognition:DetectFaces',
+//         ],
+//         resources: ['*'], 
         
-      })
-    );
+//       })
+//     );
 
-    // Give permissions for ArrivalRekognition lambda to use Amazon Rekognition 
-    ArrivalRekognition.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: [
-          'rekognition:IndexFaces',
-          'rekognition:SearchFacesByImage',
-          'rekognition:DetectFaces',
-        ],
-        resources: ['*'], 
+//     // Give permissions for ArrivalRekognition lambda to use Amazon Rekognition 
+//     ArrivalRekognition.addToRolePolicy(
+//       new iam.PolicyStatement({
+//         actions: [
+//           'rekognition:IndexFaces',
+//           'rekognition:SearchFacesByImage',
+//           'rekognition:DetectFaces',
+//         ],
+//         resources: ['*'], 
         
-      })
-    );
+//       })
+//     );
 
-    ArrivalRekognition.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ["sns:Publish"],
-        resources: ["*"],
-      })
-    );
+//     ArrivalRekognition.addToRolePolicy(
+//       new iam.PolicyStatement({
+//         actions: ["sns:Publish"],
+//         resources: ["*"],
+//       })
+//     );
 
-  //grant permissions to connect lambda and disable lambda to edit the table created
-  connection.grantReadWriteData(wsConnectLambda);
-  connection.grantReadWriteData(wsDisconnectLambda);
-  connection.grantReadWriteData(this.broadcastLambda);
-  wsAPI.addRoute("$default", { integration: new WebSocketLambdaIntegration("id", this.broadcastLambda) })
-  // enable other functions to call bradcast function
-  this.broadcastLambda.grantInvoke(arrivalRole);
-  this.broadcastLambda.grantInvoke(registerRole);
-  this.broadcastLambda.grantInvoke(individualRegisterRole);
-  this.broadcastLambda.grantInvoke(BulkRegisterRole);
+//   //grant permissions to connect lambda and disable lambda to edit the table created
+//   connection.grantReadWriteData(wsConnectLambda);
+//   connection.grantReadWriteData(wsDisconnectLambda);
+//   connection.grantReadWriteData(this.broadcastLambda);
+//   wsAPI.addRoute("$default", { integration: new WebSocketLambdaIntegration("id", this.broadcastLambda) })
+//   // enable other functions to call bradcast function
+//   this.broadcastLambda.grantInvoke(arrivalRole);
+//   this.broadcastLambda.grantInvoke(registerRole);
+//   this.broadcastLambda.grantInvoke(individualRegisterRole);
+//   this.broadcastLambda.grantInvoke(BulkRegisterRole);
 
-    //////////// API  Resources ////////////
+//     //////////// API  Resources ////////////
 
-    //create API
-    const api_arrival = new apigw.RestApi(this, 'api_arrival', {
-        restApiName: `${prefixname}-Bahtwin-Visitor-API`,  
-    });
+//     //create API
+//     const api_arrival = new apigw.RestApi(this, 'api_arrival', {
+//         restApiName: `${prefixname}-Bahtwin-Visitor-API`,  
+//     });
  
 
-    // create visitor resource for the api
-    const visitorResource = api_arrival.root.addResource('visitor');
+//     // create visitor resource for the api
+//     const visitorResource = api_arrival.root.addResource('visitor');
 
-    // create arrival resource under the visitor resource
-    const arrivalResource = visitorResource.addResource('arrival');
+//     // create arrival resource under the visitor resource
+//     const arrivalResource = visitorResource.addResource('arrival');
 
-    // create register resource under the visitor resource
-    const registerResource = visitorResource.addResource('register');
+//     // create register resource under the visitor resource
+//     const registerResource = visitorResource.addResource('register');
 
-    // connect POST to Lambda
-    arrivalResource.addMethod('POST', new apigw.LambdaIntegration(ArrivalRekognition, {
-      proxy: true,
-    }));
+//     // connect POST to Lambda
+//     arrivalResource.addMethod('POST', new apigw.LambdaIntegration(ArrivalRekognition, {
+//       proxy: true,
+//     }));
 
-    // connect POST to Lambda
-    registerResource.addMethod('POST', new apigw.LambdaIntegration(PreRegisterCheck, {
-      proxy: true,
-    }));
+//     // connect POST to Lambda
+//     registerResource.addMethod('POST', new apigw.LambdaIntegration(PreRegisterCheck, {
+//       proxy: true,
+//     }));
 
-    //// create admin resource for the api
-    const adminResource = api_arrival.root.addResource('admin');
+//     //// create admin resource for the api
+//     const adminResource = api_arrival.root.addResource('admin');
 
-    // create individual register resource under the admin resource
-    const registerVisitorIndividual = adminResource.addResource('registerVisitorIndividual');
+//     // create individual register resource under the admin resource
+//     const registerVisitorIndividual = adminResource.addResource('registerVisitorIndividual');
     
-    // connect POST to Lambda
-    registerVisitorIndividual.addMethod('POST', new apigw.LambdaIntegration(RegisterIndividualVisitor, {
-      proxy: true,
-    }));
+//     // connect POST to Lambda
+//     registerVisitorIndividual.addMethod('POST', new apigw.LambdaIntegration(RegisterIndividualVisitor, {
+//       proxy: true,
+//     }));
 
-    // create bulk register resource under the admin resource
-    const registerVisitorBulk = adminResource.addResource('registerVisitorBulk');
+//     // create bulk register resource under the admin resource
+//     const registerVisitorBulk = adminResource.addResource('registerVisitorBulk');
     
-    // connect POST to Lambda
-    registerVisitorBulk.addMethod('POST', new apigw.LambdaIntegration(RegisterBulkVisitor, {
-      proxy: true,
-    }));
+//     // connect POST to Lambda
+//     registerVisitorBulk.addMethod('POST', new apigw.LambdaIntegration(RegisterBulkVisitor, {
+//       proxy: true,
+//     }));
 
-    // create dashboard resource under the admin resource
-    const load_Dashboard = adminResource.addResource('loadDashboard');
+//     // create dashboard resource under the admin resource
+//     const load_Dashboard = adminResource.addResource('loadDashboard');
     
-    // connect GET to Lambda
-    load_Dashboard.addMethod('POST', new apigw.LambdaIntegration(LoadDashboard, {
-      proxy: true,
-    }));
-    const getUserInfo = visitorResource.addResource('me');
-    getUserInfo.addMethod('GET',new apigw.LambdaIntegration(GetUserInfo, { 
-      proxy: true 
-    }));
+//     // connect GET to Lambda
+//     load_Dashboard.addMethod('POST', new apigw.LambdaIntegration(LoadDashboard, {
+//       proxy: true,
+//     }));
+//     const getUserInfo = visitorResource.addResource('me');
+//     getUserInfo.addMethod('GET',new apigw.LambdaIntegration(GetUserInfo, { 
+//       proxy: true 
+//     }));
 
-    arrivalResource.addMethod('OPTIONS', new apigw.MockIntegration({
-      integrationResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-          'method.response.header.Access-Control-Allow-Origin': "'*'",
-          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-        },
-      }],
-      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-      requestTemplates: {
-        'application/json': '{"statusCode": 200}'
-      },
-    }), {
-      methodResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': true,
-          'method.response.header.Access-Control-Allow-Methods': true,
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      }],
-    });
+//     arrivalResource.addMethod('OPTIONS', new apigw.MockIntegration({
+//       integrationResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+//           'method.response.header.Access-Control-Allow-Origin': "'*'",
+//           'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+//         },
+//       }],
+//       passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+//       requestTemplates: {
+//         'application/json': '{"statusCode": 200}'
+//       },
+//     }), {
+//       methodResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': true,
+//           'method.response.header.Access-Control-Allow-Methods': true,
+//           'method.response.header.Access-Control-Allow-Origin': true,
+//         },
+//       }],
+//     });
 
 
-    registerResource.addMethod('OPTIONS', new apigw.MockIntegration({
-      integrationResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-          'method.response.header.Access-Control-Allow-Origin': "'*'",
-          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-        },
-      }],
-      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-      requestTemplates: {
-        'application/json': '{"statusCode": 200}'
-      },
-    }), {
-      methodResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': true,
-          'method.response.header.Access-Control-Allow-Methods': true,
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      }],
-    });
+//     registerResource.addMethod('OPTIONS', new apigw.MockIntegration({
+//       integrationResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+//           'method.response.header.Access-Control-Allow-Origin': "'*'",
+//           'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+//         },
+//       }],
+//       passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+//       requestTemplates: {
+//         'application/json': '{"statusCode": 200}'
+//       },
+//     }), {
+//       methodResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': true,
+//           'method.response.header.Access-Control-Allow-Methods': true,
+//           'method.response.header.Access-Control-Allow-Origin': true,
+//         },
+//       }],
+//     });
 
-    registerVisitorIndividual.addMethod('OPTIONS', new apigw.MockIntegration({
-      integrationResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-          'method.response.header.Access-Control-Allow-Origin': "'*'",
-          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-        },
-      }],
-      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-      requestTemplates: {
-        'application/json': '{"statusCode": 200}'
-      },
-    }), {
-      methodResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': true,
-          'method.response.header.Access-Control-Allow-Methods': true,
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      }],
-    });
+//     registerVisitorIndividual.addMethod('OPTIONS', new apigw.MockIntegration({
+//       integrationResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+//           'method.response.header.Access-Control-Allow-Origin': "'*'",
+//           'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+//         },
+//       }],
+//       passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+//       requestTemplates: {
+//         'application/json': '{"statusCode": 200}'
+//       },
+//     }), {
+//       methodResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': true,
+//           'method.response.header.Access-Control-Allow-Methods': true,
+//           'method.response.header.Access-Control-Allow-Origin': true,
+//         },
+//       }],
+//     });
 
-    registerVisitorBulk.addMethod('OPTIONS', new apigw.MockIntegration({
-      integrationResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-          'method.response.header.Access-Control-Allow-Origin': "'*'",
-          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-        },
-      }],
-      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-      requestTemplates: {
-        'application/json': '{"statusCode": 200}'
-      },
-    }), {
-      methodResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': true,
-          'method.response.header.Access-Control-Allow-Methods': true,
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      }],
-    });
+//     registerVisitorBulk.addMethod('OPTIONS', new apigw.MockIntegration({
+//       integrationResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+//           'method.response.header.Access-Control-Allow-Origin': "'*'",
+//           'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+//         },
+//       }],
+//       passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+//       requestTemplates: {
+//         'application/json': '{"statusCode": 200}'
+//       },
+//     }), {
+//       methodResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': true,
+//           'method.response.header.Access-Control-Allow-Methods': true,
+//           'method.response.header.Access-Control-Allow-Origin': true,
+//         },
+//       }],
+//     });
 
-     load_Dashboard.addMethod('OPTIONS', new apigw.MockIntegration({
-      integrationResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-          'method.response.header.Access-Control-Allow-Origin': "'*'",
-          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-        },
-      }],
-      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-      requestTemplates: {
-        'application/json': '{"statusCode": 200}'
-      },
-    }), {
-      methodResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': true,
-          'method.response.header.Access-Control-Allow-Methods': true,
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      }],
-    });
+//      load_Dashboard.addMethod('OPTIONS', new apigw.MockIntegration({
+//       integrationResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+//           'method.response.header.Access-Control-Allow-Origin': "'*'",
+//           'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+//         },
+//       }],
+//       passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+//       requestTemplates: {
+//         'application/json': '{"statusCode": 200}'
+//       },
+//     }), {
+//       methodResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': true,
+//           'method.response.header.Access-Control-Allow-Methods': true,
+//           'method.response.header.Access-Control-Allow-Origin': true,
+//         },
+//       }],
+//     });
 
-    getUserInfo .addMethod('OPTIONS', new apigw.MockIntegration({
-      integrationResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-          'method.response.header.Access-Control-Allow-Origin': "'*'",
-          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-        },
-      }],
-      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-      requestTemplates: {
-        'application/json': '{"statusCode": 200}'
-      },
-    }), {
-      methodResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': true,
-          'method.response.header.Access-Control-Allow-Methods': true,
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      }],
-    });
+//     getUserInfo .addMethod('OPTIONS', new apigw.MockIntegration({
+//       integrationResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+//           'method.response.header.Access-Control-Allow-Origin': "'*'",
+//           'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+//         },
+//       }],
+//       passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+//       requestTemplates: {
+//         'application/json': '{"statusCode": 200}'
+//       },
+//     }), {
+//       methodResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': true,
+//           'method.response.header.Access-Control-Allow-Methods': true,
+//           'method.response.header.Access-Control-Allow-Origin': true,
+//         },
+//       }],
+//     });
 
 
     
+
+//     // ────────────────────────────────
+// // GET IMAGE URL (presigned GET URL)
+// // ────────────────────────────────
+// const getImageUrlFn = new NodejsFunction(
+//   this,
+//   "GeneratePresignedImageUrlHandler",
+//   {
+//     runtime: lambda.Runtime.NODEJS_18_X,
+//     entry: path.join(__dirname, "../lambda/generatePresignedDownloadUrl.ts"),
+//     handler: "handler",
+//     environment: {
+//       BUCKET_NAME: bucket.bucketName,
+//       USER_TABLE: this.userTable.tableName, 
+//     },
+//     timeout: cdk.Duration.seconds(30),
+//   }
+// );
+
+// // Permissions
+// bucket.grantRead(getImageUrlFn);                 
+// this.userTable.grantReadData(getImageUrlFn);    
+
+// // API Gateway: w
+// const getImageUrlResource = visitorResource.addResource("get-image-url");
+
+// getImageUrlResource.addCorsPreflight({
+//   allowOrigins: ["*"],
+//   allowMethods: ["GET"],
+// });
+
+// getImageUrlResource.addMethod(
+//   "GET",
+//   new apigw.LambdaIntegration(getImageUrlFn, { proxy: true }),
+//   { authorizationType: apigw.AuthorizationType.NONE }
+// );
+
+// new cdk.CfnOutput(this, 'AdminApiBaseUrl', {
+//   value: api_arrival.urlForPath('/admin/'),
+//   exportName: `${prefixname}-AdminApiBaseUrl`,
+// });
+
+// // active users
+
+
+// const websiteHeartbeatLambda = new NodejsFunction(this, "WebsiteHeartbeatLambda", {
+//   runtime: lambda.Runtime.NODEJS_18_X,
+//   entry: path.join(__dirname, "../lambda/heartbeat.ts"),
+//   handler: "handler",
+//   environment: {
+//     WEBSITE_ACTIVITY_TABLE: websiteActivityTable.tableName,
+//     BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
+//   },
+// });
+
+// const heartbeatResource =visitorResource.addResource("heartbeat");
+
+// heartbeatResource.addMethod("POST", new apigw.LambdaIntegration(websiteHeartbeatLambda));
+
+// heartbeatResource.addMethod('OPTIONS', new apigw.MockIntegration({
+//       integrationResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+//           'method.response.header.Access-Control-Allow-Origin': "'*'",
+//           'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
+//         },
+//       }],
+//       passthroughBehavior: apigw.PassthroughBehavior.NEVER,
+//       requestTemplates: {
+//         'application/json': '{"statusCode": 200}'
+//       },
+//     }), {
+//       methodResponses: [{
+//         statusCode: '200',
+//         responseParameters: {
+//           'method.response.header.Access-Control-Allow-Headers': true,
+//           'method.response.header.Access-Control-Allow-Methods': true,
+//           'method.response.header.Access-Control-Allow-Origin': true,
+//         },
+//       }],
+//     });
+// websiteActivityTable.grantReadWriteData(websiteHeartbeatLambda);
+// const heartbeatRole = websiteHeartbeatLambda.role!;
+// this.broadcastLambda.grantInvoke(heartbeatRole);
+
+// // GET USER BADGE INFO (Unity)
+// const getUserBadgeInfoFn = new NodejsFunction(
+//   this,
+//   "GetUserBadgeInfoHandler",
+//   {
+//     runtime: lambda.Runtime.NODEJS_18_X,
+//     entry: path.join(__dirname, "../lambda/getUserBadgeInfo.ts"),
+//     handler: "handler",
+//     environment: {
+//       USER_TABLE: this.userTable.tableName,
+//       BUCKET_NAME: bucket.bucketName,
+//     },
+//   }
+// );
+
+// this.userTable.grantReadWriteData(getUserBadgeInfoFn);
+// bucket.grantRead(getUserBadgeInfoFn);
+
+// const badgeResource = visitorResource.addResource("badge");
+// badgeResource.addMethod(
+//   "POST",
+//   new apigw.LambdaIntegration(getUserBadgeInfoFn),
+//   { authorizationType: apigw.AuthorizationType.NONE }
+// );
+
+// badgeResource.addCorsPreflight({
+//   allowOrigins: ["*"],
+//   allowMethods: ["POST"],
+// });
+    
+//   }
+// }
+
+import { Construct } from "constructs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as iam from "aws-cdk-lib/aws-iam";
+import { Effect } from "aws-cdk-lib/aws-iam";
+import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
+import { WebSocketLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import * as logs from "aws-cdk-lib/aws-logs";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as cdk from "aws-cdk-lib";
+
+export interface FacialRecognitionStackProps extends cdk.StackProps {
+  facialWsConnectionsTable: dynamodb.ITable; // from DBStack
+}
+
+export class FacialRecognitionStack extends cdk.Stack {
+  public readonly broadcastLambda: lambda.Function;
+
+  constructor(scope: Construct, id: string, props: FacialRecognitionStackProps) {
+    super(scope, id, props);
+
+    const prefixname = this.stackName.split("-")[0].toLowerCase();
+    const connectionTable = props.facialWsConnectionsTable;
 
     // ────────────────────────────────
-// GET IMAGE URL (presigned GET URL)
-// ────────────────────────────────
-const getImageUrlFn = new NodejsFunction(
-  this,
-  "GeneratePresignedImageUrlHandler",
-  {
-    runtime: lambda.Runtime.NODEJS_18_X,
-    entry: path.join(__dirname, "../lambda/generatePresignedDownloadUrl.ts"),
-    handler: "handler",
-    environment: {
-      BUCKET_NAME: bucket.bucketName,
-      USER_TABLE: this.userTable.tableName, 
-    },
-    timeout: cdk.Duration.seconds(30),
-  }
-);
+    // WS connect lambda
+    // ────────────────────────────────
 
-// Permissions
-bucket.grantRead(getImageUrlFn);                 
-this.userTable.grantReadData(getImageUrlFn);    
-
-// API Gateway: w
-const getImageUrlResource = visitorResource.addResource("get-image-url");
-
-getImageUrlResource.addCorsPreflight({
-  allowOrigins: ["*"],
-  allowMethods: ["GET"],
-});
-
-getImageUrlResource.addMethod(
-  "GET",
-  new apigw.LambdaIntegration(getImageUrlFn, { proxy: true }),
-  { authorizationType: apigw.AuthorizationType.NONE }
-);
-
-new cdk.CfnOutput(this, 'AdminApiBaseUrl', {
-  value: api_arrival.urlForPath('/admin/'),
-  exportName: `${prefixname}-AdminApiBaseUrl`,
-});
-
-// active users
-
-
-const websiteHeartbeatLambda = new NodejsFunction(this, "WebsiteHeartbeatLambda", {
-  runtime: lambda.Runtime.NODEJS_18_X,
-  entry: path.join(__dirname, "../lambda/heartbeat.ts"),
-  handler: "handler",
-  environment: {
-    WEBSITE_ACTIVITY_TABLE: websiteActivityTable.tableName,
-    BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
-  },
-});
-
-const heartbeatResource =visitorResource.addResource("heartbeat");
-
-heartbeatResource.addMethod("POST", new apigw.LambdaIntegration(websiteHeartbeatLambda));
-
-heartbeatResource.addMethod('OPTIONS', new apigw.MockIntegration({
-      integrationResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-          'method.response.header.Access-Control-Allow-Origin': "'*'",
-          'method.response.header.Access-Control-Allow-Methods': "'POST,OPTIONS'",
-        },
-      }],
-      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-      requestTemplates: {
-        'application/json': '{"statusCode": 200}'
-      },
-    }), {
-      methodResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': true,
-          'method.response.header.Access-Control-Allow-Methods': true,
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      }],
-    });
-websiteActivityTable.grantReadWriteData(websiteHeartbeatLambda);
-const heartbeatRole = websiteHeartbeatLambda.role!;
-this.broadcastLambda.grantInvoke(heartbeatRole);
-
-// GET USER BADGE INFO (Unity)
-const getUserBadgeInfoFn = new NodejsFunction(
-  this,
-  "GetUserBadgeInfoHandler",
-  {
-    runtime: lambda.Runtime.NODEJS_18_X,
-    entry: path.join(__dirname, "../lambda/getUserBadgeInfo.ts"),
-    handler: "handler",
-    environment: {
-      USER_TABLE: this.userTable.tableName,
-      BUCKET_NAME: bucket.bucketName,
-    },
-  }
-);
-
-this.userTable.grantReadWriteData(getUserBadgeInfoFn);
-bucket.grantRead(getUserBadgeInfoFn);
-
-const badgeResource = visitorResource.addResource("badge");
-badgeResource.addMethod(
-  "POST",
-  new apigw.LambdaIntegration(getUserBadgeInfoFn),
-  { authorizationType: apigw.AuthorizationType.NONE }
-);
-
-badgeResource.addCorsPreflight({
-  allowOrigins: ["*"],
-  allowMethods: ["POST"],
-});
     
+    const wsConnectLambda = new lambda.Function(this, "ws-connect-lambda", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "ws_connect.handler",
+      code: lambda.Code.fromAsset("lambda"),
+      timeout: cdk.Duration.seconds(30),
+      // functionName: `${prefixname}-Wconnect-lambda`,
+      environment: {
+        TABLE_NAME: connectionTable.tableName,
+        WS_TOKEN: "YZ0CLr6sRvWwTjPAccFHj6JdHY6HetrDq39ogV75TDDqijQsYJkO1LDgqYERCbLS",
+      },
+      logRetention: logs.RetentionDays.ONE_DAY,
+    });
+
+    // ────────────────────────────────
+    // WS disconnect lambda
+    // ────────────────────────────────
+    const wsDisconnectLambda = new lambda.Function(this, "ws-disconnect-lambda", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "ws_disable.handler",
+      code: lambda.Code.fromAsset("lambda"),
+      timeout: cdk.Duration.seconds(30),
+      functionName: `${prefixname}-Wdisconnect-lambda`,
+      logRetention: logs.RetentionDays.ONE_DAY,
+    });
+
+    // ────────────────────────────────
+    // WebSocket API (Admin dashboard)
+    // ────────────────────────────────
+    const wsAPI = new apigatewayv2.WebSocketApi(this, `${prefixname}-AdminDashboardWS`, {
+      connectRouteOptions: {
+        integration: new WebSocketLambdaIntegration(
+          "ws-connect-integration",
+          wsConnectLambda
+        ),
+      },
+      disconnectRouteOptions: {
+        integration: new WebSocketLambdaIntegration(
+          "ws-disconnect-integration",
+          wsDisconnectLambda
+        ),
+      },
+    });
+
+    const apiStage = new apigatewayv2.WebSocketStage(this, "dev", {
+      webSocketApi: wsAPI,
+      stageName: "dev",
+      autoDeploy: true,
+    });
+
+    const managementApiEndpoint = cdk.Fn.join("", [
+      "https://",
+      cdk.Fn.select(2, cdk.Fn.split("/", wsAPI.apiEndpoint)),
+      "/",
+      apiStage.stageName,
+    ]);
+
+    // ────────────────────────────────
+    // Broadcast lambda
+    // ────────────────────────────────
+    this.broadcastLambda = new lambda.Function(this, "ws-broadcast-lambda", {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: "broadcast.handler",
+      code: lambda.Code.fromAsset("lambda"),
+      timeout: cdk.Duration.seconds(30),
+      functionName: "broadcast-lambda",
+      environment: {
+        TABLE_NAME: connectionTable.tableName,
+        WS_ENDPOINT: managementApiEndpoint,
+      },
+      initialPolicy: [
+        new iam.PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["execute-api:ManageConnections"],
+          resources: [
+            `arn:aws:execute-api:${cdk.Stack.of(this).region}:${cdk.Stack.of(
+              this
+            ).account}:${wsAPI.apiId}/${apiStage.stageName}/*/@connections/*`,
+          ],
+        }),
+      ],
+      logRetention: logs.RetentionDays.ONE_DAY,
+    });
+
+    // Default route -> broadcast
+    wsAPI.addRoute("$default", {
+      integration: new WebSocketLambdaIntegration("ws-default", this.broadcastLambda),
+    });
+
+    // ────────────────────────────────
+    // Permissions: Lambdas <-> Connections Table
+    // ────────────────────────────────
+    connectionTable.grantReadWriteData(wsConnectLambda);
+    connectionTable.grantReadWriteData(wsDisconnectLambda);
+    connectionTable.grantReadWriteData(this.broadcastLambda);
   }
 }
+
+
+
+
+
