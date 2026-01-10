@@ -25,11 +25,14 @@ export class FacialRecognitionStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+
+    const prefixname = this.stackName.split('-')[0].toLowerCase();  // ✅ Add this
     //////////// DynamoDB Resources ////////////
 
+    
     // Users Table
     this.userTable = new dynamodb.Table(this, 'userTable', {
-      tableName: 'UserManagementTable',
+      tableName: `${prefixname}-UserManagementTable1`,
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // serverless
       removalPolicy: cdk.RemovalPolicy.DESTROY, // only for dev/testing
@@ -58,7 +61,7 @@ export class FacialRecognitionStack extends cdk.Stack {
 
     // create table for invited visitors
     const InvitedVisitorTable = new dynamodb.Table(this, 'InvitedVisitorTable', {
-      tableName: 'InvitedVisitorTable',
+      tableName: `${prefixname}-InvitedVisitorTable`,
       partitionKey: { name: 'visitorId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // serverless
       removalPolicy: cdk.RemovalPolicy.DESTROY, // only for dev/testing
@@ -80,7 +83,7 @@ export class FacialRecognitionStack extends cdk.Stack {
 
       // create connection table
       const connection = new dynamodb.Table(this, "ConnectionTable",{
-            tableName: "ConnectionTable",
+            tableName: `${prefixname}-ConnectionTable`,
             partitionKey:{
                 name: "ConnectionId",
                 type: dynamodb.AttributeType.STRING,
@@ -90,7 +93,7 @@ export class FacialRecognitionStack extends cdk.Stack {
         
       // Active Users analytics table
       const websiteActivityTable = new dynamodb.Table(this, "WebsiteActivityTable", {
-        tableName: "WebsiteActivity",
+        tableName: `${prefixname}-WebsiteActivityTable`,
         partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
         sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -102,7 +105,7 @@ export class FacialRecognitionStack extends cdk.Stack {
 
     //create S3 Bucket for images and static files
     const bucket = new s3.Bucket(this, 'BahtwinTestBucket',{
-      bucketName: 'bahtwin-testing',
+      bucketName: `${prefixname}-bahtwin-testing`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects:true,
       });
@@ -111,14 +114,14 @@ export class FacialRecognitionStack extends cdk.Stack {
 
     // Create an Amazon Rekognition Collection
     const collection= new rekognition.CfnCollection(this, 'bahtwin-testing-collection', {
-      collectionId: 'bahtwin-testing-collection', 
+      collectionId: `${prefixname}-bahtwin-testing-collection`, 
     });
 
     //////////// SNS Resources ////////////
 
     // Create an SNS topic
     const arrivalTopic = new sns.Topic(this, 'VisitorArrivalTopic', {
-      topicName: 'VisitorArrivalNotifications',
+      topicName: `${prefixname}-VisitorArrivalNotifications`,
     });
     arrivalTopic.addSubscription(
   new subscriptions.SmsSubscription("+97332233417")
@@ -153,7 +156,7 @@ export class FacialRecognitionStack extends cdk.Stack {
         
       },
       timeout: cdk.Duration.seconds(30),
-      functionName: 'SendFeedbackLambda',
+      //functionName: 'SendFeedbackLambda',
       logRetention: logs.RetentionDays.ONE_DAY
     });
 
@@ -168,7 +171,7 @@ export class FacialRecognitionStack extends cdk.Stack {
         WEBSITE_ACTIVITY_TABLE: websiteActivityTable.tableName
       },
       timeout:cdk.Duration.seconds(30),
-      functionName: 'LoadDashboard', 
+      //functionName: 'LoadDashboard', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
 
@@ -179,7 +182,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       handler:'ws_connect.handler',
       code: lambda.Code.fromAsset('lambda'),
       timeout:cdk.Duration.seconds(30),
-      functionName: 'connect-lambda', 
+      //functionName: 'connect-lambda', 
         environment: {
           TABLE_NAME: connection.tableName,
           WS_TOKEN: "YZ0CLr6sRvWwTjPAccFHj6JdHY6HetrDq39ogV75TDDqijQsYJkO1LDgqYERCbLS"
@@ -192,7 +195,7 @@ export class FacialRecognitionStack extends cdk.Stack {
       handler:'ws_disable.handler',
       code: lambda.Code.fromAsset('lambda'),
       timeout:cdk.Duration.seconds(30),
-      functionName: 'disconnect-lambda', 
+      //functionName: 'disconnect-lambda', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
       });
 
@@ -231,7 +234,7 @@ export class FacialRecognitionStack extends cdk.Stack {
     handler: 'broadcast.handler',
     code: lambda.Code.fromAsset('lambda'),
     timeout: cdk.Duration.seconds(30),
-    functionName: 'broadcast-lambda',
+    //functionName: 'broadcast-lambda',
     environment: {
       TABLE_NAME: connection.tableName,
       WS_ENDPOINT: managementApiEndpoint,
@@ -259,7 +262,7 @@ export class FacialRecognitionStack extends cdk.Stack {
         BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
       },
       timeout:cdk.Duration.seconds(30),
-      functionName: 'ArrivalRekognition', 
+      //functionName: 'ArrivalRekognition', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
 
@@ -275,7 +278,7 @@ export class FacialRecognitionStack extends cdk.Stack {
         BROADCAST_LAMBDA: this.broadcastLambda.functionArn,
       },
       timeout:cdk.Duration.seconds(30),
-      functionName: 'PreRegisterCheck', 
+      //functionName: 'PreRegisterCheck', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
     this.PreRegisterCheckExport = PreRegisterCheck;
@@ -294,7 +297,7 @@ export class FacialRecognitionStack extends cdk.Stack {
         BROADCAST_LAMBDA: this.broadcastLambda.functionArn
       },
       timeout:cdk.Duration.seconds(30),
-      functionName: 'RegisterIndividualVisitor', 
+      //functionName: 'RegisterIndividualVisitor', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
     //create lambda for bulk upload invites
@@ -312,7 +315,7 @@ export class FacialRecognitionStack extends cdk.Stack {
         BROADCAST_LAMBDA: this.broadcastLambda.functionArn
       },
       timeout:cdk.Duration.seconds(30),
-      functionName: 'RegisterBulkVisitor', 
+      //functionName: 'RegisterBulkVisitor', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
 
@@ -326,7 +329,7 @@ export class FacialRecognitionStack extends cdk.Stack {
         BUCKET_NAME: bucket.bucketName
       },
       timeout:cdk.Duration.seconds(30),
-      functionName: 'GetUserInfo', 
+      //functionName: 'GetUserInfo', 
       logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
     });
     bucket.grantRead(GetUserInfo);
@@ -402,7 +405,7 @@ export class FacialRecognitionStack extends cdk.Stack {
 
     //create API
     const api_arrival = new apigw.RestApi(this, 'api_arrival', {
-      restApiName: 'Bahtwin Visitor API',
+        restApiName: `${prefixname}-Bahtwin-Visitor-API`,  
     });
  
 
@@ -642,7 +645,7 @@ getImageUrlResource.addMethod(
 
 new cdk.CfnOutput(this, 'AdminApiBaseUrl', {
   value: api_arrival.urlForPath('/admin/'),
-  exportName: 'AdminApiBaseUrl',
+  exportName: `${prefixname}-AdminApiBaseUrl`,
 });
 
 // active users

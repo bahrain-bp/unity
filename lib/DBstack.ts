@@ -24,22 +24,19 @@ export class DBStack extends Stack {
     super(scope, id, props);
 
     // 1) UnityBahtwin
+    const prefixname = this.stackName.split('-')[0].toLowerCase();
+
     this.table = new dynamodb.Table(this, "BahtwinTable", {
-      tableName: "UnityBahtwinTable",
+      tableName: `${prefixname}-UnityBahtwinTable`,
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    new cdk.CfnOutput(this, "UnityBahtwinTableNameOutput", {
-      value: this.table.tableName,
-      exportName: "UnityBahtwinTableName",
-    });
-
     // 2) User management
     this.userManagementTable = new dynamodb.Table(this, "UserManagementTable", {
-      tableName: "UserManagement",
+      tableName: `${prefixname}-UserManagementTable`,
       partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -47,6 +44,7 @@ export class DBStack extends Stack {
 
     // 3) PreReg bucket
     this.preRegBucket = new s3.Bucket(this, "PreregistrationImagesBucket", {
+      bucketName: `${prefixname}-preregistration-images`,  // Add this
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -60,15 +58,15 @@ export class DBStack extends Stack {
       ],
     });
 
-    this.preRegBucket.addCorsRule({
-      allowedOrigins: ["*"],
-      allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.POST, s3.HttpMethods.PUT],
-      allowedHeaders: ["*"],
-    });
+    // this.preRegBucket.addCorsRule({
+    //   allowedOrigins: ["*"],
+    //   allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.POST, s3.HttpMethods.PUT],
+    //   allowedHeaders: ["*"],
+    // });
 
     // Active WebSocket connections
     this.activeConnectionsTable = new dynamodb.Table(this, "ActiveConnectionsTable", {
-      tableName: "ActiveConnections",
+      tableName: `${prefixname}-ActiveConnections`,
       partitionKey: { name: "connectionId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -77,7 +75,7 @@ export class DBStack extends Stack {
 
     // Whiteboard strokes history table
     this.whiteboardStrokesTable = new dynamodb.Table(this, "WhiteboardStrokesTable", {
-      tableName: "WhiteboardStrokes",
+      tableName: `${prefixname}-WhiteboardStrokes`,
       partitionKey: { name: "boardId", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "timestamp", type: dynamodb.AttributeType.NUMBER },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -86,7 +84,7 @@ export class DBStack extends Stack {
 
     // Website activity analytics table
     this.websiteActivityTable = new dynamodb.Table(this, "WebsiteActivityTable", {
-      tableName: "WebsiteActivity",
+      tableName: `${prefixname}-WebsiteActivity`,
       partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -96,7 +94,7 @@ export class DBStack extends Stack {
 
     // Daily summaries
     this.dailySummariesTable = new dynamodb.Table(this, "DailySummariesTable", {
-      tableName: "bahtwin-daily-summaries",
+      tableName: `${prefixname}-DailySummaries`,
       partitionKey: { name: "date", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "timestamp", type: dynamodb.AttributeType.NUMBER },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -106,20 +104,15 @@ export class DBStack extends Stack {
 
     // Alexa users table
     this.alexaUsersTable = new dynamodb.Table(this, "AlexaUsersTable", {
-      tableName: "alexa-users",
+      tableName: `${prefixname}-AlexaUsersTable`,
       partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    new cdk.CfnOutput(this, "AlexaUsersTableName", {
-      value: this.alexaUsersTable.tableName,
-      exportName: "AlexaUsersTableName",
-    });
-
     // 4) PlugActions
     this.plugActionsTable = new dynamodb.Table(this, "PlugActionsTable", {
-      tableName: "PlugActions",
+      tableName: `${prefixname}-PlugActionsTable`,
       partitionKey: { name: "user_id", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -127,20 +120,15 @@ export class DBStack extends Stack {
     });
 
     this.plugActionsTable.addGlobalSecondaryIndex({
-      indexName: "plug_id-ts-index",
+      indexName: `plug_id-ts-index`,
       partitionKey: { name: "plug_id", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    new cdk.CfnOutput(this, "PlugActionsTableNameOutput", {
-      value: this.plugActionsTable.tableName,
-      exportName: "PlugActionsTableName",
-    });
-
     // 5) IoT telemetry
     this.iotTelemetryTable = new dynamodb.Table(this, "IoTTelemetryTable", {
-      tableName: "IoTDeviceTelemetry",
+      tableName: `${prefixname}-IoTDeviceTelemetry`,
       partitionKey: { name: "device", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "ts", type: dynamodb.AttributeType.NUMBER },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -148,14 +136,11 @@ export class DBStack extends Stack {
       timeToLiveAttribute: "expires_at",
     });
 
-    new cdk.CfnOutput(this, "IoTDeviceTelemetryTableNameOutput", {
-      value: this.iotTelemetryTable.tableName,
-      exportName: "IoTDeviceTelemetryTableName",
-    });
+ 
 
     // 6) Chatbot
     this.chatbotTable = new dynamodb.Table(this, "UnityChatbotTable", {
-      tableName: "UnityChatbotTable",
+      tableName: `${prefixname}-UnityChatbotTable`,
       partitionKey: { name: "sessionId", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "createdAt", type: dynamodb.AttributeType.NUMBER },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -164,7 +149,27 @@ export class DBStack extends Stack {
 
     new cdk.CfnOutput(this, "UnityChatbotTableNameOutput", {
       value: this.chatbotTable.tableName,
-      exportName: "UnityChatbotTable",
+      exportName: `${prefixname}-UnityChatbotTableName`,
+    });
+
+    new cdk.CfnOutput(this, "UnityBahtwinTableNameOutput", {
+      value: this.table.tableName,
+      exportName: `${prefixname}-UnityBahtwinTableName`,
+    });
+
+    new cdk.CfnOutput(this, "AlexaUsersTableName", {
+      value: this.alexaUsersTable.tableName,
+      exportName: `${prefixname}-AlexaUsersTableName`,
+    });
+
+    new cdk.CfnOutput(this, "PlugActionsTableNameOutput", {
+      value: this.plugActionsTable.tableName,
+      exportName: `${prefixname}-PlugActionsTableName`,
+    });
+
+       new cdk.CfnOutput(this, "IoTDeviceTelemetryTableNameOutput", {
+      value: this.iotTelemetryTable.tableName,
+      exportName: `${prefixname}-IoTDeviceTelemetryTableName`,
     });
   }
 }

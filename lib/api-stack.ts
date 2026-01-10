@@ -21,6 +21,8 @@ export class APIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: APIStackProps) {
     super(scope, id, props);
 
+    const prefixname = this.stackName.split('-')[0].toLowerCase();
+
     const wsStack = props.wsStack;
     const dbStack = props.dbStack;
     const bedrockStack = props.bedrockStack;
@@ -56,7 +58,7 @@ export class APIStack extends cdk.Stack {
     // 1. Cognito User Pool
     // ────────────────────────────────
     const userPool = new cognito.UserPool(this, "UnityUserPool", {
-      userPoolName: "unity-users",
+      userPoolName: `${prefixname}-unity-users`,
       selfSignUpEnabled: true,
       signInAliases: { email: true },
       standardAttributes: {
@@ -133,7 +135,7 @@ export class APIStack extends cdk.Stack {
 
     const userPoolDomain = new cognito.UserPoolDomain(this, "UnityUserPoolDomain", {
       userPool,
-      cognitoDomain: { domainPrefix: `unity-${this.account}-dev` },
+      cognitoDomain: { domainPrefix: `${prefixname}-unity-${this.account}-dev` },
     });
 
     new cdk.CfnOutput(this, "UserPoolId", { value: userPool.userPoolId });
@@ -159,7 +161,7 @@ export class APIStack extends cdk.Stack {
     // 3. API Gateway + Cognito Authorizer
     // ────────────────────────────────
     const api = new apigw.RestApi(this, "UnityRestApi", {
-      restApiName: "Unity Service",
+      restApiName: `${prefixname}-Unity Service`,
       deployOptions: {
         stageName: "dev",
         tracingEnabled: true,
@@ -455,7 +457,7 @@ export class APIStack extends cdk.Stack {
       environment: {
         BUCKET_NAME: preRegBucket.bucketName,
         USER_MANAGEMENT_TABLE: userTable.tableName,
-        COLLECTION_ID: "VisitorFaceCollection",
+        COLLECTION_ID: `${prefixname}-VisitorFaceCollection`,
       },
       tracing: lambda.Tracing.ACTIVE,
     });

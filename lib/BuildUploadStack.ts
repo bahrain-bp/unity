@@ -9,11 +9,14 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 
 interface BuildUploadStackProps extends StackProps {
   frontendBucketName: string;
+  cloudfrontDistributionId: string;
 }
 
 export class BuildUploadStack extends Stack {
   constructor(scope: Construct, id: string, props: BuildUploadStackProps) {
     super(scope, id, props);
+
+    const prefixname = this.stackName.split('-')[0].toLowerCase();  // ✅ Add this
 
     const frontendBucket = s3.Bucket.fromBucketName(
       this,
@@ -35,7 +38,9 @@ export class BuildUploadStack extends Stack {
           UPLOAD_DIRECTORY: "unity",
           MAX_FILES: "4",
           URL_EXPIRATION_SECONDS: "3600", // 1 hour
-          CLOUDFRONT_DISTRIBUTION_ID: "E8RMBHHUMVCJZ",
+          //CLOUDFRONT_DISTRIBUTION_ID: "E8RMBHHUMVCJZ",
+          CLOUDFRONT_DISTRIBUTION_ID: props.cloudfrontDistributionId,
+
         },
       }
     );
@@ -51,7 +56,7 @@ export class BuildUploadStack extends Stack {
 
     // API Gateway
     const api = new apigateway.RestApi(this, "FileUploadApi", {
-      restApiName: "File Upload Service",
+      restApiName: `${prefixname}-File Upload Service`,
       description: "API for generating presigned URLs",
       deployOptions: {
         stageName: "prod",

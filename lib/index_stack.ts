@@ -14,11 +14,12 @@ export class IndexStack extends cdk.Stack {
     super(scope, id, props);
 
     const { collection, dataAccessPolicy } = props.openSearchStack;
+    const prefixname = this.stackName.split('-')[0].toLowerCase();
 
     // Vector index
     this.vectorIndex = new opensearchserverless.CfnIndex(this, 'VectorIndex', {
       collectionEndpoint: collection.attrCollectionEndpoint,
-      indexName: 'unity-vector-index',
+      indexName: `${prefixname}-vector-index`,
       mappings: {
         properties: {
           'bedrock-knowledge-base-vector': {
@@ -44,7 +45,7 @@ export class IndexStack extends cdk.Stack {
     // Output
     new cdk.CfnOutput(this, 'IndexName', {
       value: this.vectorIndex.indexName!,
-      exportName: 'UnityIndexName'
+      exportName: `${prefixname}-IndexName`
     });
   }
 }

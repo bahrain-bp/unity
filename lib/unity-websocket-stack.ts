@@ -28,6 +28,7 @@ export class UnityWebSocketStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: UnityWebSocketStackProps) {
     super(scope, id, props);
 
+    const prefixname = this.stackName.split('-')[0].toLowerCase();
     const plugActionsTable = props.dbStack.plugActionsTable;
 
     // ────────────────────────────────
@@ -103,7 +104,7 @@ export class UnityWebSocketStack extends cdk.Stack {
 
     // 5) WebSocket API
     this.webSocketApi = new apigwv2.WebSocketApi(this, "UnityWebSocketApi", {
-      apiName: "unity-realtime-api",
+      apiName: `${prefixname}-unity-realtime-api`,
       connectRouteOptions: {
         integration: new integrations.WebSocketLambdaIntegration(
           "ConnectIntegration",
@@ -127,7 +128,7 @@ export class UnityWebSocketStack extends cdk.Stack {
     // 6) Stage
     this.stage = new apigwv2.WebSocketStage(this, "UnityWsStage", {
       webSocketApi: this.webSocketApi,
-      stageName: "dev",
+      stageName: `${prefixname}-dev`,
       autoDeploy: true,
     });
 
