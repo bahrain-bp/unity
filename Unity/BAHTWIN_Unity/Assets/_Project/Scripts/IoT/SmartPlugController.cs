@@ -1,18 +1,18 @@
 using System;
 using UnityEngine;
 using TMPro;
-using UnityEngine.InputSystem; // New Input System
+using UnityEngine.InputSystem;
 
 [Serializable]
 public class PlugStatePayload
 {
-    public string id;          // "plug1", "plug2"
-    public string type;        // "plug"
-    public string state;       // "on" / "off"
-    public long updated_at;    // unix seconds
-    public int status;         // HTTP status from backend
-    public string message;     // optional error / info
-    public int retryAfter;     // cooldown seconds (for 429)
+    public string id;
+    public string type;
+    public string state;
+    public long updated_at;
+    public int status;
+    public string message;
+    public int retryAfter;
 }
 
 [RequireComponent(typeof(Collider))]
@@ -32,36 +32,30 @@ public class SmartPlugController : MonoBehaviour
     public TextMeshPro label;
 
     [Header("Interaction (Trigger + Interact Action)")]
-    [Tooltip("Set this to your Player tag. Your player root should be tagged Player.")]
     public string playerTag = "Player";
-
-    [Tooltip("Drag your Input Action here (recommended): Player/Interact (F).")]
     public InputActionReference interactAction;
-
-    [Tooltip("Keep mouse click working too (optional).")]
     public bool allowMouseClick = true;
 
     // --- state ---
     private bool isOn;
     private bool isBusy;
-    private float localCooldownRemaining = 0f;
+
+    // backend cooldown remaining (seconds)
+    private float cooldownRemaining = 0f;
 
     // trigger state
     private bool playerInRange;
+
+    // Prevent duplicate click in same frame (e.g., OnMouseDown + Interact)
+    private int lastClickFrame = -1;
 
     private void Awake()
     {
         isOn = startsOn;
         ApplyVisualState();
 
-        // Ensure our collider is trigger (interaction zone)
         var col = GetComponent<Collider>();
-        if (col != null && !col.isTrigger)
-        {
-            // You can leave it off if you want, but then OnTrigger won't fire.
-            // Better to force it for this interaction style.
-            col.isTrigger = true;
-        }
+        if (col != null && !col.isTrigger) col.isTrigger = true;
     }
 
     private void OnEnable()
@@ -76,23 +70,31 @@ public class SmartPlugController : MonoBehaviour
 
     private void Update()
     {
-        // Cooldown timer
-        if (localCooldownRemaining > 0f)
+        // Tick cooldown timer (only from backend)
+        if (cooldownRemaining > 0f)
         {
-            localCooldownRemaining -= Time.deltaTime;
-            if (localCooldownRemaining < 0f) localCooldownRemaining = 0f;
+            cooldownRemaining -= Time.deltaTime;
+            if (cooldownRemaining < 0f) cooldownRemaining = 0f;
 
             if (label != null)
             {
-                int remaining = Mathf.CeilToInt(localCooldownRemaining);
+                int remaining = Mathf.CeilToInt(cooldownRemaining);
                 if (remaining > 0) label.text = $"{plugDisplayName} : COOLDOWN {remaining}s";
                 else ApplyVisualState();
             }
+
+            // During cooldown, no interaction
+            return;
         }
 
-        if (isBusy || localCooldownRemaining > 0f) return;
+        // If busy, keep showing "TOGGLING..." and block input
+        if (isBusy)
+        {
+            if (label != null) label.text = $"{plugDisplayName} : TOGGLING...";
+            return;
+        }
 
-        // Show hint only when player is inside trigger
+        // Normal idle label
         if (label != null)
         {
             label.text = playerInRange
@@ -100,42 +102,45 @@ public class SmartPlugController : MonoBehaviour
                 : $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
         }
 
-        // Press F (Interact Action) while in range
+        // Press F while in range
         if (playerInRange && interactAction != null && interactAction.action.WasPressedThisFrame())
         {
-            Debug.Log($"[SmartPlug] Interact pressed in trigger for {deviceId}");
-            OnClick();
+            TryToggleFromUser();
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag(playerTag))
-        {
-            playerInRange = true;
-            // Debug.Log($"[SmartPlug] Player entered trigger for {deviceId}");
-        }
+        if (other.CompareTag(playerTag)) playerInRange = true;
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag(playerTag))
-        {
-            playerInRange = false;
-            // Debug.Log($"[SmartPlug] Player exited trigger for {deviceId}");
-        }
+        if (other.CompareTag(playerTag)) playerInRange = false;
     }
 
-    // Call this from Button / OnMouseDown / Trigger+Key
-    public void OnClick()
+    private void OnMouseDown()
     {
+        if (!allowMouseClick) return;
+        TryToggleFromUser();
+    }
+
+    private void TryToggleFromUser()
+    {
+        // Avoid double-fire same frame
+        if (Time.frameCount == lastClickFrame) return;
+        lastClickFrame = Time.frameCount;
+
         if (isBusy) return;
-        if (localCooldownRemaining > 0f) return;
+        if (cooldownRemaining > 0f) return;
 
         bool desired = !isOn;
         string desiredState = desired ? "on" : "off";
 
+        // Busy immediately until backend responds
         isBusy = true;
+        if (label != null) label.text = $"{plugDisplayName} : TOGGLING...";
+
         Debug.Log($"[SmartPlug] Toggle → deviceId={deviceId}, desired={desiredState}");
 
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -145,14 +150,7 @@ public class SmartPlugController : MonoBehaviour
 #endif
     }
 
-    private void OnMouseDown()
-    {
-        if (!allowMouseClick) return;
-        OnClick();
-    }
-
-    // JS will call this:
-    // unityInstance.SendMessage("SmartPlug_<deviceId>", "OnDeviceStateJson", json)
+    // Called by JS/WS:
     public void OnDeviceStateJson(string json)
     {
         Debug.Log($"[SmartPlug] OnDeviceStateJson({deviceId}) raw: {json}");
@@ -178,31 +176,37 @@ public class SmartPlugController : MonoBehaviour
 
         if (!string.Equals(payload.id, deviceId, StringComparison.OrdinalIgnoreCase))
         {
-            isBusy = false;
+            // Not for this plug
             return;
         }
 
-        // Handle error/cooldown
+        // Backend cooldown -> show cooldown + unlock after it ends
+        if (payload.retryAfter > 0)
+        {
+            cooldownRemaining = Mathf.Max(cooldownRemaining, payload.retryAfter);
+            isBusy = false;
+
+            if (label != null) label.text = $"{plugDisplayName} : COOLDOWN {payload.retryAfter}s";
+            return;
+        }
+
+        // Error (not success)
         if (payload.status != 200 && payload.status != 0)
         {
-            Debug.LogWarning($"[SmartPlug] Backend status {payload.status}: {payload.message}");
-
-            if (payload.status == 429 && payload.retryAfter > 0)
-            {
-                localCooldownRemaining = payload.retryAfter;
-                if (label != null) label.text = $"{plugDisplayName} : COOLDOWN {payload.retryAfter}s";
-            }
-
             isBusy = false;
+            if (label != null)
+            {
+                var msg = string.IsNullOrWhiteSpace(payload.message) ? $"Error {payload.status}" : payload.message;
+                label.text = $"{plugDisplayName} : ERROR";
+                Debug.LogWarning($"[SmartPlug] Backend status {payload.status}: {msg}");
+            }
             return;
         }
 
-        // Success
-        bool newState = string.Equals(payload.state, "on", StringComparison.OrdinalIgnoreCase);
-        isOn = newState;
-
+        // Success: update state + unlock
+        isOn = string.Equals(payload.state, "on", StringComparison.OrdinalIgnoreCase);
         isBusy = false;
-        localCooldownRemaining = 0f;
+
         ApplyVisualState();
     }
 
@@ -214,7 +218,7 @@ public class SmartPlugController : MonoBehaviour
             mat.color = isOn ? onColor : offColor;
         }
 
-        if (label != null && localCooldownRemaining <= 0f)
+        if (label != null)
         {
             label.text = $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
         }
@@ -222,7 +226,6 @@ public class SmartPlugController : MonoBehaviour
         Debug.Log($"[SmartPlug] {deviceId} -> {(isOn ? "ON" : "OFF")}");
     }
 
-    // Editor-only helper
     private void SimulateBackendResponse(string desiredState)
     {
         var payload = new PlugStatePayload
@@ -236,7 +239,6 @@ public class SmartPlugController : MonoBehaviour
             retryAfter = 0
         };
 
-        string json = JsonUtility.ToJson(payload);
-        OnDeviceStateJson(json);
+        OnDeviceStateJson(JsonUtility.ToJson(payload));
     }
 }
