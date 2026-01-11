@@ -48,7 +48,7 @@ function Landing() {
           <Feature
             icon={VA()}
             title="Intelligent Virtual Assistant"
-            content="Meet Picky, your smart companion powered by AI and natural language processing"
+            content="Meet Peccy, your smart companion powered by AI and natural language processing"
           />
         </div>
       </section>
