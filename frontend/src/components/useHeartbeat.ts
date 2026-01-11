@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { ImageClient } from "../services/api";
+import { Client } from "../services/api";
 
 export function useHeartbeat(userId: string) {
   useEffect(() => {
     const sendHeartbeat = async () => {
       try {
-        await ImageClient.post("/visitor/heartbeat", { userId });
+        await Client.post("/visitor/heartbeat", { userId });
         // optionally, you can handle the response here
       } catch (error) {
         console.error("Heartbeat failed:", error);

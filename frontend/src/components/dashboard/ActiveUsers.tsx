@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { User } from "lucide-react";
-import { ImageClient } from "../../services/api";
+import { Client } from "../../services/api";
 import "../../../sass/dashboard/_adminDashboard.scss";
 
 interface ActiveUsersNowResponse {
@@ -22,7 +22,7 @@ export default function ActiveUsersNow() {
   // Initial load (same as InvitationsToday)
   const fetchActiveUsers = async () => {
     try {
-      const { data } = await ImageClient.post<ActiveUsersNowResponse>(
+      const { data } = await Client.post<ActiveUsersNowResponse>(
         "/admin/loadDashboard",
         { component: "active_users_now" }
       );

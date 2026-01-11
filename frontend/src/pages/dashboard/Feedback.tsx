@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FeedbackCard } from "../../components/dashboard/FeedbackCard";
-import { FeedbackClient } from "../../services/api";
+import { Client } from "../../services/api";
 import DashboardLayout from "./DashboardLayout";
 
 export default function FeedbackPage() {
@@ -16,7 +16,7 @@ export default function FeedbackPage() {
   useEffect(() => {
     async function fetchFeedbacks() {
       try {
-        const response = await FeedbackClient.get("/admin/getFeedback");
+        const response = await Client.get("/admin/getFeedback");
         setFeedbacks(response.data);
       } catch (error) {
         console.error("Failed to fetch feedbacks:", error);

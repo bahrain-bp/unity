@@ -11,7 +11,7 @@ import * as path from "path";
 import { BedrockStack } from "./bedrock_stack";
 import { UnityWebSocketStack } from "./unity-websocket-stack";
 import { FrontendDeploymentStack } from "./frontend-deployment-stack";
-import * as logs from "aws-cdk-lib/aws-logs";             
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 
@@ -27,7 +27,7 @@ export class APIStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: APIStackProps) {
     super(scope, id, props);
 
-    const prefixname = this.stackName.split('-')[0].toLowerCase();
+    const prefixname = this.stackName.split("-")[0].toLowerCase();
 
     const wsStack = props.wsStack;
     const dbStack = props.dbStack;
@@ -41,6 +41,7 @@ export class APIStack extends cdk.Stack {
     const feedbackTable = dbStack.visitorFeedbackTable;
     const usedTokensTable = dbStack.usedTokensTable;
     const REKOG_COLLECTION_ID = dbStack.visitorFaceCollection.collectionId!;
+
     // Ensure DBStack is created before APIStack
     this.addDependency(dbStack);
 
@@ -48,10 +49,25 @@ export class APIStack extends cdk.Stack {
     // ✅ X-RAY HELPER (one place, apply to all lambdas)
     // ────────────────────────────────
     const enableXRay = (fn: lambda.Function) => {
-      // Allow Lambda to send traces to X-Ray
       fn.role?.addManagedPolicy(
         iam.ManagedPolicy.fromAwsManagedPolicyName("AWSXRayDaemonWriteAccess")
       );
+    };
+
+    // ────────────────────────────────
+    // ✅ ONE GLOBAL CORS (temporary "*", later replace with deployed frontend URL)
+    // ────────────────────────────────
+    const GLOBAL_CORS: apigw.CorsOptions = {
+      allowOrigins: apigw.Cors.ALL_ORIGINS, // "*"
+      allowMethods: apigw.Cors.ALL_METHODS,
+      allowHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-Amz-Date",
+        "X-Api-Key",
+        "X-Amz-Security-Token",
+        "X-Amz-User-Agent",
+      ],
     };
 
     // DynamoDB Outputs (already present)
@@ -105,25 +121,35 @@ export class APIStack extends cdk.Stack {
       })
     );
 
-    userPool.addTrigger(cognito.UserPoolOperation.POST_CONFIRMATION, postConfirmFn);
+    userPool.addTrigger(
+      cognito.UserPoolOperation.POST_CONFIRMATION,
+      postConfirmFn
+    );
 
-    const userPoolClient = new cognito.UserPoolClient(this, "UnityUserPoolClientV2", {
-      userPool,
-      generateSecret: false,
-      authFlows: { userSrp: true, userPassword: true },
-      oAuth: {
-        flows: {
-          authorizationCodeGrant: true,
-          implicitCodeGrant: true,
+    const userPoolClient = new cognito.UserPoolClient(
+      this,
+      "UnityUserPoolClientV2",
+      {
+        userPool,
+        generateSecret: false,
+        authFlows: { userSrp: true, userPassword: true },
+        oAuth: {
+          flows: {
+            authorizationCodeGrant: true,
+            implicitCodeGrant: true,
+          },
+          callbackUrls: ["http://localhost:3000/callback"],
+          logoutUrls: ["http://localhost:3000/"],
+          scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL],
         },
-        callbackUrls: ["http://localhost:3000/callback"],
-        logoutUrls: ["http://localhost:3000/"],
-        scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL],
-      },
-      supportedIdentityProviders: [cognito.UserPoolClientIdentityProvider.COGNITO],
-    });
+        supportedIdentityProviders: [
+          cognito.UserPoolClientIdentityProvider.COGNITO,
+        ],
+      }
+    );
 
-    const cfnClient = userPoolClient.node.defaultChild as cognito.CfnUserPoolClient;
+    const cfnClient = userPoolClient.node
+      .defaultChild as cognito.CfnUserPoolClient;
     cfnClient.allowedOAuthFlowsUserPoolClient = true;
     cfnClient.allowedOAuthFlows = ["code", "implicit"];
     cfnClient.allowedOAuthScopes = ["openid", "email"];
@@ -144,14 +170,22 @@ export class APIStack extends cdk.Stack {
       groupName: "visitor",
     });
 
-    const userPoolDomain = new cognito.UserPoolDomain(this, "UnityUserPoolDomain", {
-      userPool,
-      cognitoDomain: { domainPrefix: `${prefixname}-unity-${this.account}-dev` },
-    });
+    const userPoolDomain = new cognito.UserPoolDomain(
+      this,
+      "UnityUserPoolDomain",
+      {
+        userPool,
+        cognitoDomain: { domainPrefix: `${prefixname}-unity-${this.account}-dev` },
+      }
+    );
 
     new cdk.CfnOutput(this, "UserPoolId", { value: userPool.userPoolId });
-    new cdk.CfnOutput(this, "UserPoolClientId", { value: userPoolClient.userPoolClientId });
-    new cdk.CfnOutput(this, "UserPoolDomainUrl", { value: userPoolDomain.baseUrl() });
+    new cdk.CfnOutput(this, "UserPoolClientId", {
+      value: userPoolClient.userPoolClientId,
+    });
+    new cdk.CfnOutput(this, "UserPoolDomainUrl", {
+      value: userPoolDomain.baseUrl(),
+    });
 
     // ────────────────────────────────
     // 2. Lambda Function (hello)
@@ -170,6 +204,7 @@ export class APIStack extends cdk.Stack {
 
     // ────────────────────────────────
     // 3. API Gateway + Cognito Authorizer
+    // ✅ GLOBAL CORS APPLIED ONCE HERE
     // ────────────────────────────────
     const api = new apigw.RestApi(this, "UnityRestApi", {
       restApiName: `${prefixname}-Unity Service`,
@@ -177,11 +212,16 @@ export class APIStack extends cdk.Stack {
         stageName: "dev",
         tracingEnabled: true,
       },
+      defaultCorsPreflightOptions: GLOBAL_CORS,
     });
 
-    const authorizer = new apigw.CognitoUserPoolsAuthorizer(this, "UnityCognitoAuthorizer", {
-      cognitoUserPools: [userPool],
-    });
+    const authorizer = new apigw.CognitoUserPoolsAuthorizer(
+      this,
+      "UnityCognitoAuthorizer",
+      {
+        cognitoUserPools: [userPool],
+      }
+    );
 
     const helloResource = api.root.addResource("hello");
     helloResource.addMethod("GET", new apigw.LambdaIntegration(helloFn), {
@@ -356,32 +396,32 @@ export class APIStack extends cdk.Stack {
     alexaResource
       .addResource("ht")
       .addResource("latest")
-      .addMethod("GET", new apigw.LambdaIntegration(alexaTelemetryFn), publicMethodOptions);
+      .addMethod(
+        "GET",
+        new apigw.LambdaIntegration(alexaTelemetryFn),
+        publicMethodOptions
+      );
 
     alexaResource
       .addResource("parking")
       .addResource("latest")
-      .addMethod("GET", new apigw.LambdaIntegration(alexaTelemetryFn), publicMethodOptions);
+      .addMethod(
+        "GET",
+        new apigw.LambdaIntegration(alexaTelemetryFn),
+        publicMethodOptions
+      );
 
     alexaResource
       .addResource("summary")
-      .addMethod("GET", new apigw.LambdaIntegration(alexaTelemetryFn), publicMethodOptions);
+      .addMethod(
+        "GET",
+        new apigw.LambdaIntegration(alexaTelemetryFn),
+        publicMethodOptions
+      );
 
     new cdk.CfnOutput(this, "AlexaHtLatestUrl", { value: api.url + "alexa/ht/latest" });
     new cdk.CfnOutput(this, "AlexaParkingLatestUrl", { value: api.url + "alexa/parking/latest" });
     new cdk.CfnOutput(this, "AlexaSummaryUrl", { value: api.url + "alexa/summary" });
-
-    plugsResource.addCorsPreflight({
-      allowOrigins: ["http://localhost:8080", "http://localhost:5173"],
-      allowMethods: ["OPTIONS", "POST"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
-
-    telemetryResource.addCorsPreflight({
-      allowOrigins: ["http://localhost:8080", "http://localhost:5173"],
-      allowMethods: ["OPTIONS", "GET"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
 
     // ────────────────────────────────
     // WhatsApp Bot (Cloud API) — webhook
@@ -408,58 +448,61 @@ export class APIStack extends cdk.Stack {
     const whatsappResource = api.root.addResource("whatsapp");
     const webhookResource = whatsappResource.addResource("webhook");
 
-    webhookResource.addMethod("GET", new apigw.LambdaIntegration(whatsappBotFn), publicMethodOptions);
-    webhookResource.addMethod("POST", new apigw.LambdaIntegration(whatsappBotFn), publicMethodOptions);
+    webhookResource.addMethod(
+      "GET",
+      new apigw.LambdaIntegration(whatsappBotFn),
+      publicMethodOptions
+    );
+    webhookResource.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(whatsappBotFn),
+      publicMethodOptions
+    );
 
     new cdk.CfnOutput(this, "WhatsAppWebhookUrl", { value: api.url + "whatsapp/webhook" });
 
     // ────────────────────────────────
     // Virtual Assistant API route (Bedrock)
     // ────────────────────────────────
-    // ✅ FIX: no addTracing() in CDK. Use escape hatch to enable tracing.
-    const bedrockCfnFn = bedrockStack.lambdaFunction.node.defaultChild as lambda.CfnFunction;
+    const bedrockCfnFn = bedrockStack.lambdaFunction.node
+      .defaultChild as lambda.CfnFunction;
     bedrockCfnFn.tracingConfig = { mode: "Active" };
 
-    // ✅ Ensure bedrock lambda can publish traces too
     enableXRay(bedrockStack.lambdaFunction);
 
     const assistantResource = api.root.addResource("assistant");
-
-    assistantResource.addCorsPreflight({
-      allowOrigins: ["*"],
-      allowMethods: ["POST"],
-    });
-
-    assistantResource.addMethod("POST", new apigw.LambdaIntegration(bedrockStack.lambdaFunction));
+    assistantResource.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(bedrockStack.lambdaFunction)
+    );
 
     // ────────────────────────────────
     // Pre-Registration: Presigned Upload + Validate Image + Presigned Download
     // ────────────────────────────────
-    const generatePresignedUrlFn = new NodejsFunction(this, "GeneratePresignedUrlHandler", {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      entry: path.join(__dirname, "../lambda/generatePresignedUploadUrl.ts"),
-      handler: "handler",
-      environment: {
-        BUCKET_NAME: preRegBucket.bucketName,
-      },
-      tracing: lambda.Tracing.ACTIVE,
-    });
+    const generatePresignedUrlFn = new NodejsFunction(
+      this,
+      "GeneratePresignedUrlHandler",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        entry: path.join(__dirname, "../lambda/generatePresignedUploadUrl.ts"),
+        handler: "handler",
+        environment: {
+          BUCKET_NAME: preRegBucket.bucketName,
+        },
+        tracing: lambda.Tracing.ACTIVE,
+      }
+    );
     enableXRay(generatePresignedUrlFn);
 
     preRegBucket.grantReadWrite(generatePresignedUrlFn);
 
     const uploadImageResource = api.root.addResource("upload-image");
+    uploadImageResource.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(generatePresignedUrlFn),
+      { authorizationType: apigw.AuthorizationType.NONE }
+    );
 
-    uploadImageResource.addCorsPreflight({
-      allowOrigins: ["*"],
-      allowMethods: ["POST"],
-    });
-
-    uploadImageResource.addMethod("POST", new apigw.LambdaIntegration(generatePresignedUrlFn), {
-      authorizationType: apigw.AuthorizationType.NONE,
-    });
-
-    // Validate image (Python lambda)
     const preRegisterCheckFn = new lambda.Function(this, "PreRegisterCheckHandler", {
       runtime: lambda.Runtime.PYTHON_3_9,
       handler: "PreRegisterCheck.handler",
@@ -478,17 +521,12 @@ export class APIStack extends cdk.Stack {
     userTable.grantReadWriteData(preRegisterCheckFn);
 
     const validateImageResource = api.root.addResource("validate-image");
+    validateImageResource.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(preRegisterCheckFn),
+      { authorizationType: apigw.AuthorizationType.NONE }
+    );
 
-    validateImageResource.addCorsPreflight({
-      allowOrigins: ["*"],
-      allowMethods: ["POST"],
-    });
-
-    validateImageResource.addMethod("POST", new apigw.LambdaIntegration(preRegisterCheckFn), {
-      authorizationType: apigw.AuthorizationType.NONE,
-    });
-
-    // Generate presigned S3 download URL
     const getImageFn = new NodejsFunction(this, "GetPresignedDownloadUrlHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/generatePresignedDownloadUrl.ts"),
@@ -503,12 +541,6 @@ export class APIStack extends cdk.Stack {
     preRegBucket.grantRead(getImageFn);
 
     const getImageResource = api.root.addResource("get-image");
-
-    getImageResource.addCorsPreflight({
-      allowOrigins: ["*"],
-      allowMethods: ["GET"],
-    });
-
     getImageResource.addMethod("GET", new apigw.LambdaIntegration(getImageFn), {
       authorizationType: apigw.AuthorizationType.NONE,
     });
@@ -517,35 +549,17 @@ export class APIStack extends cdk.Stack {
     // USER MANAGEMENT
     // ────────────────────────────────
     const usersResource = api.root.addResource("users");
-
-    usersResource.addCorsPreflight({
-      allowOrigins: ["http://localhost:5173"],
-      allowMethods: ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
-
     const userByIdResource = usersResource.addResource("{userId}");
 
-    userByIdResource.addCorsPreflight({
-      allowOrigins: ["http://localhost:5173"],
-      allowMethods: ["OPTIONS", "PUT", "DELETE"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
-
-    // Get users
     const usersGetFn = new NodejsFunction(this, "UsersGetHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/users-get.ts"),
       handler: "handler",
       environment: {
         USER_POOL_ID: userPool.userPoolId,
-        ALLOWED_ORIGIN: "http://localhost:5173",
+        ALLOWED_ORIGIN: "*", // since GLOBAL CORS is "*"
       },
-      bundling: {
-        target: "node18",
-        minify: true,
-        sourceMap: false,
-      },
+      bundling: { target: "node18", minify: true, sourceMap: false },
       tracing: lambda.Tracing.ACTIVE,
     });
     enableXRay(usersGetFn);
@@ -562,20 +576,15 @@ export class APIStack extends cdk.Stack {
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
-    // Create users
     const usersCreateFn = new NodejsFunction(this, "UsersCreateHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/users-create.ts"),
       handler: "handler",
       environment: {
         USER_POOL_ID: userPool.userPoolId,
-        ALLOWED_ORIGIN: "http://localhost:5173",
+        ALLOWED_ORIGIN: "*",
       },
-      bundling: {
-        target: "node18",
-        minify: true,
-        sourceMap: false,
-      },
+      bundling: { target: "node18", minify: true, sourceMap: false },
       tracing: lambda.Tracing.ACTIVE,
     });
     enableXRay(usersCreateFn);
@@ -592,20 +601,15 @@ export class APIStack extends cdk.Stack {
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
-    // Update users
     const usersUpdateFn = new NodejsFunction(this, "UsersUpdateHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/users-update.ts"),
       handler: "handler",
       environment: {
         USER_POOL_ID: userPool.userPoolId,
-        ALLOWED_ORIGIN: "http://localhost:5173",
+        ALLOWED_ORIGIN: "*",
       },
-      bundling: {
-        target: "node18",
-        minify: true,
-        sourceMap: false,
-      },
+      bundling: { target: "node18", minify: true, sourceMap: false },
       tracing: lambda.Tracing.ACTIVE,
     });
     enableXRay(usersUpdateFn);
@@ -622,20 +626,15 @@ export class APIStack extends cdk.Stack {
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
-    // Delete users
     const usersDeleteFn = new NodejsFunction(this, "UsersDeleteHandler", {
       runtime: lambda.Runtime.NODEJS_18_X,
       entry: path.join(__dirname, "../lambda/users-delete.ts"),
       handler: "handler",
       environment: {
         USER_POOL_ID: userPool.userPoolId,
-        ALLOWED_ORIGIN: "http://localhost:5173",
+        ALLOWED_ORIGIN: "*",
       },
-      bundling: {
-        target: "node18",
-        minify: true,
-        sourceMap: false,
-      },
+      bundling: { target: "node18", minify: true, sourceMap: false },
       tracing: lambda.Tracing.ACTIVE,
     });
     enableXRay(usersDeleteFn);
@@ -647,10 +646,14 @@ export class APIStack extends cdk.Stack {
       })
     );
 
-    userByIdResource.addMethod("DELETE", new apigw.LambdaIntegration(usersDeleteFn), {
-      authorizer,
-      authorizationType: apigw.AuthorizationType.COGNITO,
-    });
+    userByIdResource.addMethod(
+      "DELETE",
+      new apigw.LambdaIntegration(usersDeleteFn),
+      {
+        authorizer,
+        authorizationType: apigw.AuthorizationType.COGNITO,
+      }
+    );
 
     // ────────────────────────────────
     // Analytics Dashboard (REAL DATA)
@@ -674,59 +677,44 @@ export class APIStack extends cdk.Stack {
 
     const analyticsResource = api.root.addResource("analytics");
     const dashboardResource = analyticsResource.addResource("dashboard");
-
-    dashboardResource.addCorsPreflight({
-      allowOrigins: ["http://localhost:8080", "http://localhost:5173"],
-      allowMethods: ["OPTIONS", "GET"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
-
     dashboardResource.addMethod("GET", new apigw.LambdaIntegration(analyticsDashboardFn), {
       authorizer,
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
-    const presignedUrlHandler = new NodejsFunction(
-          this,
-          "PresignedUrlHandler",
-          {
-            runtime: lambda.Runtime.NODEJS_20_X,
-            handler: "handler",
-            entry: path.join(__dirname, "..", "lambda", "uploadBuildHandler.ts"),
-            timeout: cdk.Duration.seconds(10),
-            memorySize: 256,
-            environment: {
-              BUCKET_NAME: frontendStack.frontendBucket.bucketName,
-              UPLOAD_DIRECTORY: "unity",
-              MAX_FILES: "4",
-              URL_EXPIRATION_SECONDS: "3600", // 1 hour
-              //CLOUDFRONT_DISTRIBUTION_ID: "E8RMBHHUMVCJZ",
-              CLOUDFRONT_DISTRIBUTION_ID: frontendStack.distribution.distributionId,
-    
-            },
-          }
-        );
+    // ────────────────────────────────
+    // Upload Unity build (presigned) + CloudFront invalidation
+    // ────────────────────────────────
+    const presignedUrlHandler = new NodejsFunction(this, "PresignedUrlHandler", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: "handler",
+      entry: path.join(__dirname, "..", "lambda", "uploadBuildHandler.ts"),
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 256,
+      environment: {
+        BUCKET_NAME: frontendStack.frontendBucket.bucketName,
+        UPLOAD_DIRECTORY: "unity",
+        MAX_FILES: "4",
+        URL_EXPIRATION_SECONDS: "3600",
+        CLOUDFRONT_DISTRIBUTION_ID: frontendStack.distribution.distributionId,
+      },
+      tracing: lambda.Tracing.ACTIVE,
+    });
+    enableXRay(presignedUrlHandler);
 
-        frontendStack.frontendBucket.grantPut(presignedUrlHandler);
+    frontendStack.frontendBucket.grantPut(presignedUrlHandler);
 
+    presignedUrlHandler.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["cloudfront:CreateInvalidation"],
+        resources: ["*"],
+      })
+    );
 
-        presignedUrlHandler.addToRolePolicy(
-              new iam.PolicyStatement({
-                actions: ["cloudfront:CreateInvalidation"],
-                resources: ["*"],
-              })
-            );
     const uploadResource = api.root.addResource("generate-upload-urls");
+    uploadResource.addMethod("POST", new apigw.LambdaIntegration(presignedUrlHandler));
 
-            uploadResource.addMethod(
-                  "POST",
-                  new apigw.LambdaIntegration(presignedUrlHandler)
-                );
-
-
-                //sara stacks
-
-                // ────────────────────────────────────────────────
+    // ────────────────────────────────────────────────
     // Visitor Feedback API (python)
     // ────────────────────────────────────────────────
     const createPythonLambda = (
@@ -808,7 +796,6 @@ export class APIStack extends cdk.Stack {
     usedTokensTable.grantReadWriteData(getVisitorInfoLambda);
     usedTokensTable.grantReadWriteData(submitFeedbackLambda);
 
-    // allow submitFeedback -> broadcast
     broadcastLambda.grantInvoke(submitFeedbackLambda.role!);
 
     const getVisitorInfoResource = api.root.addResource("getVisitorInfo");
@@ -825,27 +812,19 @@ export class APIStack extends cdk.Stack {
 
     const adminResource = api.root.addResource("admin");
 
-    adminResource.addResource("getFeedback").addMethod("GET", new apigw.LambdaIntegration(getFeedbackLambda), {
-      authorizer,
-      authorizationType: apigw.AuthorizationType.COGNITO,
-    });
+    adminResource
+      .addResource("getFeedback")
+      .addMethod("GET", new apigw.LambdaIntegration(getFeedbackLambda), {
+        authorizer,
+        authorizationType: apigw.AuthorizationType.COGNITO,
+      });
 
-    adminResource.addResource("loadFeedback").addMethod("POST", new apigw.LambdaIntegration(loadFeedbackLambda), {
-      authorizer,
-      authorizationType: apigw.AuthorizationType.COGNITO,
-    });
-
-    const corsOrigins = ["http://localhost:8080", "http://localhost:5173"];
-    getVisitorInfoResource.addCorsPreflight({
-      allowOrigins: corsOrigins,
-      allowMethods: ["OPTIONS", "GET"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
-    submitFeedbackResource.addCorsPreflight({
-      allowOrigins: corsOrigins,
-      allowMethods: ["OPTIONS", "POST"],
-      allowHeaders: ["Content-Type", "Authorization"],
-    });
+    adminResource
+      .addResource("loadFeedback")
+      .addMethod("POST", new apigw.LambdaIntegration(loadFeedbackLambda), {
+        authorizer,
+        authorizationType: apigw.AuthorizationType.COGNITO,
+      });
 
     // ────────────────────────────────────────────────
     // Facial Recognition REST API
@@ -855,7 +834,6 @@ export class APIStack extends cdk.Stack {
     const facialBucket = dbStack.bahtwinTestingBucket;
 
     const visitorResource = api.root.addResource("visitor");
-    const facialCorsOrigins = ["http://localhost:8080", "http://localhost:5173"];
 
     const publicOpts: apigw.MethodOptions = {
       authorizationType: apigw.AuthorizationType.NONE,
@@ -870,9 +848,13 @@ export class APIStack extends cdk.Stack {
     const arrivalTopic = new sns.Topic(this, "VisitorArrivalTopic", {
       topicName: `${prefixname}-VisitorArrivalNotifications`,
     });
-    arrivalTopic.addSubscription(new subscriptions.SmsSubscription("+97332233417"));
+    arrivalTopic.addSubscription(
+      new subscriptions.SmsSubscription("+97332233417")
+    );
 
-    new cdk.CfnOutput(this, "ArrivalTopicArnOutput", { value: arrivalTopic.topicArn });
+    new cdk.CfnOutput(this, "ArrivalTopicArnOutput", {
+      value: arrivalTopic.topicArn,
+    });
 
     const sendFeedbackLambda = new lambda.Function(this, "SendFeedbackLambda", {
       runtime: lambda.Runtime.PYTHON_3_11,
@@ -880,7 +862,11 @@ export class APIStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, "../lambda"), {
         bundling: {
           image: lambda.Runtime.PYTHON_3_11.bundlingImage,
-          command: ["bash", "-c", `pip install -r requirements.txt -t /asset-output && cp -r . /asset-output`],
+          command: [
+            "bash",
+            "-c",
+            `pip install -r requirements.txt -t /asset-output && cp -r . /asset-output`,
+          ],
         },
       }),
       environment: {
@@ -911,8 +897,8 @@ export class APIStack extends cdk.Stack {
         USER_TABLE: userTable.tableName,
         InviteTable: invitedVisitorTable.tableName,
         BROADCAST_LAMBDA: broadcastLambda.functionArn,
-        TOPIC_ARN: arrivalTopic.topicArn, 
-        SEND_FEEDBACK_LAMBDA: sendFeedbackLambda.functionArn, 
+        TOPIC_ARN: arrivalTopic.topicArn,
+        SEND_FEEDBACK_LAMBDA: sendFeedbackLambda.functionArn,
       },
     });
     enableXRay(arrivalRekognitionFn);
@@ -925,7 +911,7 @@ export class APIStack extends cdk.Stack {
       tracing: lambda.Tracing.ACTIVE,
       environment: {
         BUCKET_NAME: facialBucket.bucketName,
-        COLLECTION_ID: REKOG_COLLECTION_ID, 
+        COLLECTION_ID: REKOG_COLLECTION_ID,
         USER_TABLE: userTable.tableName,
         BROADCAST_LAMBDA: broadcastLambda.functionArn,
       },
@@ -1014,7 +1000,6 @@ export class APIStack extends cdk.Stack {
     });
     enableXRay(getUserBadgeInfoFn);
 
-    // Permissions
     facialBucket.grantReadWrite(arrivalRekognitionFn);
     facialBucket.grantReadWrite(visitorPreRegisterFn);
     facialBucket.grantRead(getImageUrlFn);
@@ -1036,7 +1021,11 @@ export class APIStack extends cdk.Stack {
     for (const fn of [visitorPreRegisterFn, arrivalRekognitionFn]) {
       fn.addToRolePolicy(
         new iam.PolicyStatement({
-          actions: ["rekognition:IndexFaces", "rekognition:SearchFacesByImage", "rekognition:DetectFaces"],
+          actions: [
+            "rekognition:IndexFaces",
+            "rekognition:SearchFacesByImage",
+            "rekognition:DetectFaces",
+          ],
           resources: ["*"],
         })
       );
@@ -1051,44 +1040,60 @@ export class APIStack extends cdk.Stack {
     broadcastLambda.grantInvoke(registerVisitorBulkFn.role!);
     broadcastLambda.grantInvoke(websiteHeartbeatFn.role!);
 
-    // Routes + CORS
-    const addCors = (res: apigw.IResource, methods: string[]) =>
-      res.addCorsPreflight({
-        allowOrigins: facialCorsOrigins,
-        allowMethods: ["OPTIONS", ...methods],
-        allowHeaders: ["Content-Type", "Authorization"],
-      });
-
     const visitorArrivalRes = visitorResource.addResource("arrival");
-    visitorArrivalRes.addMethod("POST", new apigw.LambdaIntegration(arrivalRekognitionFn), publicOpts);
-    addCors(visitorArrivalRes, ["POST"]);
+    visitorArrivalRes.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(arrivalRekognitionFn),
+      publicOpts
+    );
 
     const visitorRegisterRes = visitorResource.addResource("register");
-    visitorRegisterRes.addMethod("POST", new apigw.LambdaIntegration(visitorPreRegisterFn), publicOpts);
-    addCors(visitorRegisterRes, ["POST"]);
+    visitorRegisterRes.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(visitorPreRegisterFn),
+      publicOpts
+    );
 
     const visitorGetImageUrlRes = visitorResource.addResource("get-image-url");
-    visitorGetImageUrlRes.addMethod("GET", new apigw.LambdaIntegration(getImageUrlFn), publicOpts);
-    addCors(visitorGetImageUrlRes, ["GET"]);
+    visitorGetImageUrlRes.addMethod(
+      "GET",
+      new apigw.LambdaIntegration(getImageUrlFn),
+      publicOpts
+    );
 
     const visitorHeartbeatRes = visitorResource.addResource("heartbeat");
-    visitorHeartbeatRes.addMethod("POST", new apigw.LambdaIntegration(websiteHeartbeatFn), publicOpts);
-    addCors(visitorHeartbeatRes, ["POST"]);
+    visitorHeartbeatRes.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(websiteHeartbeatFn),
+      publicOpts
+    );
 
     const visitorBadgeRes = visitorResource.addResource("badge");
-    visitorBadgeRes.addMethod("POST", new apigw.LambdaIntegration(getUserBadgeInfoFn), publicOpts);
-    addCors(visitorBadgeRes, ["POST"]);
+    visitorBadgeRes.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(getUserBadgeInfoFn),
+      publicOpts
+    );
 
     const adminRegisterIndividualRes = adminResource.addResource("registerVisitorIndividual");
-    adminRegisterIndividualRes.addMethod("POST", new apigw.LambdaIntegration(registerVisitorIndividualFn), adminOpts);
-    addCors(adminRegisterIndividualRes, ["POST"]);
+    adminRegisterIndividualRes.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(registerVisitorIndividualFn),
+      adminOpts
+    );
 
     const adminRegisterBulkRes = adminResource.addResource("registerVisitorBulk");
-    adminRegisterBulkRes.addMethod("POST", new apigw.LambdaIntegration(registerVisitorBulkFn), adminOpts);
-    addCors(adminRegisterBulkRes, ["POST"]);
+    adminRegisterBulkRes.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(registerVisitorBulkFn),
+      adminOpts
+    );
 
     const adminLoadDashboardRes = adminResource.addResource("loadDashboard");
-    adminLoadDashboardRes.addMethod("POST", new apigw.LambdaIntegration(loadDashboardFn), adminOpts);
-    addCors(adminLoadDashboardRes, ["POST"]);
+    adminLoadDashboardRes.addMethod(
+      "POST",
+      new apigw.LambdaIntegration(loadDashboardFn),
+      adminOpts
+    );
   }
 }

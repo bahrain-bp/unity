@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { FaUpload } from "react-icons/fa";
 import DashboardLayout from "./DashboardLayout";
 import "../../../sass/dashboard/_visitorInvite.scss";
-import { ImageClient } from "../../services/api";
+import { Client } from "../../services/api";
 
 function VisitorTestPage() {
   const [mode, setMode] = useState<"single" | "bulk">("single");
@@ -37,7 +37,7 @@ function VisitorTestPage() {
         setMessage("Sending invitation...");
         setMessageType("processing");
 
-        const response = await ImageClient.post(
+        const response = await Client.post(
           "admin/registerVisitorIndividual",
           {
             name,
@@ -69,7 +69,7 @@ function VisitorTestPage() {
           reader.readAsDataURL(csvFile);
         });
 
-        const response = await ImageClient.post(
+        const response = await Client.post(
           "/admin/registerVisitorBulk",
           { file: fileBase64 }
         );

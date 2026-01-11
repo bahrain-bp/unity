@@ -5,7 +5,7 @@ import tmpUserImg from "../assets/user.png";
 import logo from "../assets/logo.svg";
 import Drawer from "@mui/material/Drawer";
 import { MENU } from "../assets/icons";
-import { ImageClient } from "../services/api";
+import { Client } from "../services/api";
 
 function Navbar() {
   const { email, isAuthenticated, signOut, userId, userRole } = useAuth();
@@ -20,7 +20,7 @@ function Navbar() {
 
   const getUserImg = async () => {
     try {
-      const result = await ImageClient.get(
+      const result = await Client.get(
         `/visitor/me?userId=${userId}`
       );
 

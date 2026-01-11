@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Users } from "lucide-react";
-import { ImageClient } from "../../services/api";
+import { Client } from "../../services/api";
 
 interface TotalVisitorsResponse {
   card: string;
@@ -16,7 +16,7 @@ export default function TotalBahtwinVisitors() {
   // Fetch total visitors on load
   const fetchTotalVisitors = async () => {
     try {
-      const { data } = await ImageClient.post<TotalVisitorsResponse>(
+      const { data } = await Client.post<TotalVisitorsResponse>(
         "/admin/loadDashboard",
         { component: "total_bahtwin_visitors" } // send component name
       );

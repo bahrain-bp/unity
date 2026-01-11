@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
-import { FeedbackClient } from "../../services/api";
+import { Client } from "../../services/api";
 
 interface AvgFeedbackData {
   avg_score: number;
@@ -27,7 +27,7 @@ export default function AvgFeedbackScore() {
   // Fetch initial feedback
   const fetchFeedback = async () => {
     try {
-      const { data } = await FeedbackClient.post<LoadDashboardResponse>(
+      const { data } = await Client.post<LoadDashboardResponse>(
         "/admin/loadFeedback",
         { component: "avg_feedback_score" }
       );

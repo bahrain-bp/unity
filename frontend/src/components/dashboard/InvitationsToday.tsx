@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
-import { ImageClient } from "../../services/api";
+import { Client } from "../../services/api";
 
 interface InvitationsTodayResponse {
   card: string;
@@ -17,7 +17,7 @@ export default function InvitationsToday() {
   // Fetch today invitations on load
   const fetchTodayInvitations = async () => {
     try {
-      const { data } = await ImageClient.post<InvitationsTodayResponse>(
+      const { data } = await Client.post<InvitationsTodayResponse>(
         "/admin/loadDashboard",
         { component: "today_invitations" }
       );
