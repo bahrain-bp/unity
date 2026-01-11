@@ -957,6 +957,8 @@ export class APIStack extends cdk.Stack {
       },
     });
     enableXRay(loadDashboardFn);
+    userTable.grantReadWriteData(loadDashboardFn);
+    
 
     const getImageUrlFn = new NodejsFunction(this, "GeneratePresignedImageUrlHandlerV2", {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -1095,5 +1097,26 @@ export class APIStack extends cdk.Stack {
       new apigw.LambdaIntegration(loadDashboardFn),
       adminOpts
     );
+
+    //get user info lambda
+    const GetUserInfo = new lambda.Function(this, 'GetUserInfo',{
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler:'GetUserInfo.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      environment:{
+        USER_TABLE: userTable.tableName,
+        BUCKET_NAME: facialBucket.bucketName
+      },
+      timeout:cdk.Duration.seconds(30),
+      //functionName: 'GetUserInfo', 
+      logRetention: logs.RetentionDays.ONE_DAY, // <- CDK will manage the log group
+    });
+    facialBucket.grantRead(GetUserInfo);
+    preRegBucket.grantRead(GetUserInfo);
+    userTable.grantReadWriteData(GetUserInfo);
+const getUserInfo = visitorResource.addResource('me');
+    getUserInfo.addMethod('GET',new apigw.LambdaIntegration(GetUserInfo, { 
+      proxy: true 
+    }));
   }
 }
