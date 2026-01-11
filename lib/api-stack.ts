@@ -673,6 +673,38 @@ export class APIStack extends cdk.Stack {
       authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
+    // Website analytics heartbeat
+    const heartbeatEnv = {
+      WEBSITE_ACTIVITY_TABLE: dbStack.websiteActivityTable.tableName,
+      TIMEZONE: "Asia/Bahrain",
+      ACTIVE_WINDOW_SECONDS: "300",
+      LAST_6_HOURS_SECONDS: "21600",
+      ACTIVITY_TTL_SECONDS: "172800",
+      CACHE_TTL_SECONDS: "60",
+    };
+
+    const recordHeartbeatFn = new NodejsFunction(this, "WebsiteRecordHeartbeatLambda", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      entry: path.join(__dirname, "../lambda/website-analytics/heartbeat.ts"),
+      handler: "handler",
+      bundling: { target: "node18", minify: true, sourceMap: false },
+      environment: heartbeatEnv,
+      tracing: lambda.Tracing.ACTIVE,
+    });
+    enableXRay(recordHeartbeatFn);
+
+    const heartbeatResource = api.root.addResource("heartbeat");
+    heartbeatResource.addCorsPreflight({
+      allowOrigins: ["*"],
+      allowMethods: ["OPTIONS", "POST"],
+      allowHeaders: ["Content-Type", "Authorization"],
+    });
+    heartbeatResource.addMethod("POST", new apigw.LambdaIntegration(recordHeartbeatFn), {
+      authorizationType: apigw.AuthorizationType.NONE,
+    });
+
+    dbStack.websiteActivityTable.grantReadWriteData(recordHeartbeatFn);
+
 
   }
 }
