@@ -13,6 +13,7 @@ import { UnityWebSocketStack } from "../lib/unity-websocket-stack";
 import { BuildUploadStack } from "../lib/BuildUploadStack"; 
 
 import { AlexaStack } from "../lib/AlexaStack";
+import { SummaryStack } from "../lib/SummaryStack";
 
 const app = new cdk.App();
 
@@ -88,6 +89,18 @@ const alexaStack = new AlexaStack(app, "Unity-AlexaStack", {
 });
 
 alexaStack.addDependency(dbStack);
+
+// Summary Stack (daily Alexa (Echo Show) summaries)
+const summaryStack = new SummaryStack(app, "Unity-SummaryStack", {
+  dbStack,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION || "us-east-1",
+  },
+});
+
+summaryStack.addDependency(dbStack);
+
 
 
 // const FRStack = new FacialRecognitionStack(app, 'FacialRecognitionStack', {
