@@ -138,8 +138,8 @@ export class APIStack extends cdk.Stack {
             authorizationCodeGrant: true,
             implicitCodeGrant: true,
           },
-          callbackUrls: ["http://localhost:3000/callback"],
-          logoutUrls: ["http://localhost:3000/"],
+          callbackUrls: ["localhost:5173" + "/callback"],
+          logoutUrls: ["localhost:5173" + "/"],
           scopes: [cognito.OAuthScope.OPENID, cognito.OAuthScope.EMAIL],
         },
         supportedIdentityProviders: [
@@ -738,7 +738,7 @@ export class APIStack extends cdk.Stack {
         }),
         environment: env,
         timeout: cdk.Duration.seconds(30),
-        functionName,
+        functionName: `${prefixname}${functionName}`,
         logRetention: logs.RetentionDays.ONE_DAY,
         tracing: lambda.Tracing.ACTIVE,
       });
@@ -800,14 +800,12 @@ export class APIStack extends cdk.Stack {
 
     const getVisitorInfoResource = api.root.addResource("getVisitorInfo");
     getVisitorInfoResource.addMethod("GET", new apigw.LambdaIntegration(getVisitorInfoLambda), {
-      authorizer,
-      authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
     const submitFeedbackResource = api.root.addResource("submitFeedback");
     submitFeedbackResource.addMethod("POST", new apigw.LambdaIntegration(submitFeedbackLambda), {
-      authorizer,
-      authorizationType: apigw.AuthorizationType.COGNITO,
+      // authorizer,
+      // authorizationType: apigw.AuthorizationType.COGNITO,
     });
 
     const adminResource = api.root.addResource("admin");
@@ -871,7 +869,7 @@ export class APIStack extends cdk.Stack {
       }),
       environment: {
         JWT_SECRET: "secret",
-        FRONTEND_URL: "https://d3pah2wsw5ry03.cloudfront.net/VisitorFeedBack",
+        FRONTEND_URL: frontendStack.distribution.domainName + "/VisitorFeedBack",
         GMAIL_USER: "bahtwinnoreply@gmail.com",
         GMAIL_PASS: "zdjl cdgw kxzb okny",
         WORKMAIL_USER: "no-reply@bahtwin.awsapps.com",
@@ -884,7 +882,8 @@ export class APIStack extends cdk.Stack {
       tracing: lambda.Tracing.ACTIVE,
     });
     enableXRay(sendFeedbackLambda);
-
+    
+    
     const arrivalRekognitionFn = new lambda.Function(this, "ArrivalRekognitionHandler", {
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: "ArrivalRekognition.ArrivalRekognition",
@@ -899,10 +898,14 @@ export class APIStack extends cdk.Stack {
         BROADCAST_LAMBDA: broadcastLambda.functionArn,
         TOPIC_ARN: arrivalTopic.topicArn,
         SEND_FEEDBACK_LAMBDA: sendFeedbackLambda.functionArn,
+        SEND_FEEDBACK_LAMBDA_NAME: sendFeedbackLambda.functionName,
       },
     });
     enableXRay(arrivalRekognitionFn);
 
+    const arrivalRole = arrivalRekognitionFn.role!;
+    sendFeedbackLambda.grantInvoke(arrivalRole);
+    
     const visitorPreRegisterFn = new lambda.Function(this, "VisitorPreRegisterHandler", {
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: "PreRegisterCheck.PreRegisterCheck",
@@ -925,6 +928,9 @@ export class APIStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       tracing: lambda.Tracing.ACTIVE,
       environment: {
+        FRONTEND_URL: frontendStack.distribution.domainName,
+        GMAIL_USER: 'bahtwinnoreply@gmail.com',      // Gmail address for sending
+        GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
         InviteTable: invitedVisitorTable.tableName,
         BROADCAST_LAMBDA: broadcastLambda.functionArn,
       },
@@ -938,6 +944,9 @@ export class APIStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       tracing: lambda.Tracing.ACTIVE,
       environment: {
+        FRONTEND_URL: frontendStack.distribution.domainName,
+        GMAIL_USER: '	bahtwinnoreply@gmail.com',      // Gmail address for sending
+        GMAIL_PASS: 'zdjl cdgw kxzb okny',        // Gmail app password
         InviteTable: invitedVisitorTable.tableName,
         BROADCAST_LAMBDA: broadcastLambda.functionArn,
       },

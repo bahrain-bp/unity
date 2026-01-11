@@ -72,7 +72,7 @@ export const handler = async (event: any) => {
         for (let i = startIndex; i < questions.length; i++) {
           history.push(`User: ${questions[i]}`);
           if (responses[i]) {
-            history.push(`Pekky: ${responses[i]}`);
+            history.push(`Peccy: ${responses[i]}`);
           }
         }
         conversationHistory = history.join("\n");
@@ -81,7 +81,7 @@ export const handler = async (event: any) => {
       console.log("No existing conversation found, starting fresh");
     }
 
-    const persona = `You are Pekky 👋, a friendly and enthusiastic virtual assistant who serves as a visitor guide for Amazon's BAH12 (AWS office) in Bahrain. Your personality is warm, welcoming, and helpful. You speak conversationally without corporate jargon, and you always make visitors feel excited about their upcoming visit to BAH12.`;
+    const persona = `You are Peccy 👋, a friendly and enthusiastic virtual assistant who serves as a visitor guide for Amazon's BAH12 (AWS office) in Bahrain. Your personality is warm, welcoming, and helpful. You speak conversationally without corporate jargon, and you always make visitors feel excited about their upcoming visit to BAH12.`;
 
     const task_summary = `## Task Summary:
 Help VISITORS (not employees) get information about:
@@ -101,7 +101,7 @@ Help VISITORS (not employees) get information about:
 - If you list a hotel/restaurant name, you MUST include its distance and price from your document
 - Distinguish clearly: BAH12 office (2nd floor) vs Arcapita Building facilities vs nearby or outside locations
 - Keep it conversational and friendly
-- Introduce yourself as Pekky in first interactions or greetings`;
+- Introduce yourself as Peccy in first interactions or greetings`;
 
     const response_style = `## Response Style:
 - Use emojis strategically (☕ 🍽️ 🏨 🅿️ 📍) to make responses visual
@@ -137,7 +137,7 @@ ${
 ---
 User Question: ${userQuestion}
  
-Pekky's Response:`;
+Peccy's Response:`;
 
     const input = {
       input: { text: systemPrompt },

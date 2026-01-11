@@ -17,6 +17,7 @@ TOPIC_ARN = os.environ['TOPIC_ARN']
 InviteTable = os.environ['InviteTable']
 InviteTable = dynamodb.Table(InviteTable)
 BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
+SEND_FEEDBACK_LAMBDA_NAME = os.environ['SEND_FEEDBACK_LAMBDA_NAME']
 
 def ArrivalRekognition(event, context):
     if event["httpMethod"] == "OPTIONS":
@@ -119,7 +120,7 @@ def ArrivalRekognition(event, context):
             SendSMS(visitor['name'])
 
             lambda_client.invoke(
-            FunctionName='SendFeedbackLambda',
+            FunctionName=SEND_FEEDBACK_LAMBDA_NAME,
             InvocationType='Event',  # async invocation
             Payload=json.dumps(payload)
         )

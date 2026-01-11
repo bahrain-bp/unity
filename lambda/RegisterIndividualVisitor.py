@@ -13,6 +13,8 @@ from boto3.dynamodb.conditions import Key
 lambda_client = boto3.client("lambda")
 BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 
+Cloudfront_domain = os.environ["FRONTEND_URL"]
+
 GMAIL_USER = os.environ['GMAIL_USER']      #  Gmail address
 GMAIL_PASS = os.environ['GMAIL_PASS']      # Gmail app password
 
@@ -182,7 +184,7 @@ def send_invitation_email(name, email, formatted_visit_dt):
         </p>
 
         <p style="text-align:center;">
-        <a href="https://d3pah2wsw5ry03.cloudfront.net" class="btn" style="color:#ffffff;">Access BAHTWIN Platform</a>
+        <a href="{Cloudfront_domain}" class="btn" style="color:#ffffff;">Access BAHTWIN Platform</a>
         </p>
 
         <p class="footer">
