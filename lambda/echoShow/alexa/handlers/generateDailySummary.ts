@@ -17,10 +17,6 @@ const bedrock = new BedrockRuntimeClient({ region: "us-east-1" });
 
 const SUMMARIES_TABLE = process.env.SUMMARIES_TABLE!;
 const WEBSITE_ACTIVITY_TABLE = process.env.WEBSITE_ACTIVITY_TABLE!;
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "";
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
-const OPENROUTER_REFERRER = process.env.OPENROUTER_REFERRER || "";
-const OPENROUTER_APP_TITLE = process.env.OPENROUTER_APP_TITLE || "Unity Daily Summary";
 
 // Bahrain is UTC+3
 const BAHRAIN_OFFSET_SECONDS = 3 * 60 * 60;
@@ -392,14 +388,6 @@ Generate the summary:`;
   } catch (error) {
     console.error("Bedrock error:", error);
 
-    if (OPENROUTER_API_KEY) {
-      try {
-        return await generateSummaryWithOpenRouter(systemPrompt, userPrompt);
-      } catch (fallbackError) {
-        console.error("OpenRouter summary failed:", fallbackError);
-      }
-    }
-
     // Intelligent fallback (context-aware)
     if (isWeekend && metrics.usersToday === 0) {
       return `${dayOfWeek} was a quiet weekend day with no website activity, which is completely normal. ${
@@ -429,44 +417,6 @@ Generate the summary:`;
       metrics.temperature !== null ? `Temperature was ${metrics.temperature}C.` : ""
     }`;
   }
-}
-
-async function generateSummaryWithOpenRouter(
-  systemPrompt: string,
-  userPrompt: string
-): Promise<string> {
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-    "Content-Type": "application/json",
-  };
-  if (OPENROUTER_REFERRER) headers["HTTP-Referer"] = OPENROUTER_REFERRER;
-  if (OPENROUTER_APP_TITLE) headers["X-Title"] = OPENROUTER_APP_TITLE;
-
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      model: OPENROUTER_MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.7,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`OpenRouter error: ${response.status} ${errorText}`);
-  }
-
-  const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content?.trim();
-  if (!content) {
-    throw new Error("OpenRouter summary response was empty.");
-  }
-
-  return content;
 }
 
 // Utility functions
