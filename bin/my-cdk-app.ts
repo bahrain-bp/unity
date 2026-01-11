@@ -84,8 +84,9 @@ const frontendStack = new FrontendDeploymentStack(
 
 const FRStack = new FacialRecognitionStack(app, `${stackNamePrefix}-Unity-FacialRecognitionStack`, {
   facialWsConnectionsTable: dbStack.facialWsConnectionsTable,
+  env
 });
-// FRStack.addDependency(dbStack);
+FRStack.addDependency(dbStack);
 
 
 // 6) API stack (Cognito + API Gateway + Lambdas)
@@ -98,7 +99,7 @@ const apistack = new APIStack(app, `${stackNamePrefix}-Unity-APIStack`, {
   broadcastLambda: FRStack.broadcastLambda
 });
 
-// apistack.addDependency(frontendStack);
+apistack.addDependency(frontendStack);
 
 // new VisitorFeedbackStack(app, `${stackNamePrefix}-VisitorFeedbackStack`, {
 //   env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION || 'us-east-1' },
