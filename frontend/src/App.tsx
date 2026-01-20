@@ -22,6 +22,7 @@ import Parking from "./pages/dashboard/Parking";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import { useEffect } from "react";
 import FeedbackPage from "./pages/dashboard/Feedback";
+import { Client } from "./services/api";
 import Whiteboard from "./pages/UserWhiteboard";
 import UserWhiteboard from "./pages/UserWhiteboard";
 
@@ -72,12 +73,13 @@ function App() {
 
       lastHeartbeatSentAt = now;
 
-      fetch(`${import.meta.env.VITE_IMAGE_API_URL}visitor/heartbeat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, timestamp: now }),
+ 
+      Client.post("/visitor/heartbeat", {
+        userId,
+        timestamp: now,
       }).catch(() => {});
     };
+    
 
     window.addEventListener("click", maybeSendHeartbeat);
     window.addEventListener("scroll", maybeSendHeartbeat);

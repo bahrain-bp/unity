@@ -19,6 +19,7 @@ export class BedrockStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props: BedrockStackProps) {
     super(scope, id, props);
+    const prefixname = this.stackName.split('-')[0].toLowerCase();
 
     const { collection, bedrockRole, dataBucket } = props.openSearchStack;
     const { vectorIndex } = props.indexStack;
@@ -26,7 +27,7 @@ export class BedrockStack extends cdk.Stack {
 
     // Knowledge Base
     this.knowledgeBase = new bedrock.CfnKnowledgeBase(this, "KnowledgeBase", {
-      name: "unity-knowledge-base",
+      name: `${prefixname}-knowledge-base`,
       roleArn: bedrockRole.roleArn,
       knowledgeBaseConfiguration: {
         type: "VECTOR",
@@ -44,7 +45,7 @@ export class BedrockStack extends cdk.Stack {
             textField: "AMAZON_BEDROCK_TEXT_CHUNK",
             vectorField: "bedrock-knowledge-base-vector",
           },
-          vectorIndexName: "unity-vector-index",
+          vectorIndexName: vectorIndex.indexName!,
         },
       },
     });
@@ -93,12 +94,12 @@ export class BedrockStack extends cdk.Stack {
     // Outputs
     new cdk.CfnOutput(this, "KnowledgeBaseId", {
       value: this.knowledgeBase.attrKnowledgeBaseId,
-      exportName: "UnityKnowledgeBaseId",
+      exportName: `${prefixname}-KnowledgeBaseId`,
     });
 
     new cdk.CfnOutput(this, "DataBucketName", {
       value: dataBucket.bucketName,
-      exportName: "UnityDataBucketName",
+      exportName: `${prefixname}-DataBucketName`,
     });
   }
 }

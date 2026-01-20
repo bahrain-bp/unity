@@ -6,7 +6,7 @@ import {
   FaCheckCircle,
   FaTimesCircle,
 } from "react-icons/fa";
-import { ImageClient } from "../services/api";
+import { Client } from "../services/api";
 import DashboardLayout from "./dashboard/DashboardLayout";
 import "../../sass/dashboard/_visitorArrival.scss"
 
@@ -68,7 +68,7 @@ const Arrival: React.FC = () => {
     setResult(null);
 
     try {
-      const response = await ImageClient.post("/visitor/arrival", {
+      const response = await Client.post("/visitor/arrival", {
         image_data: imageBase64,
       });
       setResult(response.data);

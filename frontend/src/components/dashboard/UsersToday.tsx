@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Users, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { ImageClient } from "../../services/api";
+import { Client } from "../../services/api";
 
 interface UsersTodayData {
   count: number;
@@ -23,7 +23,7 @@ export default function UsersTodayContent() {
 
   const fetchUsersToday = async () => {
     try {
-      const response = await ImageClient.post<UsersTodayResponse>(
+      const response = await Client.post<UsersTodayResponse>(
         "/admin/loadDashboard",
         { component: "users_today" }
       );

@@ -88,7 +88,7 @@ function UploadUnity() {
         size: file.size,
       }));
 
-      const response = await fetch(import.meta.env.VITE_WEBGL_API_URL, {
+      const response = await fetch(`${import.meta.env.VITE_WEBGL_API_URL}/generate-upload-urls`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ files: fileRequests }),

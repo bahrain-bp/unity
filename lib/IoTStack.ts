@@ -23,6 +23,8 @@ export class IoTStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: IoTStackProps) {
     super(scope, id, props);
 
+    const prefixname = this.stackName.split('-')[0].toLowerCase();  // ✅ Add this
+
     const { dbStack, wsStack } = props;
 
     // Ensure DBStack and WebSocketStack are created before IoTStack
@@ -56,7 +58,7 @@ export class IoTStack extends cdk.Stack {
 
     for (const device of devices) {
       const thing = new iot.CfnThing(this, `Thing-${device.name}`, {
-        thingName: device.name,
+        thingName: `${prefixname}-${device.name}`,
       });
       thingMap[device.name] = thing;
     }
@@ -65,7 +67,7 @@ export class IoTStack extends cdk.Stack {
     // 2) Shared IoT Policy
     // ────────────────────────────────
     const iotPolicy = new iot.CfnPolicy(this, "DeviceTelemetryPolicy", {
-      policyName: "DeviceTelemetryPolicy",
+      policyName: `${prefixname}-DeviceTelemetryPolicy`,
       policyDocument: {
         Version: "2012-10-17",
         Statement: [
@@ -173,8 +175,8 @@ export class IoTStack extends cdk.Stack {
     // 6) Outputs for devices (things)
     // ────────────────────────────────
     devices.forEach((device) => {
-      new cdk.CfnOutput(this, `ThingName-${device.name}`, {
-        value: device.name,
+      new cdk.CfnOutput(this, `${prefixname}-ThingName-${device.name}`, {
+        value: `${prefixname}-${device.name}`,
         description: `IoT Thing for device ${device.name}`,
       });
     });

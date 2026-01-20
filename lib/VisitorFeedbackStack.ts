@@ -18,11 +18,13 @@ export class VisitorFeedbackStack extends cdk.Stack{
         super(scope,id,props);
          const { userTable, broadcastLambda } = props;
 
+        const prefixname = this.stackName.split('-')[0].toLowerCase();  // ✅ Add this
+
   
     // Visitor Feedback Table
   
     const feedbackTable = new dynamodb.Table(this, 'VisitorFeedbackTable', {
-      tableName: 'VisitorFeedback',
+      tableName: `${prefixname}-VisitorFeedback`,
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY, // only for dev/testing
@@ -37,7 +39,7 @@ export class VisitorFeedbackStack extends cdk.Stack{
 
 
     const usedTokensTable = new dynamodb.Table(this, 'UsedTokensTable', {
-  tableName: 'used_tokens_table',
+  tableName: `${prefixname}-UsedTokens`,
   partitionKey: { 
     name: 'token', // this is required
     type: dynamodb.AttributeType.STRING 
@@ -129,7 +131,7 @@ const getFeedbackLambda = createPythonLambda(
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'FeedbackApi', {
-    restApiName: 'Visitor Feedback API',
+    restApiName: `${prefixname}-Visitor Feedback API`,
     
     });
 

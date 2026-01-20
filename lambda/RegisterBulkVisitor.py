@@ -15,12 +15,10 @@ from datetime import datetime, timezone, timedelta
 lambda_client = boto3.client("lambda")
 BROADCAST_LAMBDA = os.environ["BROADCAST_LAMBDA"]
 # Environment variables
+cloudfront_domain = os.environ["FRONTEND_URL"]
 GMAIL_USER = os.environ['GMAIL_USER']
 GMAIL_PASS = os.environ['GMAIL_PASS']
-
-WORKMAIL_USER = os.environ['WORKMAIL_USER']      
-WORKMAIL_PASS = os.environ['WORKMAIL_PASS']    
-WORKMAIL_SMTP = os.environ['WORKMAIL_SMTP'] 
+ 
 
 InviteTableName = os.environ['InviteTable']
 InviteTable = boto3.resource('dynamodb').Table(InviteTableName)
@@ -286,7 +284,7 @@ def send_invitation_email(name, email, formatted_visit_dt):
         </p>
 
         <p style="text-align:center;">
-        <a href="https://d3pah2wsw5ry03.cloudfront.net/" class="btn" style="color:#ffffff;">Access BAHTWIN Platform</a>
+        <a href="{cloudfront_domain}" class="btn" style="color:#ffffff;">Access BAHTWIN Platform</a>
         </p>
 
         <p class="footer">

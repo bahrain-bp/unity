@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FeedbackClient } from "../../services/api";
+import { Client } from "../../services/api";
 
 
 interface Comment {
@@ -21,7 +21,7 @@ export default function VisitorComments() {
   // Fetch initial comments
   const fetchComments = async () => {
     try {
-      const { data } = await FeedbackClient.post<LoadDashboardResponse>(
+      const { data } = await Client.post<LoadDashboardResponse>(
         "/admin/loadFeedback",
         { component: "visitor_comment" } // send component name
       );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FeedbackClient } from "../services/api";
+import { Client } from "../services/api";
 
 const Feedback = () => {
   // Visitor info
@@ -37,7 +37,7 @@ const Feedback = () => {
 
     const fetchVisitor = async () => {
       try {
-        const res = await FeedbackClient.get("/getVisitorInfo", {
+        const res = await Client.get("/getVisitorInfo", {
           headers: { Authorization: `Bearer ${t}` },
         });
 
@@ -110,7 +110,7 @@ const Feedback = () => {
     };
 
     try {
-      await FeedbackClient.post("/submitFeedback", payload, {
+      await Client.post("/submitFeedback", payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

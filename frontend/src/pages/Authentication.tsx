@@ -5,7 +5,7 @@ import { useAuth } from "../auth/AuthHook";
 import { useNavigate } from "react-router-dom";
 import CodeInputs from "../components/CodeInputs";
 import Message from "../components/Message";
-import { ImageClient } from "../services/api";
+import { Client } from "../services/api";
 
 function Authentication() {
   const [showPass1, setShowPass1] = useState<boolean>(false);
@@ -173,7 +173,7 @@ function Authentication() {
     setLoading(true);
     try {
       console.log(userId);
-      await ImageClient.post("/visitor/register", {
+      await Client.post("/visitor/register", {
         userId: userId,
         name: name,
         email: account.email,

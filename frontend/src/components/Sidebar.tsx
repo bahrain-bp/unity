@@ -13,7 +13,7 @@ import logo from "../assets/logo.svg";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthHook";
 import { useEffect, useState } from "react";
-import { ImageClient } from "../services/api";
+import { Client } from "../services/api";
 import tmpUserImg from "../assets/user.png";
 import Drawer from "@mui/material/Drawer";
 
@@ -44,7 +44,7 @@ export default function Sidebar({
 
   const getUserImg = async () => {
     try {
-      const result = await ImageClient.get(`/visitor/me?userId=${userId}`);
+      const result = await Client.get(`/visitor/me?userId=${userId}`);
 
       if (result.status === 200) {
         setUserImg(result.data.imageUrl);

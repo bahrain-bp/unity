@@ -5,7 +5,7 @@ import tmpUserImg from "../assets/user.png";
 import logo from "../assets/logo.svg";
 import Drawer from "@mui/material/Drawer";
 import { MENU } from "../assets/icons";
-import { ImageClient } from "../services/api";
+import { Client } from "../services/api";
 
 import Backdrop from "@mui/material/Backdrop";
 import Box from "@mui/material/Box";

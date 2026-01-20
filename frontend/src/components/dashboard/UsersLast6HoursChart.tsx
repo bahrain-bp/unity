@@ -10,7 +10,7 @@ import {
   Label,
 } from "recharts";
 import { Users } from "lucide-react";
-import { ImageClient } from "../../services/api";
+import { Client } from "../../services/api";
 
 interface UserHourData {
   hour: string;
@@ -34,7 +34,7 @@ export default function UsersLast6Hours() {
   // Initial load (same pattern as other dashboard cards)
   const fetchUsersData = async () => {
     try {
-      const { data } = await ImageClient.post<UsersLast6HoursResponse>(
+      const { data } = await Client.post<UsersLast6HoursResponse>(
         "/admin/loadDashboard",
         { component: "users_last_6_hours" }
       );

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ImageClient } from "../../services/api";
+import { Client } from "../../services/api";
 
 interface Visitor {
   visitor_name: string;
@@ -21,7 +21,7 @@ export default function RecentVisitors() {
   // Fetch last 5 checked-in visitors on page load
   const fetchRecentVisitors = async () => {
     try {
-      const { data } = await ImageClient.post<LoadDashboardResponse>(
+      const { data } = await Client.post<LoadDashboardResponse>(
         "/admin/loadDashboard",
         { component: "RecentVisitors" } // send component name
       );

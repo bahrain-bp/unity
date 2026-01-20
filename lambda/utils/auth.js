@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isAdmin = void 0;
+const isAdmin = (event) => {
+    const userGroups = event.requestContext.authorizer?.claims?.["cognito:groups"];
+    if (!userGroups)
+        return false;
+    const groups = Array.isArray(userGroups)
+        ? userGroups
+        : String(userGroups).split(",");
+    return groups.includes("admin");
+};
+exports.isAdmin = isAdmin;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXV0aC5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImF1dGgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBRU8sTUFBTSxPQUFPLEdBQUcsQ0FBQyxLQUEyQixFQUFXLEVBQUU7SUFDOUQsTUFBTSxVQUFVLEdBQUcsS0FBSyxDQUFDLGNBQWMsQ0FBQyxVQUFVLEVBQUUsTUFBTSxFQUFFLENBQUMsZ0JBQWdCLENBQUMsQ0FBQTtJQUU5RSxJQUFJLENBQUMsVUFBVTtRQUFFLE9BQU8sS0FBSyxDQUFBO0lBRTdCLE1BQU0sTUFBTSxHQUFHLEtBQUssQ0FBQyxPQUFPLENBQUMsVUFBVSxDQUFDO1FBQ3RDLENBQUMsQ0FBQyxVQUFVO1FBQ1osQ0FBQyxDQUFDLE1BQU0sQ0FBQyxVQUFVLENBQUMsQ0FBQyxLQUFLLENBQUMsR0FBRyxDQUFDLENBQUE7SUFFakMsT0FBTyxNQUFNLENBQUMsUUFBUSxDQUFDLE9BQU8sQ0FBQyxDQUFBO0FBQ2pDLENBQUMsQ0FBQTtBQVZZLFFBQUEsT0FBTyxXQVVuQiIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IEFQSUdhdGV3YXlQcm94eUV2ZW50IH0gZnJvbSBcImF3cy1sYW1iZGFcIlxyXG5cclxuZXhwb3J0IGNvbnN0IGlzQWRtaW4gPSAoZXZlbnQ6IEFQSUdhdGV3YXlQcm94eUV2ZW50KTogYm9vbGVhbiA9PiB7XHJcbiAgY29uc3QgdXNlckdyb3VwcyA9IGV2ZW50LnJlcXVlc3RDb250ZXh0LmF1dGhvcml6ZXI/LmNsYWltcz8uW1wiY29nbml0bzpncm91cHNcIl1cclxuXHJcbiAgaWYgKCF1c2VyR3JvdXBzKSByZXR1cm4gZmFsc2VcclxuXHJcbiAgY29uc3QgZ3JvdXBzID0gQXJyYXkuaXNBcnJheSh1c2VyR3JvdXBzKVxyXG4gICAgPyB1c2VyR3JvdXBzXHJcbiAgICA6IFN0cmluZyh1c2VyR3JvdXBzKS5zcGxpdChcIixcIilcclxuXHJcbiAgcmV0dXJuIGdyb3Vwcy5pbmNsdWRlcyhcImFkbWluXCIpXHJcbn1cclxuIl19

@@ -2,7 +2,7 @@ const ALLOWED_ORIGIN =
   process.env.ALLOWED_ORIGIN || "http://localhost:5173";
 
 export const BASE_CORS_HEADERS = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
   "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE",
 };
