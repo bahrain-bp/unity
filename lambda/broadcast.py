@@ -52,3 +52,4 @@ def handler(event, context):
             table.delete_item(Key={"ConnectionId": connection_id})
 
     return {"statusCode": 200}
+    

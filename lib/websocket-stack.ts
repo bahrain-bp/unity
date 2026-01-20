@@ -58,7 +58,7 @@ export class WebSocketStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_18_X,
         entry: path.join(
           __dirname,
-          "../lambda/ActivePlayer/presenceOnConnect.ts"
+          "../lambda/activePlayer/presenceOnConnect.ts"
         ),
         handler: "handler",
         environment: {
@@ -91,7 +91,7 @@ export class WebSocketStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_18_X,
         entry: path.join(
           __dirname,
-          "../lambda/ActivePlayer/presenceOnDisconnect.ts"
+          "../lambda/activePlayer/presenceOnDisconnect.ts"
         ),
         handler: "handler",
         environment: {
