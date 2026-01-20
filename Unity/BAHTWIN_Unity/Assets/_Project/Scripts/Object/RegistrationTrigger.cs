@@ -21,6 +21,6 @@ public class RegistrationTrigger : MonoBehaviour
             return;
         }
 
-        tutorial.OnRegistrationReached();
+        tutorial.CompleteTutorial();
     }
 }

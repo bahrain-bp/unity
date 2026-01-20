@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: c6970432160ae0c44b9b1c56f07d3847
+timeCreated: 1567665510
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 153549
+  packageName: Automatic Revolving Door
+  packageVersion: 1.2
+  assetPath: Assets/Revolving Door/Scripts/DoorRotation.cs
+  uploadId: 722818

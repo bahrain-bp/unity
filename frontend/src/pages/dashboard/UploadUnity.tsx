@@ -165,7 +165,7 @@ function UploadUnity() {
           multiple
           disabled={uploading}
           onChange={handleFileChange}
-          accept=".js,.unityweb"
+          accept=".js,.gz,.unityweb"
           style={{ display: "none" }}
         />
         <div className="dashboard__webgl--files" onClick={pickFilesHandler}>
@@ -227,7 +227,7 @@ function UploadUnity() {
             <div className="dashboard__webgl--upload">
               {FILES()}
               <p>Click to choose files (Max 4)</p>
-              <span>Supported formats: JS, UNITYWEB </span>
+              <span>Supported formats: JS, GZ, UNITYWEB </span>
             </div>
           )}
         </div>

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9eb073e923a558d48bb8e9552a9f37fc
+timeCreated: 1548305622
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 153549
+  packageName: Automatic Revolving Door
+  packageVersion: 1.2
+  assetPath: Assets/Revolving Door/Scenes/RevolvingDoor.unity
+  uploadId: 722818

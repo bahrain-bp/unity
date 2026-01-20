@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6d37c910235ce904897a85a49c1fb417
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 153549
+  packageName: Automatic Revolving Door
+  packageVersion: 1.2
+  assetPath: Assets/Revolving Door/Models/Materials/RevolvingDoor_Mat1.mat
+  uploadId: 722818

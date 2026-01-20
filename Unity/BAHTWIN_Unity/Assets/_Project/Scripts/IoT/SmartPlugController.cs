@@ -1,25 +1,27 @@
 using System;
 using UnityEngine;
-using TMPro;   // for TextMeshPro
+using TMPro;
+using UnityEngine.InputSystem;
 
 [Serializable]
 public class PlugStatePayload
 {
-    public string id;          // "plug1", "plug2"
-    public string type;        // "plug"
-    public string state;       // "on" / "off"
-    public long updated_at;    // unix seconds
-    public int status;         // HTTP status from backend
-    public string message;     // optional error / info
-    public int retryAfter;     // cooldown seconds (for 429)
+    public string id;
+    public string type;
+    public string state;
+    public long updated_at;
+    public int status;
+    public string message;
+    public int retryAfter;
 }
 
+[RequireComponent(typeof(Collider))]
 public class SmartPlugController : MonoBehaviour
 {
     [Header("Config")]
     public string deviceId = "plug1";
     public bool startsOn = false;
-    public string plugDisplayName = "Plug 1";   // shown on label
+    public string plugDisplayName = "Plug 1";
 
     [Header("Visuals")]
     public Renderer targetRenderer;
@@ -27,104 +29,128 @@ public class SmartPlugController : MonoBehaviour
     public Color offColor = Color.red;
 
     [Header("Label (optional)")]
-    public TextMeshPro label;                  // drag your TextMeshPro here
+    public TextMeshPro label;
 
-    [Header("Interaction (Proximity + Key)")]
-    public Transform player;                   // assign Main Camera / FPS Controller transform
-    public float interactDistance = 2f;
-    public KeyCode interactKey = KeyCode.F;
-    public bool allowMouseClick = true;        // keep mouse click toggle too
+    [Header("Interaction (Trigger + Interact Action)")]
+    public string playerTag = "Player";
+    public InputActionReference interactAction;
+    public bool allowMouseClick = true;
 
     // --- state ---
     private bool isOn;
     private bool isBusy;
 
-    // per-plug cooldown timer (seconds)
-    private float localCooldownRemaining = 0f;
+    // backend cooldown remaining (seconds)
+    private float cooldownRemaining = 0f;
+
+    // trigger state
+    private bool playerInRange;
+
+    // Prevent duplicate click in same frame (e.g., OnMouseDown + Interact)
+    private int lastClickFrame = -1;
 
     private void Awake()
     {
         isOn = startsOn;
         ApplyVisualState();
+
+        var col = GetComponent<Collider>();
+        if (col != null && !col.isTrigger) col.isTrigger = true;
+    }
+
+    private void OnEnable()
+    {
+        if (interactAction != null) interactAction.action.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if (interactAction != null) interactAction.action.Disable();
     }
 
     private void Update()
     {
-        // update label countdown if we are in cooldown
-        if (localCooldownRemaining > 0f)
+        // Tick cooldown timer (only from backend)
+        if (cooldownRemaining > 0f)
         {
-            localCooldownRemaining -= Time.deltaTime;
-            if (localCooldownRemaining < 0f)
-                localCooldownRemaining = 0f;
+            cooldownRemaining -= Time.deltaTime;
+            if (cooldownRemaining < 0f) cooldownRemaining = 0f;
 
             if (label != null)
             {
-                int remaining = Mathf.CeilToInt(localCooldownRemaining);
-                if (remaining > 0)
-                {
-                    label.text = $"{plugDisplayName} : COOLDOWN {remaining}s";
-                }
-                else
-                {
-                    // cooldown finished → restore normal label
-                    ApplyVisualState();
-                }
+                int remaining = Mathf.CeilToInt(cooldownRemaining);
+                if (remaining > 0) label.text = $"{plugDisplayName} : COOLDOWN {remaining}s";
+                else ApplyVisualState();
             }
+
+            // During cooldown, no interaction
+            return;
         }
 
-        // --- Proximity + F key interaction ---
-        if (player != null && !isBusy && localCooldownRemaining <= 0f)
+        // If busy, keep showing "TOGGLING..." and block input
+        if (isBusy)
         {
-            float distance = Vector3.Distance(player.position, transform.position);
+            if (label != null) label.text = $"{plugDisplayName} : TOGGLING...";
+            return;
+        }
 
-            // optional: show hint when close
-            if (label != null && distance <= interactDistance)
-            {
-                label.text = $"{plugDisplayName} : Press [F]";
-            }
-            else if (label != null && localCooldownRemaining <= 0f)
-            {
-                // if not close, keep normal state label
-                label.text = $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
-            }
+        // Normal idle label
+        if (label != null)
+        {
+            label.text = playerInRange
+                ? $"{plugDisplayName} : Press [F]"
+                : $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
+        }
 
-            if (distance <= interactDistance && Input.GetKeyDown(interactKey))
-            {
-                Debug.Log($"[SmartPlug] {interactKey} pressed near {deviceId}");
-                OnClick();
-            }
+        // Press F while in range
+        if (playerInRange && interactAction != null && interactAction.action.WasPressedThisFrame())
+        {
+            TryToggleFromUser();
         }
     }
 
-    // Call this from Button / OnMouseDown / Proximity Key
-    public void OnClick()
+    private void OnTriggerEnter(Collider other)
     {
-        if (isBusy) return;
-        if (localCooldownRemaining > 0f) return;
+        if (other.CompareTag(playerTag)) playerInRange = true;
+    }
 
-        bool desired = !isOn;
-        string desiredState = desired ? "on" : "off";
-
-        isBusy = true;
-        Debug.Log($"[SmartPlug] Toggle → deviceId={deviceId}, desired={desiredState}");
-
-#if UNITY_WEBGL && !UNITY_EDITOR
-        // Call the JS global function window.ToggleSmartPlug(deviceId, state)
-        Application.ExternalCall("ToggleSmartPlug", deviceId, desiredState);
-#else
-        // In Editor / non-WebGL → just simulate backend
-        SimulateBackendResponse(desiredState);
-#endif
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag(playerTag)) playerInRange = false;
     }
 
     private void OnMouseDown()
     {
         if (!allowMouseClick) return;
-        OnClick();
+        TryToggleFromUser();
     }
 
-    // JS will call this:
-    // unityInstance.SendMessage("SmartPlug_<deviceId>", "OnDeviceStateJson", json)
+    private void TryToggleFromUser()
+    {
+        // Avoid double-fire same frame
+        if (Time.frameCount == lastClickFrame) return;
+        lastClickFrame = Time.frameCount;
+
+        if (isBusy) return;
+        if (cooldownRemaining > 0f) return;
+
+        bool desired = !isOn;
+        string desiredState = desired ? "on" : "off";
+
+        // Busy immediately until backend responds
+        isBusy = true;
+        if (label != null) label.text = $"{plugDisplayName} : TOGGLING...";
+
+        Debug.Log($"[SmartPlug] Toggle → deviceId={deviceId}, desired={desiredState}");
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        Application.ExternalCall("ToggleSmartPlug", deviceId, desiredState);
+#else
+        SimulateBackendResponse(desiredState);
+#endif
+    }
+
+    // Called by JS/WS:
     public void OnDeviceStateJson(string json)
     {
         Debug.Log($"[SmartPlug] OnDeviceStateJson({deviceId}) raw: {json}");
@@ -151,38 +177,36 @@ public class SmartPlugController : MonoBehaviour
         if (!string.Equals(payload.id, deviceId, StringComparison.OrdinalIgnoreCase))
         {
             // Not for this plug
-            isBusy = false;
             return;
         }
 
-        // Handle cooldown / error
+        // Backend cooldown -> show cooldown + unlock after it ends
+        if (payload.retryAfter > 0)
+        {
+            cooldownRemaining = Mathf.Max(cooldownRemaining, payload.retryAfter);
+            isBusy = false;
+
+            if (label != null) label.text = $"{plugDisplayName} : COOLDOWN {payload.retryAfter}s";
+            return;
+        }
+
+        // Error (not success)
         if (payload.status != 200 && payload.status != 0)
         {
-            Debug.LogWarning($"[SmartPlug] Backend status {payload.status}: {payload.message}");
-
-            if (payload.status == 429 && payload.retryAfter > 0)
-            {
-                Debug.Log($"[SmartPlug] Cooldown, retry after {payload.retryAfter} seconds");
-
-                // start per-plug countdown
-                localCooldownRemaining = payload.retryAfter;
-
-                if (label != null)
-                {
-                    label.text = $"{plugDisplayName} : COOLDOWN {payload.retryAfter}s";
-                }
-            }
-
             isBusy = false;
+            if (label != null)
+            {
+                var msg = string.IsNullOrWhiteSpace(payload.message) ? $"Error {payload.status}" : payload.message;
+                label.text = $"{plugDisplayName} : ERROR";
+                Debug.LogWarning($"[SmartPlug] Backend status {payload.status}: {msg}");
+            }
             return;
         }
 
-        // Normal success
-        bool newState = string.Equals(payload.state, "on", StringComparison.OrdinalIgnoreCase);
-
-        isOn = newState;
+        // Success: update state + unlock
+        isOn = string.Equals(payload.state, "on", StringComparison.OrdinalIgnoreCase);
         isBusy = false;
-        localCooldownRemaining = 0f;   // clear cooldown on success
+
         ApplyVisualState();
     }
 
@@ -194,16 +218,14 @@ public class SmartPlugController : MonoBehaviour
             mat.color = isOn ? onColor : offColor;
         }
 
-        if (label != null && localCooldownRemaining <= 0f)
+        if (label != null)
         {
-            // Only show ON/OFF when not in cooldown
             label.text = $"{plugDisplayName} : {(isOn ? "ON" : "OFF")}";
         }
 
         Debug.Log($"[SmartPlug] {deviceId} -> {(isOn ? "ON" : "OFF")}");
     }
 
-    // Editor-only helper
     private void SimulateBackendResponse(string desiredState)
     {
         var payload = new PlugStatePayload
@@ -217,7 +239,6 @@ public class SmartPlugController : MonoBehaviour
             retryAfter = 0
         };
 
-        string json = JsonUtility.ToJson(payload);
-        OnDeviceStateJson(json);
+        OnDeviceStateJson(JsonUtility.ToJson(payload));
     }
 }

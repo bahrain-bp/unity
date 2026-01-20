@@ -48,6 +48,7 @@ const Chatbot = () => {
     try {
       const req = sessionId ? { question, sessionId } : { question };
       const res = await Client.post("/assistant", req);
+      console.log(res);
       setLoading(false);
       return { answer: res.data.answer, sessionId: res.data.sessionId };
     } catch (error) {

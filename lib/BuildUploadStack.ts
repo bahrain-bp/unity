@@ -38,9 +38,7 @@ export class BuildUploadStack extends Stack {
           UPLOAD_DIRECTORY: "unity",
           MAX_FILES: "4",
           URL_EXPIRATION_SECONDS: "3600", // 1 hour
-          //CLOUDFRONT_DISTRIBUTION_ID: "E8RMBHHUMVCJZ",
-          CLOUDFRONT_DISTRIBUTION_ID: props.cloudfrontDistributionId,
-
+          CLOUDFRONT_DISTRIBUTION_ID: "E1K8BLGCFAMPVK",
         },
       }
     );

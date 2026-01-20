@@ -339,7 +339,7 @@ const Parking = () => {
 
       <div className="dashboard__box parking__visual">
         
-          <div style={{ padding: "2rem", textAlign: "center" }}>Refreshing...</div>
+          {/* <div style={{ padding: "2rem", textAlign: "center" }}>Refreshing...</div> */}
       
           <div className="parkingLot">
             {rows.map((row, idx) => (

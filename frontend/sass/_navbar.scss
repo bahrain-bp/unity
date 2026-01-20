@@ -104,6 +104,7 @@
         stroke: none;
         border-radius: 10rem;
         border: 1px solid $color-font;
+        object-fit: cover;
       }
     }
 
@@ -133,6 +134,58 @@
         &:hover {
           background-color: rgba($color-red, 0.3);
         }
+      }
+    }
+  }
+
+  &__modal {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    row-gap: 1rem;
+    column-gap: 2rem;
+    outline: none !important;
+
+    & img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10rem;
+      border: 1px solid $color-font;
+    }
+
+    &--info {
+      display: flex;
+      flex-direction: column;
+      row-gap: 0.4rem;
+      margin: auto;
+
+      & p {
+        &:nth-child(1) {
+          font-size: 2rem;
+          font-weight: 600;
+        }
+        &:nth-child(2) {
+          font-size: 1.4rem;
+          font-weight: 400;
+        }
+      }
+    }
+
+    & button {
+      grid-column: 1 / -1;
+      font-size: 1.4rem;
+      border: 1px solid $color-red;
+      color: $color-red;
+      padding: 0.8rem 0;
+      font-weight: 500;
+      border-radius: 10rem;
+      margin-top: 1rem;
+      width: 100%;
+      transition: all .3s;
+
+      &:hover {
+        background-color: rgba($color-red, 0.8);
+        color: $color-font;
       }
     }
   }
@@ -219,7 +272,7 @@
     border-radius: 10rem;
     position: relative;
     cursor: pointer;
-    transition: all .3s;
+    transition: all 0.3s;
 
     &:hover {
       background-color: $color-light-grey;
@@ -261,8 +314,8 @@
       & p {
         padding: 1rem;
         border-radius: 10rem;
-        transition: background .3s;
-        
+        transition: background 0.3s;
+
         &:hover {
           background-color: rgba($color-red, 0.3);
         }

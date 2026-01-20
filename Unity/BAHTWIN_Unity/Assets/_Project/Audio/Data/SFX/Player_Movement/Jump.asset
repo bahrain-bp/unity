@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Jump
   m_EditorClassIdentifier: Assembly-CSharp::AudioData
   clip: {fileID: 8300000, guid: 87a0469613de2594d8a871636b2cd118, type: 3}
-  volume: 0.5
+  volume: 1
   pitch: 1
   spatialBlend: 0
   loop: 0

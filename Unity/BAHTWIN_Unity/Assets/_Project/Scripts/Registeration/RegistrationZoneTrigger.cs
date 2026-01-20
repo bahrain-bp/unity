@@ -75,6 +75,18 @@ public class RegistrationZoneTrigger : MonoBehaviour
     public float flashInSeconds = 0.05f;
     public float flashOutSeconds = 0.20f;
 
+    [Header("Disable Things When Peccy Is Hidden")]
+    [Tooltip("If Peccy is hidden (peccyRoot inactive), these scripts will be disabled. When Peccy becomes visible, original states will be restored.")]
+    public Behaviour[] disableBehavioursWhenPeccyHidden;
+
+    [Tooltip("If Peccy is hidden (peccyRoot inactive), these GameObjects will be disabled. When Peccy becomes visible, original states will be restored.")]
+    public GameObject[] disableGameObjectsWhenPeccyHidden;
+
+    private bool[] cachedBehaviourStates;
+    private bool[] cachedGameObjectStates;
+
+    private bool lastPeccyVisible;
+
     private bool running;
     private bool playerInside;
 
@@ -107,6 +119,10 @@ public class RegistrationZoneTrigger : MonoBehaviour
         // Peccy start state
         if (peccyRoot != null && hidePeccyOnStart)
             peccyRoot.SetActive(false);
+
+        CacheDisableTargetsInitialStates();
+        ApplyPeccyVisibilityRule(force: true);
+
     }
 
     private void Start()
@@ -126,6 +142,8 @@ public class RegistrationZoneTrigger : MonoBehaviour
 
         if (peccyRoot != null)
             peccyRoot.SetActive(passed);
+
+        ApplyPeccyVisibilityRule(force: true);
     }
 
     private void CacheActions()
@@ -162,6 +180,7 @@ public class RegistrationZoneTrigger : MonoBehaviour
 
             // If already registered, ensure Peccy is visible
             if (peccyRoot != null) peccyRoot.SetActive(true);
+            ApplyPeccyVisibilityRule();
 
             ShowBubbleFaded(replayLine, replayOptions);
 
@@ -172,6 +191,7 @@ public class RegistrationZoneTrigger : MonoBehaviour
 
         // Not registered: keep Peccy hidden
         if (peccyRoot != null) peccyRoot.SetActive(false);
+        ApplyPeccyVisibilityRule();
 
         StartCoroutine(Flow(isReplay: false));
     }
@@ -266,6 +286,8 @@ public class RegistrationZoneTrigger : MonoBehaviour
         // Registration passed -> allow access + show Peccy
         accessGate?.SetRegistrationPassed(true);
         if (peccyRoot != null) peccyRoot.SetActive(true);
+        ApplyPeccyVisibilityRule();
+
 
         if (isReplay && badgeHud != null)
             badgeHud.SetForceHidden(false);
@@ -448,4 +470,107 @@ public class RegistrationZoneTrigger : MonoBehaviour
         if (moveAction != null) moveAction.Enable();
         running = false;
     }
+
+    private bool IsPeccyVisible()
+    {
+        return peccyRoot != null && peccyRoot.activeInHierarchy;
+    }
+
+    private void CacheDisableTargetsInitialStates()
+    {
+        if (disableBehavioursWhenPeccyHidden != null)
+        {
+            cachedBehaviourStates = new bool[disableBehavioursWhenPeccyHidden.Length];
+            for (int i = 0; i < disableBehavioursWhenPeccyHidden.Length; i++)
+            {
+                var b = disableBehavioursWhenPeccyHidden[i];
+                cachedBehaviourStates[i] = (b != null && b.enabled);
+            }
+        }
+
+        if (disableGameObjectsWhenPeccyHidden != null)
+        {
+            cachedGameObjectStates = new bool[disableGameObjectsWhenPeccyHidden.Length];
+            for (int i = 0; i < disableGameObjectsWhenPeccyHidden.Length; i++)
+            {
+                var go = disableGameObjectsWhenPeccyHidden[i];
+                cachedGameObjectStates[i] = (go != null && go.activeSelf);
+            }
+        }
+    }
+
+    private void ApplyPeccyVisibilityRule(bool force = false)
+    {
+        bool visible = IsPeccyVisible();
+
+        if (!force && visible == lastPeccyVisible)
+            return;
+
+        lastPeccyVisible = visible;
+
+        // If Peccy is hidden -> DISABLE targets
+        // If Peccy is visible -> RESTORE to original states
+        ApplyDisableTargets(disable: !visible);
+    }
+
+    private void ApplyDisableTargets(bool disable)
+    {
+        // Behaviours
+        if (disableBehavioursWhenPeccyHidden != null)
+        {
+            for (int i = 0; i < disableBehavioursWhenPeccyHidden.Length; i++)
+            {
+                var b = disableBehavioursWhenPeccyHidden[i];
+                if (b == null) continue;
+
+                // Safety: do not disable this script or anything under the registration zone object
+                if (b == this) continue;
+                if (b.transform.IsChildOf(transform)) continue;
+
+                if (disable)
+                {
+                    b.enabled = false;
+                }
+                else
+                {
+                    bool original = (cachedBehaviourStates != null && i < cachedBehaviourStates.Length)
+                        ? cachedBehaviourStates[i]
+                        : true;
+
+                    b.enabled = original;
+                }
+            }
+        }
+
+        // GameObjects
+        if (disableGameObjectsWhenPeccyHidden != null)
+        {
+            for (int i = 0; i < disableGameObjectsWhenPeccyHidden.Length; i++)
+            {
+                var go = disableGameObjectsWhenPeccyHidden[i];
+                if (go == null) continue;
+
+                // Safety: do not disable registration UI, bubble, flash, badge, or Peccy itself
+                if (go == gameObject) continue;
+                if (peccyRoot != null && (go == peccyRoot || go.transform.IsChildOf(peccyRoot.transform))) continue;
+                if (speechBubbleGroup != null && go.transform.IsChildOf(speechBubbleGroup.transform)) continue;
+                if (flashCanvasGroup != null && go.transform.IsChildOf(flashCanvasGroup.transform)) continue;
+                if (bottomPanel != null && (go == bottomPanel || go.transform.IsChildOf(bottomPanel.transform))) continue;
+
+                if (disable)
+                {
+                    go.SetActive(false);
+                }
+                else
+                {
+                    bool original = (cachedGameObjectStates != null && i < cachedGameObjectStates.Length)
+                        ? cachedGameObjectStates[i]
+                        : true;
+
+                    go.SetActive(original);
+                }
+            }
+        }
+    }
+
 }

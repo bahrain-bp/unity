@@ -7,6 +7,26 @@ import Drawer from "@mui/material/Drawer";
 import { MENU } from "../assets/icons";
 import { Client } from "../services/api";
 
+import Backdrop from "@mui/material/Backdrop";
+import Box from "@mui/material/Box";
+import Modal from "@mui/material/Modal";
+import Fade from "@mui/material/Fade";
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  maxWidth: "400",
+  minWidth: "500",
+  maxHeight: "80vh",
+  borderRadius: "2rem",
+  overflowY: "scroll",
+  border: "none",
+  boxShadow: 24,
+  p: 4,
+};
+
 function Navbar() {
   const { email, isAuthenticated, signOut, userId, userRole } = useAuth();
 
@@ -14,15 +34,17 @@ function Navbar() {
   const [userImg, setUserImg] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
 
+  const [openModal, setOpenModal] = useState(false);
+  const handleOpen = () => setOpenModal(true);
+  const handleClose = () => setOpenModal(false);
+
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
   };
 
   const getUserImg = async () => {
     try {
-      const result = await Client.get(
-        `/visitor/me?userId=${userId}`
-      );
+      const result = await ImageClient.get(`/visitor/me?userId=${userId}`);
 
       if (result.status === 200) {
         setUserImg(result.data.imageUrl);
@@ -53,14 +75,36 @@ function Navbar() {
         <div className="navbar__auth">
           {isAuthenticated ? (
             <div className="navbar__user">
-              <label htmlFor="user-btn">
+              <label onClick={handleOpen} htmlFor="user-btn">
                 <img src={userImg ?? tmpUserImg} alt="profile picture" />
                 {username ? username : email.replace(/@.*/, "")}
               </label>
-              <input id="user-btn" type="checkbox" />
-              <div className="navbar__user--container">
-                <p onClick={signOut}>Sign Out</p>
-              </div>
+              <Modal
+                aria-labelledby="transition-modal-title"
+                aria-describedby="transition-modal-description"
+                open={openModal}
+                onClose={handleClose}
+                closeAfterTransition
+                slots={{ backdrop: Backdrop }}
+                slotProps={{
+                  backdrop: {
+                    timeout: 500,
+                  },
+                }}
+              >
+                <Fade in={openModal}>
+                  <Box sx={style} className="navbar__modal">
+                    <img src={userImg ?? tmpUserImg} alt="profile picture" />
+                    <div className="navbar__modal--info">
+                      <p>{username ? username : email.replace(/@.*/, "")}</p>
+                      <p>{email ? email : "Loading..."}</p>
+                    </div>
+                    <button className="btn" onClick={signOut}>
+                      Sign Out
+                    </button>
+                  </Box>
+                </Fade>
+              </Modal>
             </div>
           ) : (
             <Link to={"/auth"}>Register</Link>
@@ -83,9 +127,7 @@ function Navbar() {
           </Link>
           <Link to={"/info"}>Information</Link>
           <Link to={"/environment"}>Environment</Link>
-          {userRole === "admin" && (
-            <Link to={"/dashboard"}>Dashboard</Link>
-          )}
+          {userRole === "admin" && <Link to={"/dashboard"}>Dashboard</Link>}
           {isAuthenticated ? (
             <div className="navbar__user">
               <label htmlFor="user-btn2">

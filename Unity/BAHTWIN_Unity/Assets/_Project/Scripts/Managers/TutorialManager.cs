@@ -192,7 +192,7 @@ public class TutorialManager : MonoBehaviour
             CompleteTutorial();
     }
 
-    private void CompleteTutorial()
+    public void CompleteTutorial()
     {
         current = Step.Completed;
 
