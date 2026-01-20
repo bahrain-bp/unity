@@ -84,7 +84,7 @@ public class PauseMenu : MonoBehaviour
     public void ExitGame()
     {
         Time.timeScale = 1f;
-        WebGLRedirect.GoToHomepage("https://d1db6tvnnlunso.cloudfront.net/auth");
+        WebGLRedirect.GoToHomepage("/auth");
     }
 
     public static class WebGLRedirect

@@ -36,6 +36,22 @@ public class VisitorSession : MonoBehaviour
 
     private IEnumerator LoadProfileAtStart()
     {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        float t = 0f;
+        // Wait briefly for JS to inject the badge API url (api exists AND configured)
+        while ((api == null || !api.IsConfigured) && t < 5f)
+        {
+            t += Time.unscaledDeltaTime;
+            yield return null;
+        }
+#endif
+
+        if (api == null || !api.IsConfigured)
+        {
+            Debug.LogError("[VisitorSession] Badge API not configured from JS.");
+            yield break;
+        }
+
         IsLoaded = false;
 
         if (userIdProvider == null || api == null)
