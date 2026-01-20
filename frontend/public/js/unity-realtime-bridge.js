@@ -4,6 +4,12 @@ const API_BASE = "https://mixmh2ecul.execute-api.us-east-1.amazonaws.com/dev";
 const PLUGS_ENDPOINT = `${API_BASE}/plugs`;
 const WS_URL = "wss://x7zgvke8me.execute-api.us-east-1.amazonaws.com/dev";
 
+
+window.BAHTWIN_CONFIG = window.BAHTWIN_CONFIG || {
+  BADGE_API_URL: "https://vljyjl7oae.execute-api.us-east-1.amazonaws.com/prod/visitor/badge"
+};
+
+
 // Show debug panel only on localhost (change if you want)
 // const DEBUG = location.hostname === "localhost" || location.hostname === "127.0.0.1";
 const DEBUG = false;
@@ -319,6 +325,8 @@ function setupWebSocket(unityInstance) {
 // Unity → Backend HTTP (toggle plug)
 // ------------------------------------------------
 window.initSmartPlugBridge = function (unityInstance) {
+  window.initBadgeBridge(unityInstance);
+
   if (window.__SMART_PLUG_BRIDGE__.inited) {
     console.warn("[JS] initSmartPlugBridge already called — attaching Unity instance");
     wsUnityInstance = unityInstance;
@@ -509,4 +517,20 @@ window.AskPeccyAssistant = async function (question, sessionId, unityObjectName)
     status,
     errorType: status === 429 ? "QUOTA_OR_THROTTLE" : (status >= 400 ? "BACKEND" : "OK")
   }));
+};
+
+
+// ============================================================
+// Unity – Backend HTTP (Badge API Gateaway)
+// ============================================================
+
+window.initBadgeBridge = function (unityInstance) {
+  const url = window.BAHTWIN_CONFIG?.BADGE_API_URL || "";
+  console.log("[BadgeBridge] Sending badge URL to Unity:", url);
+
+  try {
+    unityInstance?.SendMessage("BAHTWIN_Bridge", "SetBadgeApiUrl", url);
+  } catch (e) {
+    console.warn("[BadgeBridge] SendMessage failed:", e);
+  }
 };
