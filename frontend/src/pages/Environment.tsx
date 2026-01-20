@@ -8,6 +8,9 @@ declare global {
     unityInstance?: any;
     initSmartPlugBridge?: (instance: any) => void;
     initChatBridge?: (instance: any) => void;
+    __UNITY_INSTANCE__?: any;
+    BAHTWIN_OnUnityReady?: () => void;
+
   }
 }
 
@@ -106,6 +109,8 @@ const UnityPlayer = () => {
 
           // Expose globally
           window.unityInstance = unityInstance;
+          window.__UNITY_INSTANCE__ = unityInstance;
+
 
           // Fullscreen
           if (fullscreenBtnRef.current) {
@@ -155,6 +160,16 @@ const UnityPlayer = () => {
     const bridgeScript = document.createElement("script");
     bridgeScript.src = "/js/unity-realtime-bridge.js";
     bridgeScript.async = true;
+
+    bridgeScript.onload = () => {
+      document.body.appendChild(unityLoaderScript);
+    };
+
+    bridgeScript.onerror = () => {
+      console.warn("[UnityPlayer] Failed to load unity-realtime-bridge.js");
+      document.body.appendChild(unityLoaderScript); // still load Unity
+    };
+
     document.body.appendChild(bridgeScript);
 
     // ─────────────────────────────────────────────

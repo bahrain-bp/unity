@@ -1,14 +1,12 @@
 console.log("[JS] Unity Realtime Bridge Loaded");
 
-const API_BASE = "https://mixmh2ecul.execute-api.us-east-1.amazonaws.com/dev";
+const API_BASE = "https://l6c78dpf3f.execute-api.us-east-1.amazonaws.com/dev";
 const PLUGS_ENDPOINT = `${API_BASE}/plugs`;
-const WS_URL = "wss://x7zgvke8me.execute-api.us-east-1.amazonaws.com/dev";
+const WS_URL = 'wss://hfwol24w5a.execute-api.us-east-1.amazonaws.com/dev-dev';
 
-
-window.BAHTWIN_CONFIG = window.BAHTWIN_CONFIG || {
-  BADGE_API_URL: "https://vljyjl7oae.execute-api.us-east-1.amazonaws.com/prod/visitor/badge"
+window.BAHTWIN_CONFIG = {
+  BADGE_API_URL: "https://l6c78dpf3f.execute-api.us-east-1.amazonaws.com/dev/visitor/badge"
 };
-
 
 // Show debug panel only on localhost (change if you want)
 // const DEBUG = location.hostname === "localhost" || location.hostname === "127.0.0.1";
@@ -325,8 +323,6 @@ function setupWebSocket(unityInstance) {
 // Unity → Backend HTTP (toggle plug)
 // ------------------------------------------------
 window.initSmartPlugBridge = function (unityInstance) {
-  window.initBadgeBridge(unityInstance);
-
   if (window.__SMART_PLUG_BRIDGE__.inited) {
     console.warn("[JS] initSmartPlugBridge already called — attaching Unity instance");
     wsUnityInstance = unityInstance;
@@ -434,12 +430,52 @@ function sendPirOccupancyToUnity(payload, msgTs) {
   }
 }
 
+// ============================================================
+// Unity – Backend HTTP (Badge API Gateway) - Option 3 (Unity calls JS when ready)
+// ============================================================
+
+// (Optional) keep this helper for manual testing only
+window.initBadgeBridge = function (unityInstance) {
+  const url = window.BAHTWIN_CONFIG?.BADGE_API_URL || "";
+  console.log("[BadgeBridge] Sending badge URL to Unity:", url);
+
+  if (!unityInstance) {
+    console.warn("[BadgeBridge] unityInstance missing");
+    return;
+  }
+
+  try {
+    unityInstance.SendMessage("BAHTWIN_Bridge", "SetBadgeApiUrl", url);
+  } catch (e) {
+    console.warn("[BadgeBridge] SendMessage failed:", e);
+  }
+};
+
+// Unity will call this when the scene is loaded and BAHTWIN_Bridge exists
+window.BAHTWIN_OnUnityReady = function () {
+  const url = window.BAHTWIN_CONFIG?.BADGE_API_URL || "";
+  console.log("[BadgeBridge] Unity ready signal received. URL:", url);
+
+  const unity = window.__UNITY_INSTANCE__ || window.unityInstance;
+  if (!unity) {
+    console.warn("[BadgeBridge] Unity instance missing at ready time");
+    return;
+  }
+
+  try {
+    unity.SendMessage("BAHTWIN_Bridge", "SetBadgeApiUrl", url);
+    console.log("[BadgeBridge] URL sent to Unity ✅");
+  } catch (e) {
+    console.warn("[BadgeBridge] SendMessage failed:", e);
+  }
+};
+
+
 
 // ============================================================
 // Unity – Backend HTTP (Chat Assistant Bridge)
 // ============================================================
 
-const API_ASSISTANT = "https://twrmzrk7v3.execute-api.us-east-1.amazonaws.com/dev";
 
 // Store Unity WebGL instance ONLY for chat
 window.__CHAT_UNITY_INSTANCE__ = null;
@@ -451,7 +487,7 @@ window.initChatBridge = function (unityInstance) {
 };
 
 // Chat assistant endpoint
-const ASSISTANT_ENDPOINT = `${API_ASSISTANT}/assistant`;
+const ASSISTANT_ENDPOINT = `${API_BASE}/assistant`;
 
 // Unity calls:
 // AskPeccyAssistant(question, sessionId, unityObjectName)
@@ -517,20 +553,4 @@ window.AskPeccyAssistant = async function (question, sessionId, unityObjectName)
     status,
     errorType: status === 429 ? "QUOTA_OR_THROTTLE" : (status >= 400 ? "BACKEND" : "OK")
   }));
-};
-
-
-// ============================================================
-// Unity – Backend HTTP (Badge API Gateaway)
-// ============================================================
-
-window.initBadgeBridge = function (unityInstance) {
-  const url = window.BAHTWIN_CONFIG?.BADGE_API_URL || "";
-  console.log("[BadgeBridge] Sending badge URL to Unity:", url);
-
-  try {
-    unityInstance?.SendMessage("BAHTWIN_Bridge", "SetBadgeApiUrl", url);
-  } catch (e) {
-    console.warn("[BadgeBridge] SendMessage failed:", e);
-  }
 };
