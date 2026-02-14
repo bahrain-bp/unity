@@ -44,7 +44,7 @@ function Navbar() {
 
   const getUserImg = async () => {
     try {
-      const result = await ImageClient.get(`/visitor/me?userId=${userId}`);
+      const result = await Client.get(`/visitor/me?userId=${userId}`);
 
       if (result.status === 200) {
         setUserImg(result.data.imageUrl);

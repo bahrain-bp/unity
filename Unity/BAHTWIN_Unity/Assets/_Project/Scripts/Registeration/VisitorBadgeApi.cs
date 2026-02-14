@@ -15,6 +15,9 @@ public class VisitorBadgeResponse
 
 public class VisitorBadgeApi : MonoBehaviour
 {
+    public bool IsConfigured => !string.IsNullOrWhiteSpace(badgeUrl);
+
+
     [Header("API Gateway")]
     public string badgeUrl;
 
